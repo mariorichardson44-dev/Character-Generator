@@ -2781,6 +2781,18 @@ const PORTRAIT = (function () {
 const EXPORT = (function () {
   function esc(s) { return String(s == null ? '' : s); }
 
+  /* Prices are stored as medieval shorthand (d = pennies, s = shillings,
+     m = gold marks); spell them out wherever a reader sees them. */
+  function priceLabel(p) {
+    const m = String(p).match(/^(\d+)([dsm])$/);
+    if (!m) return p;
+    const n = +m[1];
+    if (n === 0) return 'worth nothing, and kept anyway';
+    const unit = m[2] === 'd' ? 'penn' : m[2] === 's' ? 'shilling' : 'gold mark';
+    if (m[2] === 'd') return n + (n === 1 ? ' penny' : ' pennies');
+    return n + ' ' + unit + (n === 1 ? '' : 's');
+  }
+
   function toMarkdown(c) {
     const lines = [];
     const push = (s) => lines.push(s);
@@ -2842,7 +2854,7 @@ const EXPORT = (function () {
     for (const s of c.skills) push('- ' + s.name + ' (' + s.tier + ')' + (s.unlikely ? ', an unlikely thing for one of their station' : ''));
     push('');
     push('## Possessions');
-    for (const p of c.possessions) push('- ' + p.item + ', ' + p.price);
+    for (const p of c.possessions) push('- ' + p.item + ' (' + priceLabel(p.price) + ')');
     push('');
     push('## People');
     for (const r of c.relationships) push('- **' + r.name + '**, ' + r.tie + ', ' + r.tension);
@@ -3020,7 +3032,7 @@ const EXPORT = (function () {
     return lines.join('\n');
   }
 
-  return { toMarkdown, toJSON, toPNG, download, companySummaryHTML, companyMarkdown, companyTitle, itemMarkdown };
+  return { toMarkdown, toJSON, toPNG, download, companySummaryHTML, companyMarkdown, companyTitle, itemMarkdown, priceLabel };
 })();
 
 /* ---------- AI (optional, user-triggered; key lives in localStorage only) ---------- */
@@ -3270,7 +3282,7 @@ if (typeof document !== 'undefined') (function () {
       row('touch', 'The Touch', esc(c.touch.manifestation) + '<br><em>Or, as the sensible say: ' + esc(c.touch.mundaneExplanation) + '</em>'),
     ]));
     secs.push(section('Skills', [row('skills', 'Skills', list(c.skills.map(s => s.name + ' (' + s.tier + ')' + (s.unlikely ? ', unlikely for their station' : ''))))]));
-    secs.push(section('Possessions', [row('possessions', 'Possessions', list(c.possessions.map(p => p.item + ', ' + p.price)))]));
+    secs.push(section('Possessions', [row('possessions', 'Possessions', list(c.possessions.map(p => p.item + ' (' + EXPORT.priceLabel(p.price) + ')')))]));
     secs.push(section('People', [row('relationships', 'People', list(c.relationships.map(r => r.name + ', ' + r.tie + ', ' + r.tension)))]));
     secs.push(section('The secret', [row('secret', 'Secret', esc(c.secret) + '.')]));
     secs.push(section('The wound in the world', [row('problem', 'Problem', esc(c.problem) + '.')]));
