@@ -119,6 +119,15 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 #print-summary .sum-secret { font-size: 9px; font-style: italic; color: #333; }
 #print-summary .sum-foot { margin-top: 6px; font-size: 8.5px; color: #666; font-style: italic; }
 
+/* ---- homebrew item card ---- */
+#item-box { text-align: left; border: 2px solid var(--accent); background: rgba(255,252,240,.6); padding: .7rem .9rem; margin-top: 1rem; font-size: .86rem; }
+#item-box h3 { font-family: var(--serif-display); font-variant: small-caps; margin: 0 0 .1rem; font-size: 1.15rem; }
+#item-box .item-meta { font-style: italic; color: var(--ink-soft); margin-bottom: .35rem; }
+#item-box ul { margin: .25rem 0 0; padding-left: 1.1rem; }
+#item-box li { margin-bottom: .18rem; }
+#item-box .item-curse { color: #7a1d1d; font-weight: bold; }
+.srd-note { font-size: .68rem; color: var(--ink-soft); font-style: italic; margin-top: .4rem; }
+
 /* ---- company strip ---- */
 #group-strip { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-bottom: .9rem; }
 .member-card { width: 88px; cursor: pointer; border: 1.5px solid var(--rule); background: rgba(255,252,240,.5); padding: .25rem .25rem .35rem; }
@@ -164,6 +173,18 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
       <button id="generate-btn">Generate</button>
       <button id="reroll-btn">Reroll (new seed)</button>
       <button id="copy-link-btn">Copy share link</button>
+    </div>
+    <div class="group">
+      <label for="rules-mode">Rules</label>
+      <select id="rules-mode">
+        <option value="grim">Grim low-fantasy</option>
+        <option value="5e">D&amp;D 5e (SRD)</option>
+      </select>
+    </div>
+    <div class="group">
+      <label>Homebrew item (5e)</label>
+      <button id="item-btn">Roll an item</button>
+      <button id="item-clear-btn">Clear item</button>
     </div>
     <div class="group">
       <label>Company</label>
@@ -212,6 +233,7 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
     <div id="char-sub"></div>
     <div id="blazon"></div>
     <div id="violation-note"></div>
+    <div id="item-box" style="display:none"></div>
     <div id="tale-controls"><button id="tale-btn" disabled>Write the tale</button></div>
     <div id="tale-box" style="display:none"><div id="tale-out"></div></div>
     <div id="tale-err"></div>
@@ -1310,6 +1332,231 @@ DATA.cadency = [
 DATA.markPlaces = ['burned into the lintel and every gatepost', 'scratched on the tools and the byre door', 'notched into the boundary willows', 'chalked fresh on the cart each market day', 'branded on the cattle’s left horn', 'cut into the boat’s stem-post'];
 
 Object.freeze(DATA);
+/* ============================== DATA5E ==============================
+   D&D 5e mode tables. Mechanics and game terms herein are drawn from the
+   Systems Reference Document 5.1 by Wizards of the Coast LLC, available
+   under the Creative Commons Attribution 4.0 International License
+   (https://creativecommons.org/licenses/by/4.0/legalcode). Setting lore
+   stays this generator's own invented world — no campaign-setting IP.  */
+'use strict';
+
+const DATA5E = {};
+DATA5E.ATTRIBUTION = 'Uses material from the System Reference Document 5.1 by Wizards of the Coast LLC, licensed under CC-BY-4.0.';
+
+/* ---- Races (SRD). Weighted so humans stay the norm — the grim world persists. */
+DATA5E.races = [
+  { w: 48, v: { key: 'human', label: 'Human', bonus: { str: 1, dex: 1, con: 1, int: 1, wis: 1, cha: 1 }, speed: 30, size: 'Medium', note: 'as common as mud, and as varied' } },
+  { w: 12, v: { key: 'dwarf', label: 'Dwarf (hill)', bonus: { con: 2, wis: 1 }, speed: 25, size: 'Medium', note: 'darkvision; resilient against poison; never forgets a debt or a seam of ore' } },
+  { w: 10, v: { key: 'elf', label: 'Elf (high)', bonus: { dex: 2, int: 1 }, speed: 30, size: 'Medium', note: 'darkvision; trances instead of sleeping; unsettles the parish' } },
+  { w: 8, v: { key: 'halfling', label: 'Halfling (lightfoot)', bonus: { dex: 2, cha: 1 }, speed: 25, size: 'Small', note: 'lucky; brave; underfoot and underestimated' } },
+  { w: 6, v: { key: 'halfelf', label: 'Half-elf', bonus: { cha: 2, dex: 1, wis: 1 }, speed: 30, size: 'Medium', note: 'darkvision; belongs wholly to neither kin, and both remind them' } },
+  { w: 5, v: { key: 'halforc', label: 'Half-orc', bonus: { str: 2, con: 1 }, speed: 30, size: 'Medium', note: 'darkvision; relentless endurance; the village watches their temper, unfairly' } },
+  { w: 4, v: { key: 'gnome', label: 'Gnome (rock)', bonus: { int: 2, con: 1 }, speed: 25, size: 'Small', note: 'darkvision; cunning with contraptions the guild calls unnatural' } },
+  { w: 3, v: { key: 'dragonborn', label: 'Dragonborn', bonus: { str: 2, cha: 1 }, speed: 30, size: 'Medium', note: 'a breath weapon and scales; strangers cross the road, then come asking favours' } },
+  { w: 2, v: { key: 'tiefling', label: 'Tiefling', bonus: { cha: 2, int: 1 }, speed: 30, size: 'Medium', note: 'darkvision; hellish resistance; the Kirk baptised them twice, to be sure' } },
+];
+
+/* ---- Classes (SRD 12), weighted toward the martial and the sneaky. -----------
+   statPriority orders ability assignment; ac is a plain baseline for the sheet. */
+DATA5E.classes = [
+  { w: 14, v: { key: 'fighter', label: 'Fighter', hitDie: 10, statPriority: ['str', 'con', 'dex', 'wis', 'cha', 'int'], saves: 'Str, Con', ac: 16, acNote: 'chain mail and shield' } },
+  { w: 12, v: { key: 'rogue', label: 'Rogue', hitDie: 8, statPriority: ['dex', 'con', 'int', 'wis', 'cha', 'str'], saves: 'Dex, Int', ac: 12, acNote: 'leather armor', dexAc: true } },
+  { w: 10, v: { key: 'cleric', label: 'Cleric', hitDie: 8, statPriority: ['wis', 'con', 'str', 'cha', 'dex', 'int'], saves: 'Wis, Cha', ac: 15, acNote: 'scale mail and shield' } },
+  { w: 9, v: { key: 'ranger', label: 'Ranger', hitDie: 10, statPriority: ['dex', 'wis', 'con', 'str', 'int', 'cha'], saves: 'Str, Dex', ac: 13, acNote: 'studded leather', dexAc: true } },
+  { w: 8, v: { key: 'barbarian', label: 'Barbarian', hitDie: 12, statPriority: ['str', 'con', 'dex', 'wis', 'cha', 'int'], saves: 'Str, Con', ac: 13, acNote: 'unarmored defense', dexAc: true } },
+  { w: 7, v: { key: 'bard', label: 'Bard', hitDie: 8, statPriority: ['cha', 'dex', 'con', 'wis', 'int', 'str'], saves: 'Dex, Cha', ac: 12, acNote: 'leather armor', dexAc: true } },
+  { w: 7, v: { key: 'druid', label: 'Druid', hitDie: 8, statPriority: ['wis', 'con', 'dex', 'int', 'cha', 'str'], saves: 'Int, Wis', ac: 13, acNote: 'leather and a wooden shield' } },
+  { w: 6, v: { key: 'monk', label: 'Monk', hitDie: 8, statPriority: ['dex', 'wis', 'con', 'str', 'int', 'cha'], saves: 'Str, Dex', ac: 13, acNote: 'unarmored defense', dexAc: true } },
+  { w: 6, v: { key: 'paladin', label: 'Paladin', hitDie: 10, statPriority: ['str', 'cha', 'con', 'wis', 'dex', 'int'], saves: 'Wis, Cha', ac: 16, acNote: 'chain mail and shield' } },
+  { w: 6, v: { key: 'wizard', label: 'Wizard', hitDie: 6, statPriority: ['int', 'con', 'dex', 'wis', 'cha', 'str'], saves: 'Int, Wis', ac: 10, acNote: 'no armor; mage armor when it matters', dexAc: true } },
+  { w: 5, v: { key: 'sorcerer', label: 'Sorcerer', hitDie: 6, statPriority: ['cha', 'con', 'dex', 'wis', 'int', 'str'], saves: 'Con, Cha', ac: 10, acNote: 'no armor', dexAc: true } },
+  { w: 5, v: { key: 'warlock', label: 'Warlock', hitDie: 8, statPriority: ['cha', 'con', 'dex', 'wis', 'int', 'str'], saves: 'Wis, Cha', ac: 12, acNote: 'leather armor', dexAc: true } },
+];
+
+/* Levels weighted low: most folk who take up the sword die at the bottom of the ladder. */
+DATA5E.levels = [
+  { w: 20, v: 1 }, { w: 18, v: 2 }, { w: 16, v: 3 }, { w: 12, v: 4 }, { w: 10, v: 5 },
+  { w: 7, v: 6 }, { w: 5, v: 7 }, { w: 4, v: 8 }, { w: 3, v: 9 }, { w: 2, v: 10 }, { w: 1, v: 11 }, { w: 1, v: 12 },
+];
+
+DATA5E.alignments = [
+  { w: 14, v: 'Neutral Good' }, { w: 13, v: 'Lawful Neutral' }, { w: 13, v: 'True Neutral' },
+  { w: 12, v: 'Lawful Good' }, { w: 11, v: 'Chaotic Good' }, { w: 11, v: 'Chaotic Neutral' },
+  { w: 7, v: 'Neutral Evil' }, { w: 5, v: 'Lawful Evil' }, { w: 2, v: 'Chaotic Evil' },
+];
+
+/* Background derived from the generated life, not rolled fresh — the grim
+   biography IS the background story. Checked top to bottom, first match wins. */
+DATA5E.backgroundRules = [
+  { test: c => c.socialClass.key === 'clergy', v: 'Acolyte' },
+  { test: c => /mercenary|knight|squire|watchman/i.test(c.occupation.name), v: 'Soldier' },
+  { test: c => /poacher|ratcatcher/i.test(c.occupation.name) || c.socialClass.key === 'outcast', v: 'Criminal' },
+  { test: c => /fisher|boat|ferry|salt-panner|eel/i.test(c.occupation.name), v: 'Sailor' },
+  { test: c => /shepherd|charcoal|huntsman|falconer|fowler|woodcutter|drover/i.test(c.occupation.name), v: 'Outlander' },
+  { test: c => /merchant|moneychanger|innkeeper/i.test(c.occupation.name), v: 'Merchant' },
+  { test: c => c.socialClass.tier >= 4, v: 'Noble' },
+  { test: c => ['craftsman', 'burgher'].includes(c.socialClass.key), v: 'Guild Artisan' },
+  { test: c => /herb-woman|midwife|apothecary/i.test(c.occupation.name), v: 'Hermit' },
+  { test: c => c.education.label === 'scholar' || c.education.label === 'Kirk-schooled', v: 'Sage' },
+  { test: () => true, v: 'Folk Hero' },
+];
+
+/* ============================== Homebrew items ==============================
+   The friend-shaped feature. Every item gets: a name, a form, a rarity, an
+   effect scaled to rarity, a quirk (personality), sometimes a curse, a price,
+   and a history hook. Concrete nouns, never "magic sword".                  */
+
+DATA5E.itemCategories = [
+  { w: 22, v: 'weapon' }, { w: 12, v: 'armor' }, { w: 30, v: 'wondrous' },
+  { w: 12, v: 'potion' }, { w: 8, v: 'ring' }, { w: 8, v: 'wand' }, { w: 6, v: 'staff' },
+];
+DATA5E.itemForms = {
+  weapon: ['longsword', 'dagger', 'warhammer', 'spear', 'longbow', 'battleaxe', 'mace', 'glaive', 'rapier', 'sling', 'light crossbow', 'quarterstaff', 'flail', 'handaxe', 'greatsword', 'scythe', 'billhook'],
+  armor: ['shield', 'chain shirt', 'leather cuirass', 'breastplate', 'open helm', 'pair of gauntlets', 'scale mail', 'buckler', 'padded gambeson', 'pair of greaves'],
+  wondrous: ['cloak', 'pair of boots', 'belt', 'pair of gloves', 'amulet', 'iron mask', 'horn lantern', 'hand mirror', 'hunting horn', 'tabor drum', 'set of knucklebone dice', 'brass censer', 'hourglass', 'iron key', 'psalter', 'goose quill', 'coil of rope', 'saddle', 'whetstone', 'bone comb', 'small bell', 'wax candle', 'fishhook', 'sewing needle', 'drinking horn', 'millstone pendant'],
+  potion: ['stoppered potion', 'oil', 'philter', 'salve', 'bitter draught', 'elixir', 'powder in a twist of paper', 'waxed flask'],
+  ring: ['iron ring', 'silver ring', 'braided-hair ring', 'signet ring', 'bone ring', 'thumb ring'],
+  wand: ['hazel wand', 'bone wand', 'blackened wand', 'copper-wound wand', 'holly wand'],
+  staff: ['oak staff', 'crook-headed staff', 'iron-shod staff', 'pilgrim’s staff', 'ashwood staff'],
+};
+DATA5E.rarities = [
+  { w: 28, v: { key: 'common', label: 'common', attune: 0.05, price: '25–75 gp' } },
+  { w: 38, v: { key: 'uncommon', label: 'uncommon', attune: 0.3, price: '100–450 gp' } },
+  { w: 23, v: { key: 'rare', label: 'rare', attune: 0.55, price: '500–4,500 gp' } },
+  { w: 8, v: { key: 'veryRare', label: 'very rare', attune: 0.8, price: '5,000–45,000 gp' } },
+  { w: 3, v: { key: 'legendary', label: 'legendary', attune: 0.9, price: 'beyond honest coin' } },
+];
+/* Effects tagged by category + minimum rarity tier (0 common .. 4 legendary). */
+DATA5E.itemEffects = [
+  // weapons
+  { cat: 'weapon', min: 1, v: 'grants a +1 bonus to attack and damage rolls made with it' },
+  { cat: 'weapon', min: 2, v: 'grants a +2 bonus to attack and damage rolls made with it' },
+  { cat: 'weapon', min: 4, v: 'grants a +3 bonus to attack and damage rolls made with it' },
+  { cat: 'weapon', min: 1, v: 'deals an extra 1d4 cold damage; struck creatures exhale winter for a moment' },
+  { cat: 'weapon', min: 2, v: 'deals an extra 1d6 fire damage, and wet wood struck by it still catches' },
+  { cat: 'weapon', min: 1, v: 'counts as magical, and cannot rust, chip, or dull by any mundane means' },
+  { cat: 'weapon', min: 2, v: 'scores a critical hit on a 19 or 20 against creatures that have lied to the wielder today' },
+  { cat: 'weapon', min: 1, v: 'returns to the wielder’s hand when thrown, taking the shortest path even through a crowd' },
+  { cat: 'weapon', min: 2, v: 'sheds no sound when it strikes — the blow lands in perfect, unsettling silence' },
+  { cat: 'weapon', min: 3, v: 'once per dawn, the wielder may reroll one missed attack made with it; the second try always looks like luck' },
+  { cat: 'weapon', min: 2, v: 'the wielder has advantage on attack rolls against undead, who seem to remember it' },
+  { cat: 'weapon', min: 3, v: 'wounds it deals cannot be healed by magic until the wielder consents aloud' },
+  { cat: 'weapon', min: 1, v: 'always points north when balanced on a finger, and always points at graves when set down' },
+  // armor
+  { cat: 'armor', min: 1, v: 'grants a +1 bonus to AC' },
+  { cat: 'armor', min: 3, v: 'grants a +2 bonus to AC' },
+  { cat: 'armor', min: 1, v: 'the wearer has advantage on saving throws against poison' },
+  { cat: 'armor', min: 2, v: 'the wearer has resistance to fire damage; it is always cool to the touch, even off the forge' },
+  { cat: 'armor', min: 1, v: 'weighs nothing once donned, though it fights like a sack of anvils against anyone else putting it on' },
+  { cat: 'armor', min: 2, v: 'arrows that miss the wearer land point-down in a neat ring around them' },
+  { cat: 'armor', min: 3, v: 'once per dawn, when the wearer drops to 0 hit points, they drop to 1 instead and taste woodsmoke' },
+  { cat: 'armor', min: 2, v: 'the wearer cannot be knocked prone while standing on tilled earth' },
+  { cat: 'armor', min: 1, v: 'sheds mud, blood, and gossip: no stain sticks to it, and no bystander quite remembers its wearer' },
+  // wondrous
+  { cat: 'wondrous', min: 1, v: 'once per dawn, the bearer may cast a fog that smells of low tide, filling a 20-foot cube for 10 minutes' },
+  { cat: 'wondrous', min: 1, v: 'the bearer has advantage on Wisdom (Perception) checks that rely on hearing; they also hear every unkind whisper' },
+  { cat: 'wondrous', min: 2, v: 'the bearer can speak with domestic animals at dusk; the animals are under no obligation to be helpful' },
+  { cat: 'wondrous', min: 1, v: 'holds one candle’s worth of light that can be poured out like water and scooped back up' },
+  { cat: 'wondrous', min: 2, v: 'once per dawn, the bearer may know one true thing the last person to touch it believed' },
+  { cat: 'wondrous', min: 2, v: 'the bearer leaves no tracks on snow, sand, or fresh graves' },
+  { cat: 'wondrous', min: 3, v: 'once per dawn, the bearer may exchange glances with anyone they can see and swap places with them; both remember agreeing to it' },
+  { cat: 'wondrous', min: 1, v: 'bread does not mould, milk does not sour, and meat does not turn within 10 feet of it' },
+  { cat: 'wondrous', min: 2, v: 'the bearer needs half the usual sleep, and someone else somewhere sleeps twice as much' },
+  { cat: 'wondrous', min: 3, v: 'the bearer has advantage on death saving throws; the item grows heavier each time it helps' },
+  { cat: 'wondrous', min: 1, v: 'when opened, played, or worn, it repeats the last words spoken over it, in the original voice' },
+  { cat: 'wondrous', min: 2, v: 'the bearer can always find north, running water, and the nearest unmarked grave' },
+  { cat: 'wondrous', min: 4, v: 'once, and only once, it will refuse a death meant for its bearer; it knows which one' },
+  { cat: 'wondrous', min: 2, v: 'rope, chain, and knots within reach loosen for the bearer and tighten for their enemies' },
+  { cat: 'wondrous', min: 1, v: 'any door the bearer knocks on three times will sound occupied, whether or not anyone is home' },
+  // potions
+  { cat: 'potion', min: 0, v: 'restores 2d4+2 hit points, and the drinker briefly smells their childhood kitchen' },
+  { cat: 'potion', min: 1, v: 'grants resistance to cold damage for 1 hour; the drinker’s breath stops fogging entirely' },
+  { cat: 'potion', min: 1, v: 'the drinker speaks and understands all languages for 1 hour, with a strong marsh accent in every one' },
+  { cat: 'potion', min: 2, v: 'the drinker becomes invisible for 10 minutes or until they attack, lie, or laugh' },
+  { cat: 'potion', min: 1, v: 'for 8 hours the drinker cannot become lost, though they may still be somewhere they should not be' },
+  { cat: 'potion', min: 2, v: 'the drinker gains the effect of water breathing for 1 hour and a powerful craving for eels' },
+  { cat: 'potion', min: 0, v: 'cures one disease, which leaves the body as a thin grey smoke that dogs refuse to walk through' },
+  { cat: 'potion', min: 2, v: 'for 1 minute the drinker’s Strength counts as 21; their grandmother’s opinions count as audible' },
+  { cat: 'potion', min: 1, v: 'the next lie told to the drinker within an hour tastes, to them, of vinegar' },
+  { cat: 'potion', min: 3, v: 'the drinker may ask one question of the next corpse they touch, as the speak with dead spell' },
+  // rings
+  { cat: 'ring', min: 1, v: 'the wearer has advantage on saving throws against being frightened; their heartbeat is inaudible even to themselves' },
+  { cat: 'ring', min: 2, v: 'once per dawn the wearer may cast disguise self; the disguise always shares the wearer’s eyes' },
+  { cat: 'ring', min: 1, v: 'the wearer’s hands stay warm in any cold, and every handshake is remembered vividly by the other party' },
+  { cat: 'ring', min: 2, v: 'the wearer does not need to breathe while their lips stay shut' },
+  { cat: 'ring', min: 3, v: 'stores up to 3 levels of spells cast into it, as a ring of spell storing; stored spells whisper' },
+  { cat: 'ring', min: 2, v: 'the wearer knows the direction of the nearest person who owes them money' },
+  { cat: 'ring', min: 1, v: 'tightens gently when the wearer is about to break a promise' },
+  // wands
+  { cat: 'wand', min: 1, v: 'has 7 charges; expend 1 to cast magic missile at 1st level. It regains 1d6+1 charges at dawn and hums off-key while doing so' },
+  { cat: 'wand', min: 2, v: 'has 3 charges; expend 1 to cast web. Regains all charges at dawn. Spiders treat the bearer with visible professional respect' },
+  { cat: 'wand', min: 1, v: 'points, when asked aloud, at the nearest thing its bearer has lost; it has opinions about what counts as lost' },
+  { cat: 'wand', min: 2, v: 'has 5 charges; expend 1 to cast fog cloud, which always smells faintly of funerals' },
+  { cat: 'wand', min: 3, v: 'has 6 charges; expend 2 to cast fireball at 3rd level. Each use leaves the bearer smelling of a different burned thing' },
+  // staves
+  { cat: 'staff', min: 1, v: 'can be commanded to stand upright and unmovable, bearing up to 400 pounds, until told otherwise' },
+  { cat: 'staff', min: 2, v: 'has 10 charges; expend 1 to cast cure wounds at 1st level. Regains 1d6+4 at dawn if left overnight in running water' },
+  { cat: 'staff', min: 2, v: 'while held, the bearer may cast druidcraft at will, and local weather takes their moods slightly personally' },
+  { cat: 'staff', min: 3, v: 'has 8 charges; expend 2 to cast call lightning. Thunder in the region arrives a beat early, as if introduced' },
+  { cat: 'staff', min: 1, v: 'never slips, never rots, and floats — carrying its bearer’s pack — at a walking pace behind them on the road' },
+];
+DATA5E.itemQuirks = [
+  'hums old marching songs, badly, when danger is within a mile',
+  'is always slightly warm, as if recently held by someone else',
+  'smells of rain about to fall',
+  'its former owner’s initials surface in the grain when it gets wet',
+  'refuses to be sold: every transaction involving coin for it falls through',
+  'casts a shadow a half-second behind its movements',
+  'small birds regard it with open suspicion',
+  'weighs noticeably more on holy days',
+  'whispers the bearer’s name, once, on first touch — then never speaks again',
+  'attracts moths, which do it no harm and pay it obvious court',
+  'is always the last thing lit by a sunset in any room',
+  'tastes of salt if licked, which the previous owner’s journal warns against twice',
+  'dreams — anyone sleeping within arm’s reach shares a recurring dream of a ford in winter',
+  'will not cross a threshold sprinkled with salt unless carried backwards',
+  'keeps its bearer’s hands clean: dirt simply prefers to be elsewhere',
+  'sulks — after a day of disuse its effects arrive a breath later than asked',
+  'is inexplicably known, by name, to every dog in any village the bearer enters',
+  'collects frost on its surface when a lie is told nearby',
+  'grows lighter as the bearer’s debts are paid, and heavier as they accrue',
+  'once a season, is briefly seen — by the bearer alone — in the hands of a stranger in a crowd',
+];
+DATA5E.itemCurses = [
+  'Curse: the bearer cannot speak the item’s true name aloud; attempts come out as the name of a childhood friend',
+  'Curse: while attuned, the bearer’s reflection lags by a heartbeat and occasionally declines to appear',
+  'Curse: the item must be fed — a coin buried at a crossroads each new moon — or its effect inverts until paid',
+  'Curse: the bearer always knows exactly how many days they have been alive, and the number feels like a countdown',
+  'Curse: whoever the bearer loves best dreams of the item and wakes reaching for it',
+  'Curse: while attuned, the bearer cannot refuse hospitality — any offered roof, meal, or toast must be accepted',
+  'Curse: wounds the bearer deals scar in the shape of the item’s silhouette, which witnesses remember',
+  'Curse: the item is owed one service, unspecified; it will make its claim at the least convenient hour',
+  'Curse: salt loses its taste for the bearer, and sanctified ground itches faintly underfoot',
+  'Curse: the previous owner is looking for it, is not alive, and is not in a hurry',
+  'Curse: each dawn there is a 1-in-20 chance the item has swapped places with the most valuable thing the bearer carries',
+  'Curse: the bearer’s name migrates to the item — strangers recall meeting the sword, not the swordsman',
+];
+DATA5E.itemNameNouns = ['Embers', 'the Drowned Court', 'Silence', 'the Ninth Winter', 'Thorns', 'the Pale Hunt', 'Last Light', 'the Salt Road', 'Crows', 'the Broken Bell', 'Mercy', 'the Long Fast', 'Sparrows', 'the Old Dyke', 'Patience', 'the Red Harvest', 'Cinders', 'the Quiet Ford', 'Oaths', 'the Gallows Oak'];
+DATA5E.itemNameAdjectives = ['Sallow', 'Threadbare', 'Unforgiving', 'Wakeless', 'Hungering', 'Sunward', 'Miser’s', 'Tithing', 'Winterborn', 'Griefbound', 'Coalbright', 'Fenwrought', 'Sexton’s', 'Vagrant', 'Steadfast'];
+DATA5E.itemHistories = [
+  'taken from a barrow that has since been found empty, doors open outward',
+  'guild-stamped, though the guild in question denies ever making such a thing',
+  'listed in an abbey inventory for two hundred years; the inventory now omits the line',
+  'won at dice from a stranger who paid the debt smiling and left no footprints in the mud',
+  'pulled from the mill-race the spring the miller vanished, oiled and dry',
+  'a wedding gift, by tradition regifted at every wedding since, always by the widowed',
+  'dug up by a plough within living memory, along with teeth that fit no known jaw',
+  'carried through the sack of Croixhaut by a soldier who swears it carried him',
+  'said to have been made as one of a pair; the other is accounted for, which is worse',
+  'bought honestly, at fair price, with a receipt — which everyone agrees is the strangest thing about it',
+  'left at the church door in a fish basket, like a foundling, with a note no one admits to reading',
+  'the only thing to survive the Great Burning unscorched, found at the fire’s exact centre',
+  'a saint’s relic by local insistence, a stolen trade-good by the Kirk’s quiet ledger',
+  'recovered from a wreck at neap tide; the salvage-right lawsuit outlived three claimants',
+  'passed down the female line for five generations with the same warning, now garbled: "not in April"',
+];
+
+Object.freeze(DATA5E);
 /* ============================== GEN ==============================
    Generation pipeline. Strict order (§2): each step may narrow later pools.
    Locks: state paths whose values survive a reroll; the pipeline consumes
@@ -1318,7 +1565,7 @@ Object.freeze(DATA);
 'use strict';
 
 const GEN = (function () {
-  const VERSION = '1.3.0';
+  const VERSION = '1.4.0';
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
@@ -1633,8 +1880,88 @@ const GEN = (function () {
     /* -- 19. Portrait params -------------------------------------------------------- */
     L('portrait', () => PORTRAIT.generateParams(rng, c));
 
+    /* -- 20 (optional). D&D 5e layer (SRD, CC-BY-4.0) -------------------------------
+       Drawn from a SEPARATE seeded stream so the base character is byte-identical
+       whichever rules mode is active — the toggle adds a layer, never a reroll.   */
+    if (opts.mode === '5e') {
+      L('fiveE', () => gen5e(c, makeRng(seedStr + ':5e')));
+      c.portrait.race = c.fiveE.race.key;
+      if (c.fiveE.race.key === 'dwarf' && c.sex === 'male' && c.portrait.beard === 'none') c.portrait.beard = 'full';
+    }
+
     validate(c, clamp, locks);
     return c;
+  }
+
+  /* The adventurer layer: race, class, level, abilities (4d6 drop lowest,
+     assigned by class priority, racial bonuses applied), and a background
+     DERIVED from the generated life rather than rolled fresh. */
+  function gen5e(c, rng) {
+    const race = deepClone(pick(rng, DATA5E.races, '5e:race'));
+    const klass = deepClone(pick(rng, DATA5E.classes, '5e:class'));
+    const level = pick(rng, DATA5E.levels, '5e:level');
+    const alignment = pick(rng, DATA5E.alignments, '5e:alignment');
+    // 4d6 drop lowest, six times, best scores to the class's priorities.
+    const rolls = [];
+    for (let i = 0; i < 6; i++) {
+      const dice = [roll(rng, 1, 6), roll(rng, 1, 6), roll(rng, 1, 6), roll(rng, 1, 6)].sort((a, b) => b - a);
+      rolls.push(dice[0] + dice[1] + dice[2]);
+    }
+    rolls.sort((a, b) => b - a);
+    const abilities = {};
+    klass.statPriority.forEach((stat, i) => { abilities[stat] = rolls[i] + (race.bonus[stat] || 0); });
+    const mod = s => Math.floor((abilities[s] - 10) / 2);
+    const mods = {};
+    for (const s of ['str', 'dex', 'con', 'int', 'wis', 'cha']) mods[s] = mod(s);
+    const prof = 2 + Math.floor((level - 1) / 4);
+    const hp = Math.max(level, klass.hitDie + mods.con + (level - 1) * (Math.floor(klass.hitDie / 2) + 1 + mods.con));
+    const ac = klass.ac + (klass.dexAc ? Math.max(0, mods.dex) : 0);
+    const background = DATA5E.backgroundRules.find(r => r.test(c)).v;
+    return {
+      race, class: { key: klass.key, label: klass.label, hitDie: klass.hitDie, saves: klass.saves, acNote: klass.acNote },
+      level, alignment, abilities, mods, prof, hp, ac, background,
+      attribution: DATA5E.ATTRIBUTION,
+    };
+  }
+
+  /* ---- Homebrew item generator (the good randomizer). Pure function of seed. ---- */
+  const RARITY_ORDER = ['common', 'uncommon', 'rare', 'veryRare', 'legendary'];
+  function generateItem(seedStr) {
+    const rng = makeRng(seedStr + ':item');
+    const category = pick(rng, DATA5E.itemCategories, 'item:category');
+    const form = pick(rng, DATA5E.itemForms[category], 'item:form');
+    const rarity = deepClone(pick(rng, DATA5E.rarities, 'item:rarity'));
+    const tier = RARITY_ORDER.indexOf(rarity.key);
+    // Common non-potions carry no mechanical effect — the quirk IS the magic.
+    const pool = DATA5E.itemEffects.filter(e => e.cat === category && e.min <= tier);
+    const effects = [];
+    if (pool.length) {
+      effects.push(pick(rng, pool.map(e => ({ w: 1, v: e.v })), 'item:effect'));
+      if (tier >= 2 && chance(rng, 0.35)) {
+        const rest = pool.filter(e => e.v !== effects[0]);
+        if (rest.length) effects.push(pick(rng, rest.map(e => ({ w: 1, v: e.v })), 'item:effect2'));
+      }
+    }
+    const attunement = chance(rng, rarity.attune);
+    const quirk = pick(rng, DATA5E.itemQuirks, 'item:quirk');
+    const curse = (tier >= 1 && chance(rng, 0.15)) ? pick(rng, DATA5E.itemCurses, 'item:curse') : null;
+    // Name: strip "pair of"/"set of" so "The Sallow Boots" beats "The Sallow Pair of Boots".
+    const short = form.replace(/^(pair|set|coil|twist) of /, '').replace(/ in a .*$/, '');
+    const title = short.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const pattern = roll(rng, 1, 3);
+    let name;
+    if (pattern === 1) name = 'The ' + pick(rng, DATA5E.itemNameAdjectives, 'item:adj') + ' ' + title;
+    else if (pattern === 2) name = title + ' of ' + pick(rng, DATA5E.itemNameNouns, 'item:noun');
+    else {
+      const culture = pick(rng, Object.keys(DATA.names), 'item:culture');
+      name = givenName(rng, culture, pick(rng, DATA.sexes, 'item:ownerSex')) + '’s ' + title;
+    }
+    const history = pick(rng, DATA5E.itemHistories, 'item:history');
+    return {
+      seed: seedStr, version: VERSION, name, category, form,
+      rarity: rarity.label, attunement, effects, quirk, curse, history, price: rarity.price,
+      attribution: DATA5E.ATTRIBUTION,
+    };
   }
 
   /* Byname formation — all five rules (§3.6), weighted, derived from own fields. */
@@ -1738,14 +2065,14 @@ const GEN = (function () {
     }
   }
 
-  function generateGroup(seedStr, kind) {
+  function generateGroup(seedStr, kind, mode) {
     const g = makeRng(seedStr + ':' + kind);
-    if (kind === 'warband') return genWarband(seedStr, g);
-    if (kind === 'settlement') return genSettlement(seedStr, g);
-    return genHousehold(seedStr, g);
+    if (kind === 'warband') return genWarband(seedStr, g, mode);
+    if (kind === 'settlement') return genSettlement(seedStr, g, mode);
+    return genHousehold(seedStr, g, undefined, mode);
   }
 
-  function genHousehold(seedStr, g, regionKey) {
+  function genHousehold(seedStr, g, regionKey, mode) {
     const members = [];
     // Head: an adult householder; clergy and outcasts don't head hearth-households.
     const classKey = pick(g, DATA.classes.filter(e => e.v.key !== 'clergy' && e.v.key !== 'outcast')
@@ -1756,6 +2083,7 @@ const GEN = (function () {
     const headAge = roll(g, Math.max(headBracket.min, 22), headBracket.max);
     const widowed = chance(g, 0.12);
     const head = generate(seedStr + ':head', {
+      mode,
       overrides: { socialClass: classKey, region: regionKey },
       locks: { ageBracket: deepClone(headBracket), age: headAge, marital: widowed ? 'widowed' : 'wed' },
     });
@@ -1765,6 +2093,7 @@ const GEN = (function () {
     if (!widowed) {
       const spouseAge = Math.max(17, headAge - 6 + roll(g, 0, 9));
       spouse = generate(seedStr + ':spouse', {
+        mode,
         overrides: { region: head.region.key, socialClass: classKey, sex: head.sex === 'male' ? 'female' : 'male' },
         locks: { culture: head.culture, ageBracket: bracketFor(spouseAge), age: spouseAge, marital: 'wed', problem: head.problem },
       });
@@ -1798,6 +2127,7 @@ const GEN = (function () {
           order: idx + 1,
         };
         const child = generate(seedStr + ':child' + (idx + 1), {
+          mode,
           overrides: { region: head.region.key, socialClass: classKey, sex: sexes[idx] },
           locks: { culture: head.culture, ageBracket: bracketFor(age), age, marital: 'unwed', family, birth, problem: head.problem },
         });
@@ -1822,11 +2152,12 @@ const GEN = (function () {
     return { kind: 'household', seed: seedStr, version: VERSION, members };
   }
 
-  function genWarband(seedStr, g) {
+  function genWarband(seedStr, g, mode) {
     const members = [];
     const leaderClass = pick(g, [{ w: 4, v: 'knightly' }, { w: 3, v: 'minorGentry' }, { w: 2, v: 'outcast' }, { w: 2, v: 'freePeasant' }], 'group:leaderClass');
     const leaderAge = roll(g, 26, 48);
     const leader = generate(seedStr + ':leader', {
+      mode,
       overrides: { socialClass: leaderClass, sex: 'male' },
       locks: { ageBracket: bracketFor(leaderAge), age: leaderAge },
     });
@@ -1839,6 +2170,7 @@ const GEN = (function () {
       const age = roll(g, 16, 45);
       const sexOverride = chance(g, 0.85) ? 'male' : undefined;
       const m = generate(seedStr + ':m' + (i + 1), {
+        mode,
         overrides: { region: leader.region.key, socialClass: cls, sex: sexOverride },
         locks: { ageBracket: bracketFor(age), age, problem: leader.problem },
       });
@@ -1862,7 +2194,7 @@ const GEN = (function () {
 
   /* Settlement: a named place with its own facts, notable office-holders
      generated INTO their offices, and full linked households. */
-  function genSettlement(seedStr, g) {
+  function genSettlement(seedStr, g, mode) {
     const region = deepClone(pick(g, DATA.regions, 'settlement:region'));
     const parts = DATA.settlementParts[region.namePool];
     const name = pick(g, parts.pre, 'settlement:name') + pick(g, parts.suf, 'settlement:name');
@@ -1885,6 +2217,7 @@ const GEN = (function () {
       const def = DATA.occupations.find(o => o.name === occName);
       const age = roll(g, Math.max(def.minAge, 24), 58);
       const char = generate(seedStr + ':' + occName.replace(/[^a-z]+/gi, '-'), {
+        mode,
         overrides: { region: region.key, occupation: occName, sex: def.sex !== 'any' ? def.sex : undefined },
         locks: { ageBracket: bracketFor(age), age },
       });
@@ -1895,7 +2228,7 @@ const GEN = (function () {
     // Households, all rooted in this region; each head is tied to one notable.
     const heads = [];
     for (let i = 0; i < size.households; i++) {
-      const h = genHousehold(seedStr + ':h' + (i + 1), makeRng(seedStr + ':h' + (i + 1) + ':household'), region.key);
+      const h = genHousehold(seedStr + ':h' + (i + 1), makeRng(seedStr + ':h' + (i + 1) + ':household'), region.key, mode);
       const head = h.members[0].char;
       heads.push({ label: 'hearth ' + (i + 1), char: head });
       if (notables.length) {
@@ -1942,7 +2275,7 @@ const GEN = (function () {
     return s;
   }
 
-  return { generate, generateGroup, VERSION, getPath, setPath };
+  return { generate, generateGroup, generateItem, VERSION, getPath, setPath };
 })();
 /* ============================== HERALDRY ==============================
    generateParams(rng, c) runs inside the pipeline (consumes seeded draws);
@@ -2418,6 +2751,17 @@ const PORTRAIT = (function () {
     }
     if (p.pox) { for (let i = 0; i < 14; i++) { const a = i * 47 % 360, x = 100 + Math.cos(a) * (16 + i % 12), y = 118 + Math.sin(a) * 10; s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="0.8" fill="' + INK + '" opacity="0.35"/>'; } }
 
+    // Race overlay (5e mode only; p.race is set by the pipeline's 5e layer).
+    if (p.race === 'elf' || p.race === 'halfelf') {
+      s += '<path d="M58,108 L50,96 L62,102 Z M142,108 L150,96 L138,102 Z" fill="#e2d2ae" stroke="' + INK + '" stroke-width="2"/>';
+    } else if (p.race === 'tiefling') {
+      s += '<path d="M74,66 Q66,48 74,34 Q80,48 82,64 Z M126,66 Q134,48 126,34 Q120,48 118,64 Z" fill="#5a4a3a" stroke="' + INK + '" stroke-width="2"/>';
+    } else if (p.race === 'halforc') {
+      s += '<path d="M90,144 L88,136 L94,142 Z M110,144 L112,136 L106,142 Z" fill="#e8e4d8" stroke="' + INK + '" stroke-width="1.4"/>';
+    } else if (p.race === 'dragonborn') {
+      s += '<path d="M70,112 q4,-3 8,0 M66,120 q4,-3 8,0 M72,128 q4,-3 8,0 M122,112 q4,-3 8,0 M126,120 q4,-3 8,0 M120,128 q4,-3 8,0" fill="none" stroke="' + INK + '" stroke-width="1.2" opacity="0.7"/>';
+    }
+
     // Grime / wear pass.
     if (p.grime) {
       s += '<path d="M70,150 Q80,160 92,162" fill="none" stroke="' + INK + '" stroke-width="4" opacity="0.0"/>';
@@ -2483,6 +2827,17 @@ const EXPORT = (function () {
       push('- *Or, as the sensible say:* ' + c.touch.mundaneExplanation);
     }
     push('');
+    if (c.fiveE) {
+      const f = c.fiveE;
+      push('## The adventurer (5e)');
+      push('- ' + f.race.label + ' ' + f.class.label + ', level ' + f.level + ' · ' + f.alignment + ' · background: ' + f.background);
+      push('- STR ' + f.abilities.str + ' · DEX ' + f.abilities.dex + ' · CON ' + f.abilities.con + ' · INT ' + f.abilities.int + ' · WIS ' + f.abilities.wis + ' · CHA ' + f.abilities.cha);
+      push('- HP ' + f.hp + ' · AC ' + f.ac + ' (' + f.class.acNote + ') · proficiency +' + f.prof + ' · saves: ' + f.class.saves + ' · speed ' + f.race.speed + ' ft');
+      push('- ' + f.race.note);
+      push('');
+      push('*' + f.attribution + '*');
+      push('');
+    }
     push('## Skills');
     for (const s of c.skills) push('- ' + s.name + ' (' + s.tier + ')' + (s.unlikely ? ' — an unlikely thing for one of their station' : ''));
     push('');
@@ -2654,7 +3009,18 @@ const EXPORT = (function () {
     return lines.join('\n');
   }
 
-  return { toMarkdown, toJSON, toPNG, download, companySummaryHTML, companyMarkdown, companyTitle };
+  function itemMarkdown(it) {
+    const lines = ['# ' + it.name, ''];
+    lines.push('*' + it.form + ' · ' + it.category + ' · ' + it.rarity + (it.attunement ? ' (requires attunement)' : '') + ' · ' + it.price + '*', '');
+    for (const e of it.effects) lines.push('- ' + e.charAt(0).toUpperCase() + e.slice(1) + '.');
+    lines.push('- Quirk: ' + it.quirk + '.');
+    if (it.curse) lines.push('- **' + it.curse + '.**');
+    lines.push('- History: ' + it.history + '.');
+    lines.push('', '*Seed: `' + it.seed + '` · ' + it.attribution + '*');
+    return lines.join('\n');
+  }
+
+  return { toMarkdown, toJSON, toPNG, download, companySummaryHTML, companyMarkdown, companyTitle, itemMarkdown };
 })();
 
 /* ---------- AI (optional, user-triggered; key lives in localStorage only) ---------- */
@@ -2740,7 +3106,7 @@ const AI = (function () {
 /* ---------- UI ---------- */
 if (typeof document !== 'undefined') (function () {
   const $ = (sel) => document.querySelector(sel);
-  const state = { seed: '', locks: {}, char: null, hoveredPath: null, group: null, sel: 0 };
+  const state = { seed: '', locks: {}, char: null, hoveredPath: null, group: null, sel: 0, mode: 'grim', item: null, itemSeed: null };
 
   function currentDebug() { return /[?&#]debug=1|#debug\b/.test(location.search + location.hash); }
   TRACE.on = currentDebug();
@@ -2756,7 +3122,14 @@ if (typeof document !== 'undefined') (function () {
   function writeHash() {
     history.replaceState(null, '', '#seed=' + encodeURIComponent(state.seed)
       + (state.group ? '&group=' + state.group.kind : '')
+      + (state.mode === '5e' ? '&rules=5e' : '')
+      + (state.item ? '&item=' + encodeURIComponent(state.itemSeed) : '')
       + (currentDebug() ? '&debug=1' : ''));
+  }
+  function modeFromHash() { return /rules=5e/.test(location.hash) ? '5e' : 'grim'; }
+  function itemFromHash() {
+    const m = location.hash.match(/item=([^&]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
   }
 
   function generate(newSeed) {
@@ -2768,7 +3141,7 @@ if (typeof document !== 'undefined') (function () {
       socialClass: $('#ov-class').value || undefined,
       sex: $('#ov-sex').value || undefined,
     };
-    state.char = GEN.generate(state.seed, { locks: state.locks, overrides });
+    state.char = GEN.generate(state.seed, { locks: state.locks, overrides, mode: state.mode });
     $('#seed-input').value = state.seed;
     writeHash();
     renderStrip();
@@ -2780,7 +3153,7 @@ if (typeof document !== 'undefined') (function () {
   function generateGroup(kind, baseSeed) {
     TRACE.rows = [];
     state.seed = baseSeed;
-    state.group = GEN.generateGroup(baseSeed, kind);
+    state.group = GEN.generateGroup(baseSeed, kind, state.mode);
     state.sel = 0;
     state.char = state.group.members[0].char;
     $('#seed-input').value = baseSeed;
@@ -2851,6 +3224,20 @@ if (typeof document !== 'undefined') (function () {
 
     const alive = c.family.siblings.filter(s => s.alive).length;
     const secs = [];
+    if (c.fiveE) {
+      const f = c.fiveE;
+      const ab = f.abilities, md = f.mods;
+      const stat = k => k.toUpperCase() + ' ' + ab[k] + ' (' + (md[k] >= 0 ? '+' : '') + md[k] + ')';
+      secs.push(section('The adventurer (5e)', [
+        row('fiveE', 'Adventurer',
+          '<strong>' + esc(f.race.label) + ' ' + esc(f.class.label) + '</strong>, level ' + f.level + ' · ' + esc(f.alignment) + '<br>' +
+          'Background: ' + esc(f.background) + ' <em>(from the life below)</em><br>' +
+          ['str', 'dex', 'con', 'int', 'wis', 'cha'].map(stat).join(' · ') + '<br>' +
+          'HP ' + f.hp + ' · AC ' + f.ac + ' (' + esc(f.class.acNote) + ') · proficiency +' + f.prof + ' · saves ' + esc(f.class.saves) + ' · speed ' + f.race.speed + ' ft<br>' +
+          '<em>' + esc(f.race.note) + '</em>' +
+          '<div class="srd-note">' + esc(f.attribution) + '</div>'),
+      ]));
+    }
     secs.push(section('Origin', [
       row('region', 'Region', esc(c.region.name) + ' — ' + esc(c.region.terrain) + '. Lives by ' + esc(c.region.economy) + '. In living memory: ' + esc(c.region.disaster) + '.'),
       row('culture', 'Culture', esc(c.culture)),
@@ -2897,6 +3284,28 @@ if (typeof document !== 'undefined') (function () {
     updateTaleButton();
     renderDebug();
     bindRows();
+  }
+
+  function renderItem() {
+    const box = $('#item-box');
+    const it = state.item;
+    if (!it) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = '';
+    box.innerHTML = '<h3>' + esc(it.name) + '</h3>' +
+      '<div class="item-meta">' + esc(it.form) + ' · ' + esc(it.category) + ' · <strong>' + esc(it.rarity) + '</strong>' +
+      (it.attunement ? ' (requires attunement)' : '') + ' · ' + esc(it.price) + '</div>' +
+      '<ul>' + it.effects.map(e => '<li>' + esc(e.charAt(0).toUpperCase() + e.slice(1)) + '.</li>').join('') +
+      '<li>Quirk: ' + esc(it.quirk) + '.</li>' +
+      (it.curse ? '<li class="item-curse">' + esc(it.curse) + '.</li>' : '') +
+      '<li><em>History: ' + esc(it.history) + '.</em></li></ul>' +
+      '<div class="srd-note">seed ' + esc(it.seed) + ' · ' + esc(it.attribution) + '</div>';
+  }
+
+  function rollItem(seed) {
+    state.itemSeed = seed || randomSeed();
+    state.item = GEN.generateItem(state.itemSeed);
+    writeHash();
+    renderItem();
   }
 
   function ordSuffix(n) { return n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'; }
@@ -2965,6 +3374,14 @@ if (typeof document !== 'undefined') (function () {
     $('#seed-input').addEventListener('keydown', e => { if (e.key === 'Enter') generateFromInput(); });
     ['#ov-region', '#ov-class', '#ov-sex'].forEach(sel => { $(sel).onchange = () => { if (!state.group) generate(state.seed); }; });
 
+    $('#rules-mode').onchange = () => {
+      state.mode = $('#rules-mode').value;
+      if (state.group) generateGroup(state.group.kind, state.seed);
+      else generate(state.seed);
+    };
+    $('#item-btn').onclick = () => rollItem();
+    $('#item-clear-btn').onclick = () => { state.item = null; state.itemSeed = null; writeHash(); renderItem(); };
+
     $('#solo-btn').onclick = () => generate(state.seed || randomSeed());
     $('#household-btn').onclick = () => generateGroup('household', state.seed || randomSeed());
     $('#warband-btn').onclick = () => generateGroup('warband', state.seed || randomSeed());
@@ -2978,8 +3395,9 @@ if (typeof document !== 'undefined') (function () {
       else EXPORT.download(state.seed + '.json', EXPORT.toJSON(state.char, state.locks), 'application/json');
     };
     $('#export-md-btn').onclick = () => {
-      if (state.group) EXPORT.download(state.seed + '-' + state.group.kind + '.md', EXPORT.companyMarkdown(state.group), 'text/markdown');
-      else EXPORT.download(state.seed + '.md', EXPORT.toMarkdown(state.char), 'text/markdown');
+      const itemMd = state.item ? '\n\n---\n\n' + EXPORT.itemMarkdown(state.item) : '';
+      if (state.group) EXPORT.download(state.seed + '-' + state.group.kind + '.md', EXPORT.companyMarkdown(state.group) + itemMd, 'text/markdown');
+      else EXPORT.download(state.seed + '.md', EXPORT.toMarkdown(state.char) + itemMd, 'text/markdown');
     };
     $('#export-png-btn').onclick = () => EXPORT.toPNG(state.char);
     $('#print-btn').onclick = () => window.print();
@@ -3044,10 +3462,14 @@ if (typeof document !== 'undefined') (function () {
       else if (e.key === 'c' || e.key === 'C') copyLink();
     });
 
+    state.mode = modeFromHash();
+    $('#rules-mode').value = state.mode;
+    const hashItem = itemFromHash();
     const hashSeed = seedFromHash() || randomSeed();
     const hashGroup = groupFromHash();
     if (hashGroup) generateGroup(hashGroup, hashSeed);
     else generate(hashSeed);
+    if (hashItem) rollItem(hashItem);
   });
 
   function copyLink() {
