@@ -119,14 +119,29 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 #print-summary .sum-secret { font-size: 9px; font-style: italic; color: #333; }
 #print-summary .sum-foot { margin-top: 6px; font-size: 8.5px; color: #666; font-style: italic; }
 
-/* ---- homebrew item card ---- */
-#item-box { text-align: left; border: 2px solid var(--accent); background: rgba(255,252,240,.6); padding: .7rem .9rem; margin-top: 1rem; font-size: .86rem; }
-#item-box h3 { font-family: var(--serif-display); font-variant: small-caps; margin: 0 0 .1rem; font-size: 1.15rem; }
-#item-box .item-meta { font-style: italic; color: var(--ink-soft); margin-bottom: .35rem; }
-#item-box ul { margin: .25rem 0 0; padding-left: 1.1rem; }
-#item-box li { margin-bottom: .18rem; }
-#item-box .item-curse { color: #7a1d1d; font-weight: bold; }
-.srd-note { font-size: .68rem; color: var(--ink-soft); font-style: italic; margin-top: .4rem; }
+/* ---- tabs ---- */
+#tabs { display: flex; gap: .4rem; }
+.tab { border-bottom-width: 3px; opacity: .65; }
+.tab.active { opacity: 1; border-bottom-color: var(--accent); background: var(--rule); font-weight: bold; }
+
+/* ---- item forge (its own view, fully separate from character gen) ---- */
+#forge-layout {
+  display: none; grid-template-columns: 240px minmax(340px, 640px);
+  gap: 1.2rem; padding: 1.2rem; max-width: 1000px; margin: 0 auto; justify-content: center;
+}
+body.view-forge #layout { display: none; }
+body.view-forge #forge-layout { display: grid; }
+@media (max-width: 980px) { #forge-layout { grid-template-columns: 1fr; } }
+#forge-controls { display: flex; flex-direction: column; gap: .55rem; align-content: start; }
+#forge-controls label { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+#forge-controls .group { display: flex; flex-direction: column; gap: .3rem; padding-bottom: .6rem; border-bottom: 1px solid var(--rule); }
+#forge-card { text-align: left; border: 2px solid var(--accent); background: rgba(255,252,240,.6); padding: 1rem 1.2rem; font-size: .95rem; align-self: start; }
+#forge-card h3 { font-family: var(--serif-display); font-variant: small-caps; margin: 0 0 .15rem; font-size: 1.5rem; }
+#forge-card .item-meta { font-style: italic; color: var(--ink-soft); margin-bottom: .45rem; }
+#forge-card ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+#forge-card li { margin-bottom: .3rem; }
+#forge-card .item-curse { color: #7a1d1d; font-weight: bold; }
+.srd-note { font-size: .68rem; color: var(--ink-soft); font-style: italic; margin-top: .5rem; }
 
 /* ---- company strip ---- */
 #group-strip { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-bottom: .9rem; }
@@ -146,7 +161,8 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 @media print {
   @page { size: A4; margin: 12mm; }
   body { background: #fff; font-size: 10.5px; }
-  header, #controls, .lock, #tale-controls, #debug-box, #group-strip, #settlement-box { display: none !important; }
+  header, #controls, .lock, #tale-controls, #debug-box, #group-strip, #settlement-box, #forge-controls { display: none !important; }
+  body.view-forge #forge-layout { display: block; padding: 0; }
   #layout { display: block; padding: 0; }
   #centre { page-break-inside: avoid; }
   #face-arms svg { max-height: 150px; width: auto; margin: 0 auto; }
@@ -162,7 +178,11 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 </head>
 <body>
 <header>
-  <h1>Low-Fantasy Character Generator</h1>
+  <h1>Low-Fantasy Generator</h1>
+  <nav id="tabs">
+    <button id="tab-characters" class="tab active">Characters</button>
+    <button id="tab-forge" class="tab">Item forge</button>
+  </nav>
   <span class="kbd-hint">Space: reroll &nbsp;·&nbsp; L: lock hovered field &nbsp;·&nbsp; C: copy link</span>
 </header>
 <div id="layout">
@@ -180,11 +200,6 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
         <option value="grim">Grim low-fantasy</option>
         <option value="5e">D&amp;D 5e (SRD)</option>
       </select>
-    </div>
-    <div class="group">
-      <label>Homebrew item (5e)</label>
-      <button id="item-btn">Roll an item</button>
-      <button id="item-clear-btn">Clear item</button>
     </div>
     <div class="group">
       <label>Company</label>
@@ -233,13 +248,34 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
     <div id="char-sub"></div>
     <div id="blazon"></div>
     <div id="violation-note"></div>
-    <div id="item-box" style="display:none"></div>
     <div id="tale-controls"><button id="tale-btn" disabled>Write the tale</button></div>
     <div id="tale-box" style="display:none"><div id="tale-out"></div></div>
     <div id="tale-err"></div>
   </div>
   <div id="sheet"></div>
   <div id="debug-box" style="display:none"></div>
+</div>
+<div id="forge-layout">
+  <div id="forge-controls">
+    <div class="group">
+      <label for="forge-seed-input">Item seed</label>
+      <input type="text" id="forge-seed-input" spellcheck="false" autocomplete="off">
+      <button id="forge-roll-btn">Roll an item</button>
+      <button id="forge-copy-btn">Copy item link</button>
+    </div>
+    <div class="group">
+      <label>Constrain the roll</label>
+      <select id="forge-cat"></select>
+      <select id="forge-rarity"></select>
+      <select id="forge-class"></select>
+    </div>
+    <div class="group">
+      <label>Export</label>
+      <button id="forge-md-btn">Markdown</button>
+      <button id="forge-print-btn">Print</button>
+    </div>
+  </div>
+  <div id="forge-card"></div>
 </div>
 <div id="print-summary"></div>
 <script>
@@ -1406,6 +1442,23 @@ DATA5E.backgroundRules = [
    effect scaled to rarity, a quirk (personality), sometimes a curse, a price,
    and a history hook. Concrete nouns, never "magic sword".                  */
 
+/* "Suited to class" filter for the forge: which item categories each class
+   actually wants. Explicit item-type choice always beats this. */
+DATA5E.classItemAffinity = {
+  barbarian: ['weapon', 'armor', 'potion'],
+  bard: ['wondrous', 'ring', 'potion'],
+  cleric: ['armor', 'staff', 'wondrous'],
+  druid: ['staff', 'wondrous', 'potion'],
+  fighter: ['weapon', 'armor', 'potion'],
+  monk: ['wondrous', 'ring', 'potion'],
+  paladin: ['weapon', 'armor', 'wondrous'],
+  ranger: ['weapon', 'wondrous', 'potion'],
+  rogue: ['weapon', 'wondrous', 'ring'],
+  sorcerer: ['wand', 'ring', 'wondrous'],
+  warlock: ['wand', 'ring', 'wondrous'],
+  wizard: ['wand', 'staff', 'ring'],
+};
+
 DATA5E.itemCategories = [
   { w: 22, v: 'weapon' }, { w: 12, v: 'armor' }, { w: 30, v: 'wondrous' },
   { w: 12, v: 'potion' }, { w: 8, v: 'ring' }, { w: 8, v: 'wand' }, { w: 6, v: 'staff' },
@@ -1924,13 +1977,25 @@ const GEN = (function () {
     };
   }
 
-  /* ---- Homebrew item generator (the good randomizer). Pure function of seed. ---- */
+  /* ---- Homebrew item generator (the good randomizer). ---------------------------
+     Pure function of (seed, constraints). Constraints filter the weighted tables
+     before the pick, same philosophy as character overrides: they narrow the
+     roll, they never staple a value onto a mismatched item. ------------------- */
   const RARITY_ORDER = ['common', 'uncommon', 'rare', 'veryRare', 'legendary'];
-  function generateItem(seedStr) {
+  function generateItem(seedStr, opts) {
+    opts = opts || {};
     const rng = makeRng(seedStr + ':item');
-    const category = pick(rng, DATA5E.itemCategories, 'item:category');
+    let catPool = DATA5E.itemCategories;
+    if (opts.category) catPool = catPool.filter(e => e.v === opts.category);
+    else if (opts.klass && DATA5E.classItemAffinity[opts.klass]) {
+      const aff = DATA5E.classItemAffinity[opts.klass];
+      catPool = catPool.filter(e => aff.includes(e.v));
+    }
+    const category = pick(rng, catPool, 'item:category');
     const form = pick(rng, DATA5E.itemForms[category], 'item:form');
-    const rarity = deepClone(pick(rng, DATA5E.rarities, 'item:rarity'));
+    let rarPool = DATA5E.rarities;
+    if (opts.rarity) rarPool = rarPool.filter(e => e.v.key === opts.rarity);
+    const rarity = deepClone(pick(rng, rarPool, 'item:rarity'));
     const tier = RARITY_ORDER.indexOf(rarity.key);
     // Common non-potions carry no mechanical effect, the quirk IS the magic.
     const pool = DATA5E.itemEffects.filter(e => e.cat === category && e.min <= tier);
@@ -1960,6 +2025,7 @@ const GEN = (function () {
     return {
       seed: seedStr, version: VERSION, name, category, form,
       rarity: rarity.label, attunement, effects, quirk, curse, history, price: rarity.price,
+      constraints: { category: opts.category || null, rarity: opts.rarity || null, klass: opts.klass || null },
       attribution: DATA5E.ATTRIBUTION,
     };
   }
@@ -3120,7 +3186,7 @@ const AI = (function () {
 /* ---------- UI ---------- */
 if (typeof document !== 'undefined') (function () {
   const $ = (sel) => document.querySelector(sel);
-  const state = { seed: '', locks: {}, char: null, hoveredPath: null, group: null, sel: 0, mode: 'grim', item: null, itemSeed: null };
+  const state = { seed: '', locks: {}, char: null, hoveredPath: null, group: null, sel: 0, mode: 'grim', view: 'char', forge: { seed: null, item: null } };
 
   function currentDebug() { return /[?&#]debug=1|#debug\b/.test(location.search + location.hash); }
   TRACE.on = currentDebug();
@@ -3134,15 +3200,22 @@ if (typeof document !== 'undefined') (function () {
     return m ? m[1] : null;
   }
   function writeHash() {
-    history.replaceState(null, '', '#seed=' + encodeURIComponent(state.seed)
+    let h = '#seed=' + encodeURIComponent(state.seed)
       + (state.group ? '&group=' + state.group.kind : '')
-      + (state.mode === '5e' ? '&rules=5e' : '')
-      + (state.item ? '&item=' + encodeURIComponent(state.itemSeed) : '')
-      + (currentDebug() ? '&debug=1' : ''));
+      + (state.mode === '5e' ? '&rules=5e' : '');
+    if (state.view === 'forge') h += '&view=forge';
+    if (state.forge.item) {
+      h += '&iseed=' + encodeURIComponent(state.forge.seed);
+      const cn = state.forge.item.constraints;
+      if (cn.category) h += '&icat=' + cn.category;
+      if (cn.rarity) h += '&irar=' + cn.rarity;
+      if (cn.klass) h += '&icls=' + cn.klass;
+    }
+    history.replaceState(null, '', h + (currentDebug() ? '&debug=1' : ''));
   }
   function modeFromHash() { return /rules=5e/.test(location.hash) ? '5e' : 'grim'; }
-  function itemFromHash() {
-    const m = location.hash.match(/item=([^&]+)/);
+  function hashParam(name) {
+    const m = location.hash.match(new RegExp(name + '=([^&]+)'));
     return m ? decodeURIComponent(m[1]) : null;
   }
 
@@ -3300,11 +3373,22 @@ if (typeof document !== 'undefined') (function () {
     bindRows();
   }
 
-  function renderItem() {
-    const box = $('#item-box');
-    const it = state.item;
-    if (!it) { box.style.display = 'none'; box.innerHTML = ''; return; }
-    box.style.display = '';
+  /* ---- Item forge: its own view, fully separate from character gen ---- */
+  function showView(v) {
+    state.view = v;
+    document.body.classList.toggle('view-forge', v === 'forge');
+    $('#tab-characters').classList.toggle('active', v === 'char');
+    $('#tab-forge').classList.toggle('active', v === 'forge');
+    writeHash();
+  }
+
+  function renderForge() {
+    const box = $('#forge-card');
+    const it = state.forge.item;
+    if (!it) {
+      box.innerHTML = '<h3>The item forge</h3><div class="item-meta">Pick a type, rarity, or class on the left (or leave them open) and roll. Every item gets a name, an effect scaled to rarity, a quirk, sometimes a curse, and a history hook. Item links reproduce the item exactly.</div>';
+      return;
+    }
     box.innerHTML = '<h3>' + esc(it.name) + '</h3>' +
       '<div class="item-meta">' + esc(it.form) + ' · ' + esc(it.category) + ' · <strong>' + esc(it.rarity) + '</strong>' +
       (it.attunement ? ' (requires attunement)' : '') + ' · ' + esc(it.price) + '</div>' +
@@ -3315,11 +3399,20 @@ if (typeof document !== 'undefined') (function () {
       '<div class="srd-note">seed ' + esc(it.seed) + ' · ' + esc(it.attribution) + '</div>';
   }
 
-  function rollItem(seed) {
-    state.itemSeed = seed || randomSeed();
-    state.item = GEN.generateItem(state.itemSeed);
+  function forgeOpts() {
+    return {
+      category: $('#forge-cat').value || undefined,
+      rarity: $('#forge-rarity').value || undefined,
+      klass: $('#forge-class').value || undefined,
+    };
+  }
+
+  function rollForge(seed) {
+    state.forge.seed = seed || randomSeed();
+    state.forge.item = GEN.generateItem(state.forge.seed, forgeOpts());
+    $('#forge-seed-input').value = state.forge.seed;
     writeHash();
-    renderItem();
+    renderForge();
   }
 
   function ordSuffix(n) { return n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'; }
@@ -3393,8 +3486,19 @@ if (typeof document !== 'undefined') (function () {
       if (state.group) generateGroup(state.group.kind, state.seed);
       else generate(state.seed);
     };
-    $('#item-btn').onclick = () => rollItem();
-    $('#item-clear-btn').onclick = () => { state.item = null; state.itemSeed = null; writeHash(); renderItem(); };
+
+    $('#tab-characters').onclick = () => showView('char');
+    $('#tab-forge').onclick = () => showView('forge');
+    $('#forge-cat').innerHTML = '<option value="">any type</option>' + DATA5E.itemCategories.map(e => '<option value="' + e.v + '">' + e.v + '</option>').join('');
+    $('#forge-rarity').innerHTML = '<option value="">any rarity</option>' + DATA5E.rarities.map(e => '<option value="' + e.v.key + '">' + e.v.label + '</option>').join('');
+    $('#forge-class').innerHTML = '<option value="">any class</option>' + DATA5E.classes.map(e => '<option value="' + e.v.key + '">suits a ' + e.v.label.toLowerCase() + '</option>').join('');
+    $('#forge-roll-btn').onclick = () => rollForge($('#forge-seed-input').value.trim() !== state.forge.seed && $('#forge-seed-input').value.trim() ? $('#forge-seed-input').value.trim() : undefined);
+    $('#forge-seed-input').addEventListener('keydown', e => { if (e.key === 'Enter') rollForge($('#forge-seed-input').value.trim() || undefined); });
+    ['#forge-cat', '#forge-rarity', '#forge-class'].forEach(sel => { $(sel).onchange = () => { if (state.forge.seed) rollForge(state.forge.seed); }; });
+    $('#forge-copy-btn').onclick = copyLink;
+    $('#forge-md-btn').onclick = () => { if (state.forge.item) EXPORT.download(state.forge.seed + '-item.md', EXPORT.itemMarkdown(state.forge.item), 'text/markdown'); };
+    $('#forge-print-btn').onclick = () => window.print();
+    renderForge();
 
     $('#solo-btn').onclick = () => generate(state.seed || randomSeed());
     $('#household-btn').onclick = () => generateGroup('household', state.seed || randomSeed());
@@ -3409,9 +3513,8 @@ if (typeof document !== 'undefined') (function () {
       else EXPORT.download(state.seed + '.json', EXPORT.toJSON(state.char, state.locks), 'application/json');
     };
     $('#export-md-btn').onclick = () => {
-      const itemMd = state.item ? '\n\n---\n\n' + EXPORT.itemMarkdown(state.item) : '';
-      if (state.group) EXPORT.download(state.seed + '-' + state.group.kind + '.md', EXPORT.companyMarkdown(state.group) + itemMd, 'text/markdown');
-      else EXPORT.download(state.seed + '.md', EXPORT.toMarkdown(state.char) + itemMd, 'text/markdown');
+      if (state.group) EXPORT.download(state.seed + '-' + state.group.kind + '.md', EXPORT.companyMarkdown(state.group), 'text/markdown');
+      else EXPORT.download(state.seed + '.md', EXPORT.toMarkdown(state.char), 'text/markdown');
     };
     $('#export-png-btn').onclick = () => EXPORT.toPNG(state.char);
     $('#print-btn').onclick = () => window.print();
@@ -3471,19 +3574,25 @@ if (typeof document !== 'undefined') (function () {
     // Keyboard: Space reroll, L lock hovered, C copy link.
     document.addEventListener('keydown', e => {
       if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
-      if (e.code === 'Space') { e.preventDefault(); reroll(); }
+      if (e.code === 'Space') { e.preventDefault(); if (state.view === 'forge') rollForge(); else reroll(); }
       else if (e.key === 'l' || e.key === 'L') { if (state.hoveredPath) toggleLock(state.hoveredPath); }
       else if (e.key === 'c' || e.key === 'C') copyLink();
     });
 
     state.mode = modeFromHash();
     $('#rules-mode').value = state.mode;
-    const hashItem = itemFromHash();
     const hashSeed = seedFromHash() || randomSeed();
     const hashGroup = groupFromHash();
     if (hashGroup) generateGroup(hashGroup, hashSeed);
     else generate(hashSeed);
-    if (hashItem) rollItem(hashItem);
+    const iseed = hashParam('iseed') || hashParam('item'); // 'item=' is the old link format
+    if (iseed) {
+      if (hashParam('icat')) $('#forge-cat').value = hashParam('icat');
+      if (hashParam('irar')) $('#forge-rarity').value = hashParam('irar');
+      if (hashParam('icls')) $('#forge-class').value = hashParam('icls');
+      rollForge(iseed);
+    }
+    if (hashParam('view') === 'forge' || (iseed && !hashParam('view') && hashParam('item'))) showView('forge');
   });
 
   function copyLink() {
