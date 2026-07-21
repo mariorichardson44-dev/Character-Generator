@@ -464,6 +464,12 @@ DATA.birthCircumstances = [
   { w: 1, v: 'swapped at nurse for a fortnight through sheer muddle; both mothers deny it now' },
   { w: 1, v: 'born in the church porch during sanctuary, the father inside with a bloody axe' },
   { w: 1, v: 'the midwife looked at the child a long moment and said only: “well, we’ll see”' },
+  { w: 1, v: 'born during the eclipse the Kirk had declared would not happen here' },
+  { w: 2, v: 'born so quietly the midwife checked twice for breath and once for fairies' },
+  { w: 1, v: 'born on the floor of the moot-hall mid-lawsuit, which the family lost' },
+  { w: 2, v: 'born with a full head of black hair to two fair parents, in a quiet house' },
+  { w: 1, v: 'delivered by a passing cunning-man whose payment was a promise not yet collected' },
+  { w: 2, v: 'born during the sheep-count and tallied, briefly, as a lamb' },
 ];
 DATA.seasons = [
   { w: 26, v: 'winter-born' }, { w: 25, v: 'spring-born' }, { w: 24, v: 'summer-born' }, { w: 25, v: 'autumn-born' },
@@ -503,6 +509,11 @@ DATA.familyStructures = [
   { w: 2, v: 'father excommunicate these five years over a boundary stone; mass is awkward' },
   { w: 2, v: 'a foundling raised by the parish, owing everyone and belonging to no one' },
   { w: 1, v: 'the family’s name is old and briefly grand; a chest of worthless charters proves it' },
+  { w: 2, v: 'the family splits one pair of good boots among three working men, by roster' },
+  { w: 2, v: 'a house ruled by the grandfather’s chair, though the grandfather is four years dead' },
+  { w: 2, v: 'the middle children ran to sea and send back money without letters, or letters without money, alternating' },
+  { w: 1, v: 'kin to the hangman by marriage, which empties the bench around them at the church ale' },
+  { w: 2, v: 'the family keeps the pound, and every stray beast in it makes them a new enemy with a rope in hand' },
 ];
 // Parents' trades assigned in GEN from occupation table filtered by class.
 
@@ -598,6 +609,10 @@ DATA.householdTensions = [
   'who has begun forgetting names, and remembers only the old grievances',
   'who does two people’s work and keeps the ledger of it in their face',
   'whose cough the whole house pretends not to hear',
+  'who eats last by choice and makes sure it is noticed',
+  'who has memorized the will and quotes it at meals, chapter and verse',
+  'whose wedding portion is still under the floorboard, unspent, a question no one asks',
+  'who laughs at the father’s jokes one beat before the punchline, from long practice',
 ];
 DATA.warbandTensions = [
   'who saved your life at the ford and spends the debt a penny at a time',
@@ -612,8 +627,12 @@ DATA.warbandTensions = [
   'who has begun flinching at things no one else hears',
   'who swore an oath to quit after this season, and swears it every season',
   'who knows the country ahead too well to have learned it honestly',
+  'who polishes the captain’s boots unasked, and everyone else’s reputation likewise',
+  'who counts the band’s dead aloud on the march, in order, as a devotion',
+  'who has been paid twice for one job once, and once for two jobs twice, and remembers which',
+  'whose homesickness has begun to sound, at night, like planning',
 ];
-DATA.warbandRoles = ['serjeant-at-arms', 'archer', 'crossbowman', 'spearman', 'forager', 'baggage-master', 'chirurgeon of sorts', 'banner-carrier', 'scout', 'cook and quartermaster'];
+DATA.warbandRoles = ['serjeant-at-arms', 'archer', 'crossbowman', 'spearman', 'forager', 'baggage-master', 'chirurgeon of sorts', 'banner-carrier', 'scout', 'cook and quartermaster', 'farrier', 'fletcher', 'lantern-boy', 'pay-clerk'];
 DATA.childStructures = [
   'raised under the parents’ roof and into the family trade',
   'the child kept closest to the hearth and worked hardest for it',
@@ -649,6 +668,8 @@ DATA.settlementHolders = [
   { w: 2, v: 'split between two manors, with a boundary dispute to match' },
   { w: 1, v: 'crown land, which means nobody fixes anything' },
   { w: 1, v: 'held in dower by an ancient widow whose heirs circle politely' },
+  { w: 1, v: 'mortgaged to a wool syndicate that has never once been seen' },
+  { w: 1, v: 'held by the Kirk as surety in a suit now older than any litigant' },
 ];
 DATA.settlementFeatures = [
   'a stone church tower visible two valleys off', 'a ford that floods in spring', 'a gallows-hill with a long memory',
@@ -656,6 +677,12 @@ DATA.settlementFeatures = [
   'a moot-oak where rents are paid and quarrels aired', 'a leper hospice at the crossroads, kept at bell-distance',
   'a beacon fire kept ready on the height', 'a ruined tower nobody quarries, for reasons', 'an eel-weir that pays half the rent',
   'a bridge chapel where carters buy prayers by the axle', 'a tithe-barn bigger than the church', 'a dovecote only the manor may keep, and everyone resents',
+  'a plague pit meadow, mown but never grazed',
+  'a chained library of four books, one of them wrong',
+  'stocks worn smooth by use and something like affection',
+  'a wind-bent mail-oak where letters wait under a stone',
+  'the stump of the maypole the old priest cut down, planted with rue by the new one',
+  'an anchorite’s cell in the church wall, currently vacant, lately not',
 ];
 DATA.settlementCustoms = [
   'at Plough-Monday the young men drag the plough door to door, and mischief follows refusal',
@@ -668,6 +695,10 @@ DATA.settlementCustoms = [
   'the bounds are beaten each year and the boys thumped at each stone, so the stones are remembered',
   'the church ale is brewed by a different household each year, and judged without mercy',
   'on the eve of the levy-muster, every door leaves out bread for whoever might not come back',
+  'the year’s first eel is eaten by the oldest inhabitant in total silence, watched by everyone',
+  'debts contracted at the fair do not count until the fair returns, a rule the fair-folk regret',
+  'on the feast of Saint Osyth the children rule the village for an hour, and use it',
+  'no bells on the day of the drowned; only the ferry horn, at noon',
 ];
 DATA.settlementTroubles = [
   'the murrain has been seen one parish over, and the cattle-market is next week',
@@ -682,6 +713,12 @@ DATA.settlementTroubles = [
   'the new bridge has moved the road, and the village is quietly starving of passers-by',
   'sanctuary was claimed at the altar a week ago, and the men outside are still waiting',
   'the reeve’s tally and the steward’s roll no longer agree, and someone will answer for the difference',
+  'the lord has licensed a rabbit warren, and the rabbits have not read the license',
+  'the church ale made more money than the tithe, and the priest has begun doing sums aloud',
+  'a hermit has moved into the old tower, and the pilgrims are wearing a road through the barley',
+  'the weir owner upstream has married the miller’s rival, and the water now arrives opinionated',
+  'the muster roll lists eleven bows; the village can produce four, and a story for each of the rest',
+  'a surveyor’s stakes appeared overnight along the common, and pulling them up is a felony someone has already committed',
 ];
 // Feuds spanning households: cause + current state, injected into both heads' ties.
 DATA.feudCauses = [
@@ -697,6 +734,12 @@ DATA.feudCauses = [
   'a word said over a coffin, and never taken back',
   'gleaning rights on the strip between the two holdings',
   'a blood debt from the grandfathers’ time, which neither side can state precisely and neither will drop',
+  'a dog that died on the wrong side of a fence',
+  'the seating at a christening eleven years ago',
+  'a loan repaid in coin nobody could spend',
+  'who reached the drowning man second',
+  'a shared wall, and the noise, or the silence, through it',
+  'the harvest-queen crown of two summers back',
 ];
 DATA.feudStates = [
   { w: 3, v: 'cold and formal, greetings exchanged like hostages' },
@@ -705,6 +748,8 @@ DATA.feudStates = [
   { w: 1, v: 'one barn already burned, cause officially unknown' },
   { w: 2, v: 'under a sworn truce that creaks at every feast day' },
   { w: 2, v: 'waiting on a marriage that is supposed to end it' },
+  { w: 2, v: 'conducted entirely through third parties, who are exhausted' },
+  { w: 1, v: 'suspended since the flood, when the sides worked shoulder to shoulder and hated it' },
 ];
 
 // Tensions binding households to the village's notable figures.
@@ -719,6 +764,10 @@ DATA.villageTensions = [
   'who sets the bread price, and your table by it',
   'who carried a tale about your household up to the manor, or so it came back to you',
   'who alone came when the fever was in your house, and can now be refused nothing',
+  'who tallies the bridge toll and remembers exact change from years past',
+  'whose barn you sheltered in the night of the storm, both of you unmentioned since',
+  'who bought your family’s pew when times were bad, and sits in it lightly',
+  'who keeps the pound key and charges friends the same as enemies; worse, actually',
 ];
 
 /* ---- 3.6 Byname material: 40 keyed epithets --------------------------------
@@ -756,6 +805,12 @@ DATA.descriptiveEpithets = [
   { key: 'yellow teeth|black teeth|toothless|no teeth', epithet: 'Gap-Tooth' },
   { key: 'freckl', epithet: 'the Speckled' },
   { key: 'left-hand|left hand', epithet: 'the Left-Handed' },
+  { key: 'milk-white streak|streak in the hair', epithet: 'Whitelock' },
+  { key: 'eyebrows that meet', epithet: 'One-Brow' },
+  { key: 'never quite warm', epithet: 'Coldhands' },
+  { key: 'missing earlobe', epithet: 'Crop-Ear' },
+  { key: 'sailor’s gait', epithet: 'Sea-Legs' },
+  { key: 'shoulder carried higher', epithet: 'the Shrug' },
 ];
 DATA.deedEpithets = [
   { key: 'fire|burning|burned', epithet: 'Ashwalker' },
@@ -768,10 +823,14 @@ DATA.deedEpithets = [
   { key: 'lightning|storm', epithet: 'Storm-Named' },
   { key: 'war|soldier|raid|sack', epithet: 'who came back' },
   { key: 'foundling|church door|basket|parish', epithet: 'Nobody’s' },
+  { key: 'goose|geese', epithet: 'Goose-Crowned' },
+  { key: 'beacon', epithet: 'Beacon-Lit' },
+  { key: 'eclipse', epithet: 'Eclipse-Born' },
+  { key: 'ordeal', epithet: 'Iron-Palm' },
 ];
 
 /* ---- Guardians for orphaned minors (coherence rule) ------------------------- */
-DATA.guardians = ['a widowed aunt with opinions', 'the parish, grudgingly', 'a master who takes the wage', 'an elder sibling barely grown', 'the abbey almoner', 'a grandmother too old for it and doing it anyway'];
+DATA.guardians = ['a widowed aunt with opinions', 'the parish, grudgingly', 'a master who takes the wage', 'an elder sibling barely grown', 'the abbey almoner', 'a grandmother too old for it and doing it anyway', 'the hayward, who feeds them out of the pound strays’ keep', 'a bachelor uncle of no fixed trade and endless patience'];
 /* ============================== DATA (part 2 of 2) ============================== */
 'use strict';
 
@@ -922,6 +981,16 @@ DATA.features = [
   'ink-dark circles beneath the eyes in every season', 'an ear thickened and folded from an old blow', 'legs bowed from rickets ridden out in childhood',
   'a whistling gap where two front teeth should be', 'the pallor of someone who works indoors, suspicious in a village', 'forearms mapped with tiny burn scars',
   'a habit of standing with the weight all on the left leg, the right one lying about something',
+  'a missing earlobe, lost to frost or a fight, depending on the telling',
+  'eyebrows that meet in the middle, which the old wives call a sign',
+  'knuckles marked with faded dots of soot-ink from a season on the roads',
+  'one shoulder carried higher than the other, like a permanent shrug',
+  'a milk-white streak in the hair since the lightning summer',
+  'teeth stained berry-dark every autumn without fail',
+  'a rolling sailor’s gait kept from two years on the boats',
+  'hands that never quite warm, even at the forge',
+  'a smile that arrives late and leaves early',
+  'a habit of blinking into strong light like a creature raised indoors',
 ];
 // Scars carry a `loc` used by the portrait overlay and an implicit source vocabulary for coherence checks.
 DATA.scars = [
@@ -955,6 +1024,12 @@ DATA.scars = [
   { w: 1, v: 'a powder of tiny spark-scars up both forearms', loc: 'arm', src: ['spark', 'forge', 'hammer'] },
   { w: 1, v: 'a rope’s kiss around the neck, faint now, from a hanging that didn’t take', loc: 'neck', src: ['rope', 'gallows'] },
   { w: 1, v: 'the star of an old trepanning above the right temple, priest-forbidden to touch', loc: 'scalp', src: ['surgery'] },
+  { w: 2, v: 'a smallpox constellation across the forehead', loc: 'brow', src: [] },
+  { w: 2, v: 'a badly healed collarbone that shows as a step under the skin', loc: 'body', src: ['fall', 'crush'] },
+  { w: 1, v: 'a fish-hook scar through the edge of the right nostril', loc: 'cheek', src: ['hook'] },
+  { w: 2, v: 'a burn like spilled milk down the left forearm', loc: 'arm', src: ['burn', 'scald'] },
+  { w: 1, v: 'a stone-chip scar at the temple from the quarry face', loc: 'brow', src: ['stone', 'crush'] },
+  { w: 1, v: 'old teeth-marks in the left thumb, human, unexplained', loc: 'hand', src: ['brawl', 'bite'] },
 ];
 DATA.ailments = [
   { w: 5, v: 'a limp from a badly-set femur, worse in cold', src: ['fall', 'crush', 'horse'] },
@@ -982,6 +1057,11 @@ DATA.ailments = [
   { w: 1, v: 'a numb white finger in each hand come winter', src: ['axe', 'hammer'] },
   { w: 1, v: 'dreams so violent the household moved the sleeping bench away from the wall' },
   { w: 1, v: 'a heart that flutters like a caged bird after fright, then rights itself' },
+  { w: 3, v: 'a knee that forecasts rain more reliably than the priest' },
+  { w: 2, v: 'gums that bleed at every apple' },
+  { w: 2, v: 'a wandering pain in the gut the herb-woman calls "the mouse"' },
+  { w: 2, v: 'sleep that comes only after the second cock-crow' },
+  { w: 1, v: 'an ear that aches in an east wind and is trusted accordingly' },
 ];
 DATA.teeth = [
   { w: 20, v: 'a workable set, yellowed but mostly present' }, { w: 15, v: 'strong teeth, the one inheritance worth having' },
@@ -1022,6 +1102,10 @@ DATA.virtues = [
   'teaches the trade freely instead of hoarding it', 'mends quarrels between neighbours without taking a side', 'faces bad news standing up and passes it on gently',
   'carries the heavy end without being asked', 'refuses spoils that smell of another’s ruin', 'keeps courage aloud when everyone else is losing theirs',
   'treats beggars as if they might be saints in disguise, as the Kirk says and nobody does', 'holds their drink and other people’s secrets equally well', 'does the ugly necessary chores no one else will name',
+  'returns every greeting, including from those it costs something to greet',
+  'measures twice for other people’s cloth and once for their own',
+  'remembers every kindness at exactly full weight, no interest',
+  'will not let anyone eat alone who does not wish to',
 ];
 DATA.vices = [
   'drinks past the singing stage into the ugly one', 'cannot let an insult lie, ever, from anyone', 'lies by reflex about small unimportant things',
@@ -1034,6 +1118,10 @@ DATA.vices = [
   'holds the purse strings of the household like a garrote', 'picks at other people’s grief for entertainment', 'always certain, most certain when wrong',
   'steals small things, pins, eggs, buttons, needing none of them', 'bitter about a promotion, inheritance, or marriage lost decades back', 'bullies the one person in the house who cannot leave',
   'prays loudly and tithes short', 'abandons projects at the four-fifths mark', 'blames the dead, they are never around to argue',
+  'keeps score in games that have no score',
+  'agrees to everything and performs a private selection',
+  'saves string, nails, grudges, and everything else',
+  'tells the same three triumphs on a rotation the village can predict',
 ];
 DATA.fears = [
   'deep water and honest about it', 'the dark between the last house and the first tree', 'dogs, since the bite',
@@ -1046,6 +1134,10 @@ DATA.fears = [
   'that the one great sin is written on their face', 'hunger, not death, hunger, remembered from the bad year', 'lepers’ bells, out of proportion to the danger',
   'their own temper and what it nearly did once', 'oaths, will not swear on anything, which looks worse', 'the Kirk’s questions getting specific',
   'growing like the parent they swore not to', 'being forgotten entire, no stone, no name, no mass said', 'nothing, claims to fear nothing, which is itself the fear showing',
+  'the sound of digging heard before dawn',
+  'being the last one awake in a sleeping house',
+  'the count coming up wrong at the sheep-fold two nights running',
+  'letters with their name spelled correctly, which never once brought good news',
 ];
 DATA.ambitions = [
   'to buy the family’s freedom from the week-work, in coin, on the manor rolls', 'to own the strip of land they were whipped on as a child',
@@ -1062,6 +1154,10 @@ DATA.ambitions = [
   'to keep every one of the children alive to adulthood, breaking the family’s run of luck', 'to hang the man who burned the mill, lawfully if possible',
   'to write, or dictate, letters willing, the true history of what happened at the ford', 'to hold the tenancy against the cousin’s claim, whatever it costs',
   'to make one thing, one, that outlasts them: a bridge, a bell, a name', 'to be left alone entirely, which is the most expensive ambition of all',
+  'to stand godparent to a child of every household on the lane',
+  'to win the scythe-race at the harvest fair once before the shoulder goes',
+  'to see the sea-cliff monastery where the singing is said to come up out of the rock',
+  'to own their grave plot outright: chosen, paid, and planted with something particular',
 ];
 DATA.temperaments = [
   { w: 12, v: 'phlegmatic: slow to move, immovable once moving' }, { w: 11, v: 'dour and dry, mistaken for humourless by the humourless' },
@@ -1111,6 +1207,14 @@ DATA.superstitions = [
   'never tells a dream before breakfast', 'knocks on the beam before boasting', 'won’t kill a spider in the house, carriers of house-luck',
   'braids a wheat-plait at harvest and keeps last year’s till the new one’s made', 'won’t look a corpse-cart driver in the eye', 'gives every well a greeting, by name if it has one',
   'stirs everything sunwise, and has stopped others’ pots to correct it', 'keeps a written charm they cannot read sewn into the hem',
+  'will not sharpen anything after sunset',
+  'greets the first lamb of spring by a name never used twice',
+  'keeps a dead wasp in a bottle against lawsuits',
+  'won’t step on a threshold shadow, their own included',
+  'counts crows aloud and adjusts plans by the total',
+  'never mends clothes while wearing them; it sews up your luck',
+  'spits on coins from strangers before pocketing them',
+  'pockets a pebble from any crossroads passed after dark and returns it by daylight',
 ];
 DATA.tics = [
   'cracks each knuckle in order before hard work', 'quotes their dead mother mid-sentence without noticing', 'hums one tune, always the same one, when lying',
@@ -1120,6 +1224,12 @@ DATA.tics = [
   'whittles when thinking; the house is full of small wooden birds', 'pulls the ear-lobe when about to bargain', 'eats fast, arm curled round the bowl, and knows it looks bad',
   'goes silent and pleasant when truly furious, which those who know them dread', 'chews a straw or a thumbnail to the quick', 'blinks hard twice before answering any question from an official',
   'always tests a bench before sitting, since the wedding incident', 'names tools; the good axe is "Widow"',
+  'folds and refolds their cap brim when spoken to by betters',
+  'tests every knot twice, including other people’s',
+  'repeats the last word of a question before answering it',
+  'stacks pebbles on fence posts along any walk, a trail of small towers',
+  'bows slightly to empty doorways out of lifelong habit',
+  'drums the finger-count of the rosary on any surface when nervous',
 ];
 
 /* ---- 3.10 The Touch (20), every entry deniable ------------------------------- */
@@ -1144,6 +1254,12 @@ DATA.touch = [
   { w: 1, manifestation: 'His touch soured three batches of cream the week his brother died, say the dairy-women.', mundane: 'Thunder-weather sours cream, and the week was full of thunder and grief alike.' },
   { w: 1, manifestation: 'Was pronounced dead of the sweat at seven, laid out and washed, and sat up at the vigil.', mundane: 'The sweat drops people into a death-sleep; the marvel is only that they checked twice.' },
   { w: 1, manifestation: 'The priest’s holy water hisses, very faintly, when it touches her skin, says the sexton.', mundane: 'Cold water on warm skin after the walk to the Kirk; the sexton drinks.' },
+  { w: 2, manifestation: 'Milk poured in her presence never spills, though jugs tip and hands slip.', mundane: 'People steady themselves around someone watching; the misses go unremembered.' },
+  { w: 2, manifestation: 'He has never once been struck on the threshing floor in twenty years of flails.', mundane: 'Twenty years teaches a body where flails go.' },
+  { w: 2, manifestation: 'The church candles burn longer on the side of the nave where she sits.', mundane: 'That side is out of the door-draught, as the sexton has told anyone who asks.' },
+  { w: 2, manifestation: 'Crows follow him from field to field, and only him, say the neighbours.', mundane: 'He ploughs; crows follow ploughs; he is the only one who counts them.' },
+  { w: 1, manifestation: 'Her stitching held on the one sail that came home whole from the black gale.', mundane: 'She waxes her thread and doubles her knots, a trick of her mother’s she tells no one.' },
+  { w: 1, manifestation: 'He wakes at the exact hour someone in the village dies, every time it has happened.', mundane: 'He wakes often; the deaths are remembered and the ordinary wakings are not.' },
 ];
 
 /* ---- 3.11 Skills (50), tiered ------------------------------------------------- */
@@ -1213,6 +1329,16 @@ DATA.possessions = [
   { t: 0, p: '0d', v: 'a letter they cannot read, kept since the messenger died' }, { t: 1, p: '3d', v: 'a set of knucklebone dice, suspiciously lucky' },
   { t: 0, p: '1d', v: 'a lock of hair sewn into the shirt hem' }, { t: 2, p: '2s', v: 'a small icon of Saint Merrow, paint worn away at the kissed corner' },
   { t: 1, p: '5d', v: 'a wooden whistle shaped like a wren, a fair-day extravagance' }, { t: 3, p: '10s', v: 'a map of the district, wrong in ways only locals would catch' },
+  { t: 0, p: '1d', v: 'a lucky misshapen horseshoe nail' },
+  { t: 0, p: '2d', v: 'a child’s outgrown shoe, kept' },
+  { t: 1, p: '6d', v: 'an eel-spear with a mended haft' },
+  { t: 1, p: '8d', v: 'a ram’s horn cup banded in tin' },
+  { t: 2, p: '3s', v: 'a bolt of undyed linen against a daughter’s wedding' },
+  { t: 2, p: '2s', v: 'a fowling net with a reputation' },
+  { t: 3, p: '12s', v: 'a bed with posts, the envy of the lane' },
+  { t: 3, p: '14s', v: 'a mule of poisonous opinions and excellent legs' },
+  { t: 4, p: '2m', v: 'a hawk’s hood stitched with silver thread' },
+  { t: 5, p: '7m', v: 'the tolls of a stone bridge, held at three lives’ term' },
 ];
 
 /* ---- 3.13 Relationship types (30), tie + tension; NPC name generated in GEN ---- */
@@ -1247,6 +1373,12 @@ DATA.relationships = [
   { tie: 'a rival for the same office', tension: 'better born, worse at the work, and everyone knows both things' },
   { tie: 'an outlaw in the greenwood', tension: 'your kin, fed in secret at the cost of everything if it’s found out' },
   { tie: 'the ferryman', tension: 'who carried you across the night you left and has kept the fare, and the hour, to himself' },
+  { tie: 'the hangman', tension: 'who nods to you with a professional warmth you have done nothing to earn' },
+  { tie: 'a creditor’s widow', tension: 'who forgave the debt aloud at the funeral and has not mentioned it since, deliberately' },
+  { tie: 'the beacon-keeper', tension: 'who saw which way you rode that night, and logs everything' },
+  { tie: 'a pardoner passing through each spring', tension: 'who sells you the same indulgence twice a year, and winks' },
+  { tie: 'the swineherd', tension: 'whose pigs found something in the beech mast that you re-buried deeper' },
+  { tie: 'the hayward', tension: 'who impounded your beast on the one day it mattered, correctly, which is worse' },
 ];
 
 /* ---- 3.14 Secrets (40), actionable and dangerous ------------------------------ */
@@ -1291,6 +1423,16 @@ DATA.secrets = [
   'kept the sword of the man they killed on the road, marked with arms someone will eventually recognise',
   'is feeding information about the garrison to a man who pays in foreign coin',
   'once cursed a neighbour aloud, alone, with the old words, and the neighbour sickened, and the guilt is worse than the fear',
+  'has been writing the anonymous letters that ended the reeve’s marriage',
+  'knows the ford-toll strongbox has a false bottom, and what is under it',
+  'saw the lord’s son at the heretic preaching, hooded, twice',
+  'keeps a second set of weights for when the inspector is not the usual man',
+  'buried a dead soldier’s pay-chest in the plague year and cannot dig it up unobserved',
+  'traded the church candlesticks for their brass twins a decade ago; the true ones are salted away',
+  'keeps the true parish register; the one the priest shows is a fair copy with three edits',
+  'was born in the other lordship, which voids the family tenancy if ever proven',
+  'once guided raiders around the beacon, for reasons that seemed sufficient that night',
+  'knows the midwife drowned no kittens the year of the twins, whatever the sack held',
 ];
 
 /* ---- 3.15 Current problems (30), the wound in the world ----------------------- */
@@ -1325,6 +1467,14 @@ DATA.problems = [
   'the salt price has doubled, which for a fishing family is arithmetic with teeth',
   'a vow made in fear at sea, pilgrimage, barefoot, this year, is now inconvenient and unpaid',
   'someone has been moving the fish-traps, and the night watch drawn up to catch them includes the person doing it',
+  'the goose-flock that pays the rent has begun dying, one each dawn, unmarked',
+  'a royal purveyor is buying grain at fixed prices, which is to say taking it',
+  'the ferry rope snapped, and the ferryman blames the fraying on a knife',
+  'the manor court has ordered an ordeal, and the parish must put forward the hand',
+  'the beacon on the height burned last night and no one will say who lit it',
+  'a murrain-dead cow was found in the well-field, placed there, arranged',
+  'the tithe reckoning falls due the same week as the wedding, and both cannot be paid whole',
+  'the muster roll lists a bow for this household; the bow was sold two winters ago',
 ];
 
 /* ---- Heraldry data (§4) --------------------------------------------------------- */
@@ -1464,13 +1614,13 @@ DATA5E.itemCategories = [
   { w: 12, v: 'potion' }, { w: 8, v: 'ring' }, { w: 8, v: 'wand' }, { w: 6, v: 'staff' },
 ];
 DATA5E.itemForms = {
-  weapon: ['longsword', 'dagger', 'warhammer', 'spear', 'longbow', 'battleaxe', 'mace', 'glaive', 'rapier', 'sling', 'light crossbow', 'quarterstaff', 'flail', 'handaxe', 'greatsword', 'scythe', 'billhook'],
-  armor: ['shield', 'chain shirt', 'leather cuirass', 'breastplate', 'open helm', 'pair of gauntlets', 'scale mail', 'buckler', 'padded gambeson', 'pair of greaves'],
-  wondrous: ['cloak', 'pair of boots', 'belt', 'pair of gloves', 'amulet', 'iron mask', 'horn lantern', 'hand mirror', 'hunting horn', 'tabor drum', 'set of knucklebone dice', 'brass censer', 'hourglass', 'iron key', 'psalter', 'goose quill', 'coil of rope', 'saddle', 'whetstone', 'bone comb', 'small bell', 'wax candle', 'fishhook', 'sewing needle', 'drinking horn', 'millstone pendant'],
-  potion: ['stoppered potion', 'oil', 'philter', 'salve', 'bitter draught', 'elixir', 'powder in a twist of paper', 'waxed flask'],
-  ring: ['iron ring', 'silver ring', 'braided-hair ring', 'signet ring', 'bone ring', 'thumb ring'],
-  wand: ['hazel wand', 'bone wand', 'blackened wand', 'copper-wound wand', 'holly wand'],
-  staff: ['oak staff', 'crook-headed staff', 'iron-shod staff', 'pilgrim’s staff', 'ashwood staff'],
+  weapon: ['longsword', 'dagger', 'warhammer', 'spear', 'longbow', 'battleaxe', 'mace', 'glaive', 'rapier', 'sling', 'light crossbow', 'quarterstaff', 'flail', 'handaxe', 'greatsword', 'scythe', 'billhook', 'morningstar', 'falchion', 'maul', 'pike', 'hunting knife', 'staff-sling', 'bearded axe', 'horseman’s pick'],
+  armor: ['shield', 'chain shirt', 'leather cuirass', 'breastplate', 'open helm', 'pair of gauntlets', 'scale mail', 'buckler', 'padded gambeson', 'pair of greaves', 'kettle helm', 'coat of plates', 'mail coif', 'iron-rimmed targe'],
+  wondrous: ['cloak', 'pair of boots', 'belt', 'pair of gloves', 'amulet', 'iron mask', 'horn lantern', 'hand mirror', 'hunting horn', 'tabor drum', 'set of knucklebone dice', 'brass censer', 'hourglass', 'iron key', 'psalter', 'goose quill', 'coil of rope', 'saddle', 'whetstone', 'bone comb', 'small bell', 'wax candle', 'fishhook', 'sewing needle', 'drinking horn', 'millstone pendant', 'tinderbox', 'spindle', 'fiddle', 'chess set', 'leather satchel', 'lodestone', 'ram’s horn', 'wax tablet', 'shepherd’s crook', 'iron nail on a cord'],
+  potion: ['stoppered potion', 'oil', 'philter', 'salve', 'bitter draught', 'elixir', 'powder in a twist of paper', 'waxed flask', 'tincture', 'decoction', 'lozenge of pressed herbs', 'black syrup in a lead-stoppered vial'],
+  ring: ['iron ring', 'silver ring', 'braided-hair ring', 'signet ring', 'bone ring', 'thumb ring', 'copper ring', 'ring of plaited reed', 'jet ring', 'ring set with a river pearl'],
+  wand: ['hazel wand', 'bone wand', 'blackened wand', 'copper-wound wand', 'holly wand', 'willow wand', 'yew wand', 'wand of fused green glass'],
+  staff: ['oak staff', 'crook-headed staff', 'iron-shod staff', 'pilgrim’s staff', 'ashwood staff', 'blackthorn staff', 'ferryman’s pole', 'shepherd’s staff'],
 };
 DATA5E.rarities = [
   { w: 28, v: { key: 'common', label: 'common', attune: 0.05, price: '25–75 gp' } },
@@ -1552,6 +1702,39 @@ DATA5E.itemEffects = [
   { cat: 'staff', min: 2, v: 'while held, the bearer may cast druidcraft at will, and local weather takes their moods slightly personally' },
   { cat: 'staff', min: 3, v: 'has 8 charges; expend 2 to cast call lightning. Thunder in the region arrives a beat early, as if introduced' },
   { cat: 'staff', min: 1, v: 'never slips, never rots, and floats, carrying its bearer’s pack, at a walking pace behind them on the road' },
+  { cat: 'weapon', min: 1, v: 'sheds dim grey light in a 10-foot radius at a command word, or goes dark at another' },
+  { cat: 'weapon', min: 1, v: 'whistles one low note when swung hard, a note that dogs answer' },
+  { cat: 'weapon', min: 2, v: 'deals an extra 1d6 lightning damage under open sky; indoors it only crackles sulkily' },
+  { cat: 'weapon', min: 2, v: 'counts as silvered, and moonlight pools visibly along its edge' },
+  { cat: 'weapon', min: 2, v: 'can be set to parry as a bonus action, granting +1 AC until the wielder’s next turn' },
+  { cat: 'weapon', min: 3, v: 'on a critical hit the target is frightened of the wielder until the end of its next turn' },
+  { cat: 'weapon', min: 3, v: 'once per dawn the wielder may add 1d8 to a damage roll after seeing the total' },
+  { cat: 'weapon', min: 4, v: 'wounds it deals bleed rust instead of blood for the first minute; healers find this upsetting but harmless' },
+  { cat: 'armor', min: 1, v: 'fastens and unfastens itself at a word, donning in a single action' },
+  { cat: 'armor', min: 1, v: 'keeps the wearer dry in rain and warm in frost, and smells faintly of hay while doing it' },
+  { cat: 'armor', min: 2, v: 'the wearer has advantage on saving throws against being pushed, pulled, or thrown' },
+  { cat: 'armor', min: 2, v: 'the first blow struck against the wearer each dawn deals no damage and rings like a church bell' },
+  { cat: 'armor', min: 3, v: 'the wearer has resistance to nonmagical piercing damage; spent arrowheads are found bent double' },
+  { cat: 'wondrous', min: 1, v: 'the bearer always knows the hour, to the nearest bell' },
+  { cat: 'wondrous', min: 1, v: 'once per dawn it can mend a tear, a crack, or a hem within reach' },
+  { cat: 'wondrous', min: 1, v: 'vermin will not chew, nest in, or foul anything the bearer carries' },
+  { cat: 'wondrous', min: 2, v: 'the bearer can hold their breath twice as long, and their breath is visible in any weather' },
+  { cat: 'wondrous', min: 2, v: 'small lost things, buttons, pins, keys, work their way toward the bearer overnight' },
+  { cat: 'wondrous', min: 2, v: 'once per dawn the bearer may ask a fire one question and receive one crackle for yes, two for no; accuracy disputed' },
+  { cat: 'wondrous', min: 3, v: 'the bearer may cast sending once per dawn; the message arrives smelling of the bearer’s hearth' },
+  { cat: 'wondrous', min: 4, v: 'the bearer does not age on days spent entirely under a roof; the item is keeping count somewhere' },
+  { cat: 'potion', min: 1, v: 'for 1 hour the drinker’s voice carries a mile without effort, which is not always the blessing it sounds' },
+  { cat: 'potion', min: 1, v: 'heals a beast of burden to full health and earns its permanent, inconvenient devotion' },
+  { cat: 'potion', min: 2, v: 'the drinker gains 10 temporary hit points and an unshakable conviction that the harvest will be fine' },
+  { cat: 'potion', min: 3, v: 'lifts one curse of rare rarity or lower; the curse is not destroyed but displaced, and the empty vial should be buried' },
+  { cat: 'ring', min: 1, v: 'the wearer’s sworn word leaves a faint taste of iron in the mouths of all who hear it' },
+  { cat: 'ring', min: 2, v: 'once per dawn the wearer may cast sanctuary on themselves; it fails if they laugh' },
+  { cat: 'ring', min: 3, v: 'the wearer is immune to disease while a given promise stands unbroken; the ring keeps its own ledger' },
+  { cat: 'wand', min: 1, v: 'has 4 charges; expend 1 to cast dancing lights, which always take the shape of small hooded figures' },
+  { cat: 'wand', min: 2, v: 'has 5 charges; expend 1 to cast hold person; the held report, later, feeling politely gripped' },
+  { cat: 'wand', min: 3, v: 'has 6 charges; expend 2 to cast lightning bolt; the thunder afterward says a word no two listeners agree on' },
+  { cat: 'staff', min: 2, v: 'while held, the bearer may cast light and thaumaturgy at will; congregations find them extremely convincing' },
+  { cat: 'staff', min: 3, v: 'has 10 charges; expend 3 to cast plant growth; the resulting crops are excellent and slightly early' },
 ];
 DATA5E.itemQuirks = [
   'hums old marching songs, badly, when danger is within a mile',
@@ -1574,6 +1757,16 @@ DATA5E.itemQuirks = [
   'collects frost on its surface when a lie is told nearby',
   'grows lighter as the bearer’s debts are paid, and heavier as they accrue',
   'once a season, is briefly seen, by the bearer alone, in the hands of a stranger in a crowd',
+  'ticks like a deathwatch beetle when its bearer procrastinates',
+  'sheds one drop of clean water at every funeral it attends',
+  'cannot be lost at dice; it comes home with the winner’s luggage',
+  'is always facing the door when its bearer wakes',
+  'smells of whatever its bearer misses most',
+  'creaks disapprovingly at blasphemy',
+  'gathers no dust, which the fastidious love and the superstitious note',
+  'is warm on the side facing the nearest buried coin, or so two previous owners insisted',
+  'hums against the skin when its true name is spoken anywhere in the parish',
+  'goes noticeably heavier in the presence of perjury',
 ];
 DATA5E.itemCurses = [
   'Curse: the bearer cannot speak the item’s true name aloud; attempts come out as the name of a childhood friend',
@@ -1588,9 +1781,15 @@ DATA5E.itemCurses = [
   'Curse: the previous owner is looking for it, is not alive, and is not in a hurry',
   'Curse: each dawn there is a 1-in-20 chance the item has swapped places with the most valuable thing the bearer carries',
   'Curse: the bearer’s name migrates to the item, strangers recall meeting the sword, not the swordsman',
+  'Curse: the bearer’s shadow salutes passing funerals whether the bearer does or not',
+  'Curse: any bread the bearer breaks is stale, always, at any table',
+  'Curse: the bearer cannot cross running water without paying it something small',
+  'Curse: children trust the bearer on sight, and their parents, on sight, do not',
+  'Curse: the item’s previous owners attend the bearer’s dreams as a quiet committee, taking minutes',
+  'Curse: every mirror shows the bearer carrying the item, even when it has been left at home',
 ];
-DATA5E.itemNameNouns = ['Embers', 'the Drowned Court', 'Silence', 'the Ninth Winter', 'Thorns', 'the Pale Hunt', 'Last Light', 'the Salt Road', 'Crows', 'the Broken Bell', 'Mercy', 'the Long Fast', 'Sparrows', 'the Old Dyke', 'Patience', 'the Red Harvest', 'Cinders', 'the Quiet Ford', 'Oaths', 'the Gallows Oak'];
-DATA5E.itemNameAdjectives = ['Sallow', 'Threadbare', 'Unforgiving', 'Wakeless', 'Hungering', 'Sunward', 'Miser’s', 'Tithing', 'Winterborn', 'Griefbound', 'Coalbright', 'Fenwrought', 'Sexton’s', 'Vagrant', 'Steadfast'];
+DATA5E.itemNameNouns = ['Embers', 'the Drowned Court', 'Silence', 'the Ninth Winter', 'Thorns', 'the Pale Hunt', 'Last Light', 'the Salt Road', 'Crows', 'the Broken Bell', 'Mercy', 'the Long Fast', 'Sparrows', 'the Old Dyke', 'Patience', 'the Red Harvest', 'Cinders', 'the Quiet Ford', 'Oaths', 'the Gallows Oak', 'the Low Mass', 'Rushlight', 'the Weeping Gate', 'Harrowfrost', 'the Hungry Month', 'Copper and Ash', 'the Still Ford', 'Marrow'];
+DATA5E.itemNameAdjectives = ['Sallow', 'Threadbare', 'Unforgiving', 'Wakeless', 'Hungering', 'Sunward', 'Miser’s', 'Tithing', 'Winterborn', 'Griefbound', 'Coalbright', 'Fenwrought', 'Sexton’s', 'Vagrant', 'Steadfast', 'Ninefold', 'Frostbitten', 'Penitent', 'Harvest-Sworn', 'Smokeblind', 'Latchless', 'Dour', 'Verdigris'];
 DATA5E.itemHistories = [
   'taken from a barrow that has since been found empty, doors open outward',
   'guild-stamped, though the guild in question denies ever making such a thing',
@@ -1607,6 +1806,14 @@ DATA5E.itemHistories = [
   'a saint’s relic by local insistence, a stolen trade-good by the Kirk’s quiet ledger',
   'recovered from a wreck at neap tide; the salvage-right lawsuit outlived three claimants',
   'passed down the female line for five generations with the same warning, now garbled: "not in April"',
+  'inventoried in a dead man’s will as "the thing in the rafters, let it stay there"',
+  'church-forfeit from a heresy trial, sold at the door by a sexton in arrears',
+  'traded for a winter’s firewood by a widow who watched it leave with visible relief',
+  'the prize of a wrestling match neither wrestler will confirm took place',
+  'found sealed in the dyke core during repairs, wrapped in lead sheet and three oaths',
+  'catalogued by the guild as ordinary three separate times, by three separate clerks, none of whom stayed a clerk',
+  'came off a pilgrim cart with a wheel of the wrong number of spokes, which the carter would not discuss',
+  'paid as a bride-price and returned, twice, by two different families',
 ];
 
 Object.freeze(DATA5E);
@@ -1618,7 +1825,7 @@ Object.freeze(DATA5E);
 'use strict';
 
 const GEN = (function () {
-  const VERSION = '1.4.0';
+  const VERSION = '1.5.0';
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
