@@ -94,6 +94,13 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 .lock:hover { opacity: 1; background: none; }
 .lock.locked { opacity: 1; }
 
+/* ---- settlement overview ---- */
+#settlement-box { text-align: left; border: 1.5px solid var(--ink-soft); background: rgba(255,252,240,.5); padding: .7rem .9rem; margin-bottom: .9rem; font-size: .85rem; }
+#settlement-box h2 { font-family: var(--serif-display); font-variant: small-caps; margin: 0 0 .1rem; font-size: 1.25rem; }
+#settlement-box .s-sub { font-style: italic; color: var(--ink-soft); margin-bottom: .4rem; }
+#settlement-box ul { margin: .25rem 0 0; padding-left: 1.1rem; }
+#settlement-box .s-trouble { margin-top: .45rem; color: #7a1d1d; font-style: italic; }
+
 /* ---- company strip ---- */
 #group-strip { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-bottom: .9rem; }
 .member-card { width: 88px; cursor: pointer; border: 1.5px solid var(--rule); background: rgba(255,252,240,.5); padding: .25rem .25rem .35rem; }
@@ -112,7 +119,7 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 @media print {
   @page { size: A4; margin: 12mm; }
   body { background: #fff; font-size: 10.5px; }
-  header, #controls, .lock, #tale-controls, #debug-box, #group-strip { display: none !important; }
+  header, #controls, .lock, #tale-controls, #debug-box, #group-strip, #settlement-box { display: none !important; }
   #layout { display: block; padding: 0; }
   #centre { page-break-inside: avoid; }
   #face-arms svg { max-height: 150px; width: auto; margin: 0 auto; }
@@ -142,6 +149,7 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
       <button id="solo-btn">Single character</button>
       <button id="household-btn">Household</button>
       <button id="warband-btn">Warband</button>
+      <button id="settlement-btn">Settlement</button>
     </div>
     <div class="group">
       <label for="ov-region">Constrain the roll</label>
@@ -172,6 +180,7 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
     </div>
   </div>
   <div id="centre">
+    <div id="settlement-box" style="display:none"></div>
     <div id="group-strip" style="display:none"></div>
     <div id="face-arms">
       <div id="portrait-box"></div>
@@ -529,6 +538,82 @@ DATA.childStructures = [
   'the child kept closest to the hearth and worked hardest for it',
   'sent to sleep in the loft with the others and expected to be useful by daylight',
   'raised half by the eldest sibling while the parents worked',
+];
+
+/* ---- Settlements ------------------------------------------------------------- */
+// Name parts per culture; a generated village name is pre + suf.
+DATA.settlementParts = {
+  aldmark: { pre: ['Har', 'Wic', 'Stan', 'Mere', 'Ash', 'Thorn', 'Gal', 'Dun', 'Wither', 'Brad'], suf: ['wick', 'ham', 'mere', 'ford', 'ley', 'den', 'worth', 'stead'] },
+  brakkish: { pre: ['Grau', 'Wurm', 'Asch', 'Kol', 'Blei', 'Falk', 'Hoch', 'Tann', 'Eber', 'Lind'], suf: ['stat', 'feld', 'brand', 'halde', 'bach', 'berg', 'hof', 'wald'] },
+  veyric: { pre: ['Aubre', 'Chal', 'Pont', 'Croix', 'Mal', 'Ver', 'Bel', 'Fon', 'Rou', 'Sau'], suf: ['mont', 'signy', 'verre', 'haut', 'court', 'ville', 'roche', 'val'] },
+  ostrav: { pre: ['Zel', 'Vos', 'Kam', 'Bel', 'Zhor', 'Rado', 'Mir', 'Dub', 'Ostro', 'Cern'], suf: ['grad', 'ov', 'enets', 'ova', 'ice', 'no', 'nik', 'ava'] },
+  norr: { pre: ['Hval', 'Skar', 'Ulf', 'Stein', 'Orm', 'Grim', 'Eyr', 'Vad', 'Bruns', 'Kald'], suf: ['vik', 'nes', 'fjord', 'strand', 'holm', 'stad', 'eyri', 'dal'] },
+  frisk: { pre: ['Terp', 'Ossel', 'Grind', 'Wester', 'Aster', 'Har', 'Mid', 'Uld', 'Bolls', 'Fern'], suf: ['werum', 'warden', 'holm', 'ryp', 'gast', 'um', 'wier', 'syl'] },
+};
+// Size drives household count, which offices exist, and the population figure.
+DATA.settlementSizes = [
+  { w: 40, v: { label: 'hamlet', households: 2, notables: ['alewife', 'herb-woman'], popMin: 30, popMax: 80 } },
+  { w: 45, v: { label: 'village', households: 3, notables: ['parish priest', 'miller', 'blacksmith', 'alewife'], popMin: 90, popMax: 320 } },
+  { w: 15, v: { label: 'market town', households: 3, notables: ['parish priest', 'innkeeper', 'blacksmith', 'merchant of wool and salt', 'barber-surgeon'], popMin: 350, popMax: 900 } },
+];
+DATA.notableRoles = {
+  'parish priest': 'the priest', miller: 'the miller', blacksmith: 'the smith', alewife: 'the alewife',
+  innkeeper: 'the innkeeper', 'merchant of wool and salt': 'the merchant', 'barber-surgeon': 'the barber-surgeon',
+  'herb-woman': 'the herb-woman',
+};
+DATA.settlementHolders = [
+  { w: 4, v: 'held of the lord of the district, through a bailiff nobody loves' },
+  { w: 3, v: 'abbey land, tithed and accounted to the last egg' },
+  { w: 2, v: 'a free charter village, proud and litigious about it' },
+  { w: 2, v: 'split between two manors, with a boundary dispute to match' },
+  { w: 1, v: 'crown land, which means nobody fixes anything' },
+  { w: 1, v: 'held in dower by an ancient widow whose heirs circle politely' },
+];
+DATA.settlementFeatures = [
+  'a stone church tower visible two valleys off', 'a ford that floods in spring', 'a gallows-hill with a long memory',
+  'an old stone row older than the Kirk, ploughed around, never through', 'a fulling mill on the beck', 'a holy well with a coin-slick bottom',
+  'a moot-oak where rents are paid and quarrels aired', 'a leper hospice at the crossroads, kept at bell-distance',
+  'a beacon fire kept ready on the height', 'a ruined tower nobody quarries, for reasons', 'an eel-weir that pays half the rent',
+  'a bridge chapel where carters buy prayers by the axle', 'a tithe-barn bigger than the church', 'a dovecote only the manor may keep, and everyone resents',
+];
+DATA.settlementCustoms = [
+  'at Plough-Monday the young men drag the plough door to door, and mischief follows refusal',
+  'the wake of Saint Merrow: three days of stalls, wrestling, and one traditional fistfight',
+  'on Allhallows eve every hearth is doused and relit from the church candle',
+  'the first sheaf of each harvest is plaited and nailed above the church door',
+  'rents are paid at the moot-oak, in public, so shame does the bailiff’s work',
+  'a straw man is drowned in the beck each spring; the Kirk disapproves and attends',
+  'no marriages in the month the flood came — not law, just not done',
+  'the bounds are beaten each year and the boys thumped at each stone, so the stones are remembered',
+  'the church ale is brewed by a different household each year, and judged without mercy',
+  'on the eve of the levy-muster, every door leaves out bread for whoever might not come back',
+];
+DATA.settlementTroubles = [
+  'the murrain has been seen one parish over, and the cattle-market is next week',
+  'the lord’s new bailiff is remeasuring every hide, hedge, and hen',
+  'the well by the church has gone brackish, and the whispering has started about why',
+  'the young men have begun slipping off to the war for wages, and the harvest will show it',
+  'a preaching friar has set up at the cross, and the tithes have begun to wobble',
+  'the mill-race is silting, and the miller blames everyone upstream by name',
+  'two families have not spoken since the boundary trial, and everyone must choose whose bread to eat',
+  'the church roof lead was sold to recast the bell; now the rain is in and the bell cracked anyway',
+  'wolves — or something doing a wolf’s work — have been at the folds three nights running',
+  'the new bridge has moved the road, and the village is quietly starving of passers-by',
+  'sanctuary was claimed at the altar a week ago, and the men outside are still waiting',
+  'the reeve’s tally and the steward’s roll no longer agree, and someone will answer for the difference',
+];
+// Tensions binding households to the village's notable figures.
+DATA.villageTensions = [
+  'who has your family’s mark in the debt-book twice over',
+  'who preached last Kirk-day about a sin only the two of you know of',
+  'who shorted your sacks for years, until you learned to watch the tally',
+  'who paid for your father’s funeral and lets you remember it',
+  'who wants your eldest for their trade, on terms that smell of charity',
+  'who saw you at the old stones at dusk and has said nothing yet',
+  'who waters the ale after the second cup, as the whole village knows',
+  'who sets the bread price, and your table by it',
+  'who carried a tale about your household up to the manor — or so it came back to you',
+  'who alone came when the fever was in your house, and can now be refused nothing',
 ];
 
 /* ---- 3.6 Byname material: 40 keyed epithets --------------------------------
@@ -1186,7 +1271,7 @@ Object.freeze(DATA);
 'use strict';
 
 const GEN = (function () {
-  const VERSION = '1.1.0';
+  const VERSION = '1.2.0';
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
@@ -1200,11 +1285,13 @@ const GEN = (function () {
     cur[parts[parts.length - 1]] = val;
   }
 
-  /* Weighted class pick with region multipliers. */
-  function pickClass(rng, regionKey, constraint) {
+  /* Weighted class pick with region multipliers. `allowed` narrows to a class list
+     (used when an occupation override dictates which classes may hold the office). */
+  function pickClass(rng, regionKey, constraint, allowed) {
     const mods = DATA.classRegionMod[regionKey] || {};
     let entries = DATA.classes.map(e => ({ w: e.w * (mods[e.v.key] || 1), v: e.v }));
     if (constraint) entries = entries.filter(e => e.v.key === constraint);
+    else if (allowed) entries = entries.filter(e => allowed.includes(e.v.key));
     return deepClone(pick(rng, entries, 'class'));
   }
 
@@ -1261,7 +1348,9 @@ const GEN = (function () {
     });
 
     /* -- 4. Social class ------------------------------------------------ */
-    L('socialClass', () => pickClass(rng, c.region.key, overrides.socialClass));
+    // An occupation override (settlement offices) narrows class to those that may hold it.
+    const occDef = overrides.occupation ? DATA.occupations.find(o => o.name === overrides.occupation) : null;
+    L('socialClass', () => pickClass(rng, c.region.key, overrides.socialClass, occDef ? occDef.classes : null));
 
     /* -- 5. Birth circumstances ----------------------------------------- */
     L('birth', () => ({
@@ -1313,7 +1402,8 @@ const GEN = (function () {
     L('education', () => {
       const classEdu = { serf: 0.15, freePeasant: 0.3, outcast: 0.2, craftsman: 0.7, burgher: 1.6, clergy: 12, minorGentry: 2.5, knightly: 1.6, noble: 4 };
       const m = classEdu[c.socialClass.key] || 1;
-      const entries = DATA.educationLevels.map(e => ({ w: e.v.lit ? e.w * m : e.w, v: e.v }));
+      let entries = DATA.educationLevels.map(e => ({ w: e.v.lit ? e.w * m : e.w, v: e.v }));
+      if (occDef && occDef.lit) entries = entries.filter(e => e.v.lit); // office demands letters
       return deepClone(pick(rng, entries, 'education'));
     });
     // Coherence: a literate serf is allowed only via a Church path, and flagged.
@@ -1328,6 +1418,11 @@ const GEN = (function () {
 
     /* -- 9. Occupation (gated by class + sex + age + literacy) ------------- */
     L('occupation', () => {
+      if (occDef && c.age >= occDef.minAge && (!occDef.lit || c.education.lit) && occDef.classes.includes(c.socialClass.key)) {
+        traceRoll('occupation:constrained', { chosen: occDef.name });
+        return deepClone(occDef);
+      }
+      if (occDef) clamp('occupation-override-failed', overrides.occupation + ' does not fit age/literacy/class — falling back to open roll');
       const pool = DATA.occupations.filter(o =>
         o.classes.includes(c.socialClass.key) && c.age >= o.minAge && (!o.lit || c.education.lit));
       const sexPool = pool.filter(o => o.sex === 'any' || o.sex === c.sex);
@@ -1581,10 +1676,12 @@ const GEN = (function () {
 
   function generateGroup(seedStr, kind) {
     const g = makeRng(seedStr + ':' + kind);
-    return kind === 'warband' ? genWarband(seedStr, g) : genHousehold(seedStr, g);
+    if (kind === 'warband') return genWarband(seedStr, g);
+    if (kind === 'settlement') return genSettlement(seedStr, g);
+    return genHousehold(seedStr, g);
   }
 
-  function genHousehold(seedStr, g) {
+  function genHousehold(seedStr, g, regionKey) {
     const members = [];
     // Head: an adult householder; clergy and outcasts don't head hearth-households.
     const classKey = pick(g, DATA.classes.filter(e => e.v.key !== 'clergy' && e.v.key !== 'outcast')
@@ -1595,7 +1692,7 @@ const GEN = (function () {
     const headAge = roll(g, Math.max(headBracket.min, 22), headBracket.max);
     const widowed = chance(g, 0.12);
     const head = generate(seedStr + ':head', {
-      overrides: { socialClass: classKey },
+      overrides: { socialClass: classKey, region: regionKey },
       locks: { ageBracket: deepClone(headBracket), age: headAge, marital: widowed ? 'widowed' : 'wed' },
     });
     members.push({ role: 'head of the household', char: head });
@@ -1695,6 +1792,56 @@ const GEN = (function () {
     }
     for (const m of members) m.char.relationships = m.char.relationships.slice(0, 6);
     return { kind: 'warband', seed: seedStr, version: VERSION, members };
+  }
+
+  /* Settlement: a named place with its own facts, notable office-holders
+     generated INTO their offices, and full linked households. */
+  function genSettlement(seedStr, g) {
+    const region = deepClone(pick(g, DATA.regions, 'settlement:region'));
+    const parts = DATA.settlementParts[region.namePool];
+    const name = pick(g, parts.pre, 'settlement:name') + pick(g, parts.suf, 'settlement:name');
+    const size = deepClone(pick(g, DATA.settlementSizes, 'settlement:size'));
+    const s = {
+      kind: 'settlement', seed: seedStr, version: VERSION,
+      name, region: { key: region.key, name: region.name },
+      size: size.label,
+      population: roll(g, size.popMin, size.popMax),
+      holder: pick(g, DATA.settlementHolders, 'settlement:holder'),
+      features: pickN(g, DATA.settlementFeatures, roll(g, 2, 4)),
+      custom: pick(g, DATA.settlementCustoms, 'settlement:custom'),
+      trouble: pick(g, DATA.settlementTroubles, 'settlement:trouble'),
+      members: [],
+    };
+
+    // Notables: generated into their offices via the occupation override.
+    const notables = [];
+    for (const occName of size.notables) {
+      const def = DATA.occupations.find(o => o.name === occName);
+      const age = roll(g, Math.max(def.minAge, 24), 58);
+      const char = generate(seedStr + ':' + occName.replace(/[^a-z]+/gi, '-'), {
+        overrides: { region: region.key, occupation: occName, sex: def.sex !== 'any' ? def.sex : undefined },
+        locks: { ageBracket: bracketFor(age), age },
+      });
+      notables.push({ role: DATA.notableRoles[occName] || occName, char });
+      s.members.push(notables[notables.length - 1]);
+    }
+
+    // Households, all rooted in this region; each head is tied to one notable.
+    for (let i = 0; i < size.households; i++) {
+      const h = genHousehold(seedStr + ':h' + (i + 1), makeRng(seedStr + ':h' + (i + 1) + ':household'), region.key);
+      const head = h.members[0].char;
+      if (notables.length) {
+        const nb = notables[i % notables.length];
+        const t1 = pick(g, DATA.villageTensions, 'settlement:tension');
+        const t2 = pick(g, DATA.villageTensions, 'settlement:tension');
+        head.relationships.unshift({ name: nb.char.name.given, tie: nb.role + ' of ' + name, tension: t1 });
+        nb.char.relationships.unshift({ name: head.name.given, tie: 'a householder of ' + name, tension: t2 });
+        head.relationships = head.relationships.slice(0, 6);
+        nb.char.relationships = nb.char.relationships.slice(0, 6);
+      }
+      h.members.forEach(m => s.members.push({ role: m.role + ' · hearth ' + (i + 1), char: m.char }));
+    }
+    return s;
   }
 
   return { generate, generateGroup, VERSION, getPath, setPath };
@@ -2425,7 +2572,7 @@ if (typeof document !== 'undefined') (function () {
     return m ? decodeURIComponent(m[1]) : null;
   }
   function groupFromHash() {
-    const m = location.hash.match(/group=(household|warband)/);
+    const m = location.hash.match(/group=(household|warband|settlement)/);
     return m ? m[1] : null;
   }
   function writeHash() {
@@ -2464,7 +2611,20 @@ if (typeof document !== 'undefined') (function () {
     render();
   }
 
+  function renderSettlementBox() {
+    const box = $('#settlement-box');
+    const s = state.group;
+    if (!s || s.kind !== 'settlement') { box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = '';
+    box.innerHTML = '<h2>' + esc(s.name) + '</h2>' +
+      '<div class="s-sub">' + esc(s.size) + ' of some ' + s.population + ' souls · ' + esc(s.region.name) + ' · ' + esc(s.holder) + '</div>' +
+      '<ul>' + s.features.map(f => '<li>' + esc(f) + '</li>').join('') + '</ul>' +
+      '<div>Custom: ' + esc(s.custom) + '.</div>' +
+      '<div class="s-trouble">The village’s trouble: ' + esc(s.trouble) + '.</div>';
+  }
+
   function renderStrip() {
+    renderSettlementBox();
     const strip = $('#group-strip');
     if (!state.group) { strip.style.display = 'none'; strip.innerHTML = ''; return; }
     strip.style.display = '';
@@ -2623,9 +2783,15 @@ if (typeof document !== 'undefined') (function () {
     $('#solo-btn').onclick = () => generate(state.seed || randomSeed());
     $('#household-btn').onclick = () => generateGroup('household', state.seed || randomSeed());
     $('#warband-btn').onclick = () => generateGroup('warband', state.seed || randomSeed());
+    $('#settlement-btn').onclick = () => generateGroup('settlement', state.seed || randomSeed());
 
     $('#copy-link-btn').onclick = copyLink;
-    $('#export-json-btn').onclick = () => EXPORT.download(state.seed + '.json', EXPORT.toJSON(state.char, state.locks), 'application/json');
+    $('#export-json-btn').onclick = () => {
+      if (state.group) EXPORT.download(state.seed + '-' + state.group.kind + '.json',
+        JSON.stringify({ format: 'medieval-company', version: state.group.version, seed: state.seed, kind: state.group.kind, group: state.group }, null, 2),
+        'application/json');
+      else EXPORT.download(state.seed + '.json', EXPORT.toJSON(state.char, state.locks), 'application/json');
+    };
     $('#export-md-btn').onclick = () => EXPORT.download(state.seed + '.md', EXPORT.toMarkdown(state.char), 'text/markdown');
     $('#export-png-btn').onclick = () => EXPORT.toPNG(state.char);
     $('#print-btn').onclick = () => window.print();
@@ -2636,11 +2802,17 @@ if (typeof document !== 'undefined') (function () {
       rd.onload = () => {
         try {
           const data = JSON.parse(rd.result);
-          if (data.format !== 'medieval-character') throw new Error('not a character file');
-          state.seed = data.seed;
-          state.locks = data.locks || {};
-          state.char = data.character;
-          state.group = null;
+          if (data.format === 'medieval-company') {
+            state.seed = data.seed;
+            state.group = data.group;
+            state.sel = 0;
+            state.char = data.group.members[0].char;
+          } else if (data.format === 'medieval-character') {
+            state.seed = data.seed;
+            state.locks = data.locks || {};
+            state.char = data.character;
+            state.group = null;
+          } else throw new Error('not a character or company file');
           $('#seed-input').value = state.seed;
           writeHash();
           renderStrip();

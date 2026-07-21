@@ -20,10 +20,11 @@ character byte-for-byte, portrait and arms included.
 - **Export**: JSON (full object, re-importable, includes locks), Markdown, a PNG name-card
   (portrait + arms via canvas), and a print stylesheet that fits the sheet on one A4/Letter
   page. `C` copies a share link.
-- **Companies**: the **Household** and **Warband** buttons generate a linked group from the
-  seed — a strip of portrait cards appears; click a card to view that member's full sheet.
-  The share link preserves the mode (`#seed=X&group=household`), so a company reproduces
-  exactly like a single character. **Single character** returns to solo mode.
+- **Companies**: the **Household**, **Warband**, and **Settlement** buttons generate a
+  linked group from the seed — a strip of portrait cards appears; click a card to view that
+  member's full sheet. The share link preserves the mode (`#seed=X&group=settlement`), so a
+  company reproduces exactly like a single character. **Single character** returns to solo
+  mode. In company mode the JSON export/import round-trips the whole company.
 
 ## Households & warbands
 
@@ -42,6 +43,15 @@ the UI uses, so all coherence rules still apply to every member:
   their shared trouble.
 - Members get cross-relationships referencing each other's generated names, with tensions
   from dedicated household/warband tension tables.
+- **Settlement**: a named place — the name is assembled from culture-flavoured parts, so a
+  Brakkish valley yields an "Aschhalde" and a Norr coast a "Skarvik" — with its own facts:
+  size and population, who holds it, landmark features, a local custom, and the village's
+  shared trouble, all shown in an overview panel. Its notable office-holders (priest,
+  miller, smith, alewife; more in a market town, fewer in a hamlet) are generated *into*
+  their offices via an occupation override that narrows class, sex, and education upstream
+  — which is why the priest can always actually read. Beneath them, full households; every
+  household head is cross-tied to one of the notables ("the miller of Aschhalde — who
+  shorted your sacks for years…") using a dedicated village tension table.
 - The padlocks and the constraint dropdowns apply to **single characters only** — a company
   manages its own internal coherence.
 
@@ -124,8 +134,9 @@ floors, 10/10 seed determinism including SVG output, a 500-character sweep (no e
 no `undefined`, ≥80% peasant-or-below, Touch ≤6%, no unflagged rule-of-tincture
 violations, every byname traceable to a field on its own character), blazon/render
 agreement for 20 armigerous characters, lock-stability over 20 rerolls, and company checks
-(household/warband determinism, shared region/culture/class/problem, child age and
-parentage coherence, cross-ties referencing real member names).
+(household/warband/settlement determinism, shared region/culture/class/problem, child age
+and parentage coherence, cross-ties referencing real member names, and notables holding
+their exact office with class/sex/literacy gates met).
 
 ## Content summary
 
