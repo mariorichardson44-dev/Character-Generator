@@ -3,11 +3,37 @@
 A single self-contained HTML file — `generator.html` — that generates grim, low-fantasy
 medieval characters: full sheet, procedural woodcut portrait, real heraldry with correct
 blazon, and an optional AI-written backstory. No build step, no dependencies, no network.
-Open it in a browser (double-click works, `file://` is fine) and it runs offline.
+Open it in a browser (double-click works, `file://` is fine) and it runs offline. With
+GitHub Pages enabled (Settings → Pages → deploy from `main`/root) it is served at
+`https://<user>.github.io/Character-Generator/` — note the path is case-sensitive; a
+bundled `index.html` redirects the bare URL to the generator.
 
 Every character is a pure function of a **seed string**. The seed is shown in the UI,
 written to the URL hash (`#seed=thornmarch-4417`), and loading that URL reproduces the
 character byte-for-byte, portrait and arms included.
+
+## D&D 5e mode & homebrew items
+
+The **Rules** dropdown switches between the native grim low-fantasy mode and **D&D 5e
+(SRD)** mode. In 5e mode every character gains an "adventurer" layer — race, class, level,
+alignment, ability scores (4d6-drop-lowest, assigned by class priority, racial bonuses
+applied), HP/AC/proficiency, and a background *derived from the generated life* (the
+priest's child becomes an Acolyte, the poacher a Criminal) rather than rolled separately.
+The layer is drawn from its own seeded stream, so toggling modes never rerolls the base
+character — same seed, same person, with or without stats. Races are weighted so humans
+stay the norm and the world stays grim; elves, tieflings, and half-orcs get portrait
+overlays (pointed ears, horns, tusks) and a line about how the village treats them.
+The toggle applies to companies too — an entire settlement can be statted at once — and
+share links carry it (`&rules=5e`).
+
+**Roll an item** generates a homebrew magic item from its own seed: form, rarity
+(weighted, commons are quirk-only flavour pieces), a rarity-scaled effect, a quirk that
+gives the item a personality, a ~15% curse, a price band, and a history hook. Items are
+deterministic, live in the share link (`&item=<seed>`), and export to Markdown.
+
+Mechanics terms come from the **System Reference Document 5.1** (Wizards of the Coast
+LLC, CC-BY-4.0); the setting lore remains this generator's own invented world — no
+campaign-setting IP is used.
 
 ## Using it
 
