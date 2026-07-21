@@ -26,10 +26,15 @@ overlays (pointed ears, horns, tusks) and a line about how the village treats th
 The toggle applies to companies too — an entire settlement can be statted at once — and
 share links carry it (`&rules=5e`).
 
-**Roll an item** generates a homebrew magic item from its own seed: form, rarity
-(weighted, commons are quirk-only flavour pieces), a rarity-scaled effect, a quirk that
-gives the item a personality, a ~15% curse, a price band, and a history hook. Items are
-deterministic, live in the share link (`&item=<seed>`), and export to Markdown.
+The **Item forge** is its own tab, fully separate from character generation. It rolls
+homebrew magic items from their own seed: form, rarity (weighted, commons are quirk-only
+flavour pieces), a rarity-scaled effect, a quirk that gives the item a personality, a
+~15% curse, a price band, and a history hook. Three dropdowns constrain the roll: item
+type (weapon/armor/wondrous/potion/ring/wand/staff), rarity (common through legendary),
+and "suits a class" (a fighter filter yields weapons and armor, a wizard filter wands,
+staves, and rings; an explicit type choice beats the class filter). Items are
+deterministic, live in the share link (`&view=forge&iseed=<seed>&icat=...&irar=...`),
+and export to Markdown or print. Old `&item=<seed>` links still work.
 
 Mechanics terms come from the **System Reference Document 5.1** (Wizards of the Coast
 LLC, CC-BY-4.0); the setting lore remains this generator's own invented world — no
