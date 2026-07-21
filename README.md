@@ -52,6 +52,19 @@ the UI uses, so all coherence rules still apply to every member:
   — which is why the priest can always actually read. Beneath them, full households; every
   household head is cross-tied to one of the notables ("the miller of Aschhalde — who
   shorted your sacks for years…") using a dedicated village tension table.
+- **Feuds**: every settlement carries at least one feud between two hearths (and sometimes
+  a second dragging in a notable), with a concrete cause ("a pig in the barley, and the
+  words said after") and a current state ("cold and formal — greetings exchanged like
+  hostages"). Both principals carry the tie in their relationships, by name; the feud is
+  listed in the overview panel and on the summary sheet.
+- **Print summary**: in company mode, the **Print summary** button prints a one-page A4
+  roster — the place's facts, custom, trouble, and feuds, then every member with portrait
+  thumbnail, name, role, age, trade, temperament, and secret (it is a GM page; secrets
+  belong on it). The Markdown export in company mode likewise emits the roster followed by
+  every member's full sheet.
+- Secrets are deduplicated within a company — two villagers with the identical secret reads
+  as a bug on a roster page — deterministically, and never touching the forced
+  transgression secret.
 - The padlocks and the constraint dropdowns apply to **single characters only** — a company
   manages its own internal coherence.
 

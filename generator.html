@@ -100,6 +100,24 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 #settlement-box .s-sub { font-style: italic; color: var(--ink-soft); margin-bottom: .4rem; }
 #settlement-box ul { margin: .25rem 0 0; padding-left: 1.1rem; }
 #settlement-box .s-trouble { margin-top: .45rem; color: #7a1d1d; font-style: italic; }
+#settlement-box .s-feud { margin-top: .25rem; color: #5c2d5c; font-style: italic; }
+
+/* ---- company summary sheet (print only) ---- */
+#print-summary { display: none; }
+#print-summary h1 { font-family: var(--serif-display); font-variant: small-caps; font-size: 20px; margin: 0 0 2px; }
+#print-summary .sum-sub { font-style: italic; color: #444; margin-bottom: 4px; }
+#print-summary .sum-facts { font-size: 10px; margin-bottom: 2px; }
+#print-summary .sum-trouble { font-size: 10.5px; font-style: italic; margin: 3px 0; }
+#print-summary .sum-feud { font-size: 10.5px; font-style: italic; margin: 2px 0; }
+#print-summary .sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; margin-top: 6px; }
+#print-summary .sum-sec-title { grid-column: 1 / -1; font-variant: small-caps; font-family: var(--serif-display); border-bottom: 1px solid #333; margin-top: 5px; font-size: 12px; }
+#print-summary .sum-row { display: flex; gap: 6px; border-bottom: 1px dotted #999; padding: 2px 0; break-inside: avoid; align-items: flex-start; }
+#print-summary .sum-row svg { width: 42px; height: auto; flex: 0 0 42px; }
+#print-summary .sum-name { font-weight: bold; font-size: 11px; }
+#print-summary .sum-role { font-style: italic; color: #555; font-size: 10px; }
+#print-summary .sum-line { font-size: 9.5px; }
+#print-summary .sum-secret { font-size: 9px; font-style: italic; color: #333; }
+#print-summary .sum-foot { margin-top: 6px; font-size: 8.5px; color: #666; font-style: italic; }
 
 /* ---- company strip ---- */
 #group-strip { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-bottom: .9rem; }
@@ -127,6 +145,9 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
   #sheet details { break-inside: avoid; border-color: #999; }
   #sheet summary { background: #eee; }
   .row:hover { background: none; }
+  /* Company summary mode: the roster page replaces the character sheet. */
+  body.summary-mode #layout { display: none !important; }
+  body.summary-mode #print-summary { display: block !important; }
 }
 </style>
 </head>
@@ -163,6 +184,7 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
       <button id="export-md-btn">Markdown</button>
       <button id="export-png-btn">PNG card</button>
       <button id="print-btn">Print</button>
+      <button id="print-summary-btn" disabled>Print summary</button>
       <label for="import-input" style="margin-top:.3rem;">Import JSON</label>
       <input type="file" id="import-input" accept=".json,application/json">
     </div>
@@ -197,6 +219,7 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
   <div id="sheet"></div>
   <div id="debug-box" style="display:none"></div>
 </div>
+<div id="print-summary"></div>
 <script>
 /* ============================== RNG ==============================
    Seeded PRNG. Every character is a pure function of its seed string.
@@ -602,6 +625,30 @@ DATA.settlementTroubles = [
   'sanctuary was claimed at the altar a week ago, and the men outside are still waiting',
   'the reeve’s tally and the steward’s roll no longer agree, and someone will answer for the difference',
 ];
+// Feuds spanning households: cause + current state, injected into both heads' ties.
+DATA.feudCauses = [
+  'the boundary stone that moved — or did not move — in the plague year',
+  'a cow that drowned in the other side’s ditch',
+  'a betrothal broken off two days before the banns',
+  'whose grain goes first at the mill in a wet week',
+  'the front pew, and who has sat in it since before the fire',
+  'an inheritance split by a will nobody saw unsigned',
+  'access to the well in the dry months',
+  'a pig in the barley, and the words said after',
+  'a bride-price half-paid and wholly resented',
+  'a word said over a coffin, and never taken back',
+  'gleaning rights on the strip between the two holdings',
+  'a blood debt from the grandfathers’ time, which neither side can state precisely and neither will drop',
+];
+DATA.feudStates = [
+  { w: 3, v: 'cold and formal — greetings exchanged like hostages' },
+  { w: 3, v: 'open name-calling at market' },
+  { w: 2, v: 'at law before the manor court, ruinously for both' },
+  { w: 1, v: 'one barn already burned, cause officially unknown' },
+  { w: 2, v: 'under a sworn truce that creaks at every feast day' },
+  { w: 2, v: 'waiting on a marriage that is supposed to end it' },
+];
+
 // Tensions binding households to the village's notable figures.
 DATA.villageTensions = [
   'who has your family’s mark in the debt-book twice over',
@@ -1271,7 +1318,7 @@ Object.freeze(DATA);
 'use strict';
 
 const GEN = (function () {
-  const VERSION = '1.2.0';
+  const VERSION = '1.3.0';
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
@@ -1674,6 +1721,23 @@ const GEN = (function () {
     return deepClone(DATA.ageBrackets.map(e => e.v).find(b => age >= b.min && age <= b.max) || DATA.ageBrackets[5].v);
   }
 
+  /* Two villagers with the identical secret reads as a bug on the roster page.
+     Deterministically reroll duplicates — except the transgression secret,
+     which is forced by a flag and must stay. */
+  function dedupeSecrets(members, seedStr) {
+    const rng = makeRng(seedStr + ':secret-dedupe');
+    const seen = new Set();
+    for (const m of members) {
+      const c = m.char;
+      const forced = c.flags.some(f => f.startsWith('transgression'));
+      if (seen.has(c.secret) && !forced) {
+        const unused = DATA.secrets.filter(s => !seen.has(s) && !(c.education.lit && s.startsWith('can read')));
+        if (unused.length) c.secret = pick(rng, unused, 'group:secret-dedupe');
+      }
+      seen.add(c.secret);
+    }
+  }
+
   function generateGroup(seedStr, kind) {
     const g = makeRng(seedStr + ':' + kind);
     if (kind === 'warband') return genWarband(seedStr, g);
@@ -1754,6 +1818,7 @@ const GEN = (function () {
       if (spouse) spouse.relationships.unshift({ name: k.name.given, tie: k.sex === 'male' ? 'your son' : 'your daughter', tension: tension() });
     }
     for (const m of members) m.char.relationships = m.char.relationships.slice(0, 6);
+    dedupeSecrets(members, seedStr);
     return { kind: 'household', seed: seedStr, version: VERSION, members };
   }
 
@@ -1791,6 +1856,7 @@ const GEN = (function () {
       }
     }
     for (const m of members) m.char.relationships = m.char.relationships.slice(0, 6);
+    dedupeSecrets(members, seedStr);
     return { kind: 'warband', seed: seedStr, version: VERSION, members };
   }
 
@@ -1827,20 +1893,52 @@ const GEN = (function () {
     }
 
     // Households, all rooted in this region; each head is tied to one notable.
+    const heads = [];
     for (let i = 0; i < size.households; i++) {
       const h = genHousehold(seedStr + ':h' + (i + 1), makeRng(seedStr + ':h' + (i + 1) + ':household'), region.key);
       const head = h.members[0].char;
+      heads.push({ label: 'hearth ' + (i + 1), char: head });
       if (notables.length) {
         const nb = notables[i % notables.length];
         const t1 = pick(g, DATA.villageTensions, 'settlement:tension');
         const t2 = pick(g, DATA.villageTensions, 'settlement:tension');
         head.relationships.unshift({ name: nb.char.name.given, tie: nb.role + ' of ' + name, tension: t1 });
         nb.char.relationships.unshift({ name: head.name.given, tie: 'a householder of ' + name, tension: t2 });
-        head.relationships = head.relationships.slice(0, 6);
-        nb.char.relationships = nb.char.relationships.slice(0, 6);
       }
       h.members.forEach(m => s.members.push({ role: m.role + ' · hearth ' + (i + 1), char: m.char }));
     }
+
+    /* Feuds spanning households. Always one between two hearths; sometimes a
+       second dragging in a notable. Both principals carry the tie by name. */
+    s.feuds = [];
+    const addFeud = (a, b) => {
+      const cause = pick(g, DATA.feudCauses, 'settlement:feudCause');
+      const state = pick(g, DATA.feudStates, 'settlement:feudState');
+      const tieFor = (other, otherLabel) => ({
+        name: other.char.name.given,
+        tie: 'the far side of the feud (' + otherLabel + ')',
+        tension: 'your feud — over ' + cause + '; ' + state,
+      });
+      a.char.relationships.unshift(tieFor(b, b.label));
+      b.char.relationships.unshift(tieFor(a, a.label));
+      s.feuds.push({
+        sides: [a.label + ' (' + a.char.name.given + ')', b.label + ' (' + b.char.name.given + ')'],
+        cause, state,
+      });
+    };
+    if (heads.length >= 2) {
+      const idxA = roll(g, 0, heads.length - 1);
+      let idxB = roll(g, 0, heads.length - 2);
+      if (idxB >= idxA) idxB++;
+      addFeud(heads[idxA], heads[idxB]);
+      if (notables.length && chance(g, 0.3)) {
+        const nb = notables[roll(g, 0, notables.length - 1)];
+        const other = heads[roll(g, 0, heads.length - 1)];
+        addFeud({ label: nb.role, char: nb.char }, other);
+      }
+    }
+    for (const m of s.members) m.char.relationships = m.char.relationships.slice(0, 6);
+    dedupeSecrets(s.members, seedStr);
     return s;
   }
 
@@ -2476,7 +2574,87 @@ const EXPORT = (function () {
     ctx.fillText(line, x, y);
   }
 
-  return { toMarkdown, toJSON, toPNG, download };
+  /* ---- Company summaries: one-page print HTML + markdown ---- */
+  function escH(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+  function companyTitle(g) {
+    return g.kind === 'settlement' ? g.name
+      : g.kind === 'warband' ? 'The band of ' + g.members[0].char.name.full
+        : 'The household of ' + g.members[0].char.name.full;
+  }
+
+  // Members grouped for display: settlement → notables + hearths; else one section.
+  function groupSections(g) {
+    if (g.kind !== 'settlement') {
+      return [{ title: g.kind === 'warband' ? 'The band' : 'The household', members: g.members }];
+    }
+    const notables = g.members.filter(m => !/ · hearth /.test(m.role));
+    const hearths = {};
+    for (const m of g.members) {
+      const mm = m.role.match(/ · hearth (\d+)$/);
+      if (mm) (hearths[mm[1]] = hearths[mm[1]] || []).push({ role: m.role.replace(/ · hearth \d+$/, ''), char: m.char });
+    }
+    return [{ title: 'Notables', members: notables }]
+      .concat(Object.keys(hearths).sort().map(k => ({ title: 'Hearth ' + k, members: hearths[k] })));
+  }
+
+  function companySummaryHTML(g) {
+    let h = '<h1>' + escH(companyTitle(g)) + '</h1>';
+    if (g.kind === 'settlement') {
+      h += '<div class="sum-sub">' + escH(g.size) + ' of some ' + g.population + ' souls · ' + escH(g.region.name) + ' · ' + escH(g.holder) + '</div>';
+      h += '<div class="sum-facts">' + g.features.map(escH).join(' · ') + '</div>';
+      h += '<div class="sum-facts">Custom: ' + escH(g.custom) + '.</div>';
+      h += '<div class="sum-trouble">The village’s trouble: ' + escH(g.trouble) + '.</div>';
+      for (const f of (g.feuds || [])) {
+        h += '<div class="sum-feud">Feud: ' + escH(f.sides[0]) + ' against ' + escH(f.sides[1]) + ' — over ' + escH(f.cause) + '; ' + escH(f.state) + '.</div>';
+      }
+    } else {
+      const lead = g.members[0].char;
+      h += '<div class="sum-sub">' + escH(lead.socialClass.label) + ' · ' + escH(lead.region.name) + ' · seed ' + escH(g.seed) + '</div>';
+      h += '<div class="sum-trouble">Their shared trouble: ' + escH(lead.problem) + '.</div>';
+    }
+    h += '<div class="sum-grid">';
+    let i = 0;
+    for (const sec of groupSections(g)) {
+      h += '<div class="sum-sec-title">' + escH(sec.title) + '</div>';
+      for (const m of sec.members) {
+        const c = m.char;
+        h += '<div class="sum-row">' + PORTRAIT.render(c.portrait, 'sum' + (i++)) +
+          '<div><span class="sum-name">' + escH(c.name.full) + '</span> <span class="sum-role">' + escH(m.role.replace(/ · hearth \d+$/, '')) + '</span>' +
+          '<div class="sum-line">' + escH(c.sex) + ', ' + c.age + ' · ' + escH(c.occupation.name) + ' · ' + escH(c.mind.temperament.split(/[:;—]/)[0].trim()) + '</div>' +
+          '<div class="sum-secret">Secret: ' + escH(c.secret) + '.</div></div></div>';
+      }
+    }
+    h += '</div><div class="sum-foot">seed ' + escH(g.seed) + ' · generator v' + escH(g.version) + '</div>';
+    return h;
+  }
+
+  function companyMarkdown(g) {
+    const lines = ['# ' + companyTitle(g), ''];
+    if (g.kind === 'settlement') {
+      lines.push('*' + g.size + ' of some ' + g.population + ' souls · ' + g.region.name + ' · ' + g.holder + '*', '');
+      for (const f of g.features) lines.push('- ' + f);
+      lines.push('- Custom: ' + g.custom + '.');
+      lines.push('- **The village’s trouble:** ' + g.trouble + '.');
+      for (const f of (g.feuds || [])) lines.push('- **Feud:** ' + f.sides[0] + ' against ' + f.sides[1] + ' — over ' + f.cause + '; ' + f.state + '.');
+    } else {
+      lines.push('*Seed: `' + g.seed + '` · shared trouble: ' + g.members[0].char.problem + '.*');
+    }
+    lines.push('');
+    for (const sec of groupSections(g)) {
+      lines.push('## ' + sec.title);
+      for (const m of sec.members) {
+        const c = m.char;
+        lines.push('- **' + c.name.full + '** (' + m.role.replace(/ · hearth \d+$/, '') + ') — ' + c.sex + ', ' + c.age + ', ' + c.occupation.name + '. Secret: ' + c.secret + '.');
+      }
+      lines.push('');
+    }
+    lines.push('---', '', '# Full sheets', '');
+    lines.push(g.members.map(m => toMarkdown(m.char)).join('\n\n---\n\n'));
+    return lines.join('\n');
+  }
+
+  return { toMarkdown, toJSON, toPNG, download, companySummaryHTML, companyMarkdown, companyTitle };
 })();
 
 /* ---------- AI (optional, user-triggered; key lives in localStorage only) ---------- */
@@ -2620,11 +2798,18 @@ if (typeof document !== 'undefined') (function () {
       '<div class="s-sub">' + esc(s.size) + ' of some ' + s.population + ' souls · ' + esc(s.region.name) + ' · ' + esc(s.holder) + '</div>' +
       '<ul>' + s.features.map(f => '<li>' + esc(f) + '</li>').join('') + '</ul>' +
       '<div>Custom: ' + esc(s.custom) + '.</div>' +
-      '<div class="s-trouble">The village’s trouble: ' + esc(s.trouble) + '.</div>';
+      '<div class="s-trouble">The village’s trouble: ' + esc(s.trouble) + '.</div>' +
+      (s.feuds || []).map(f => '<div class="s-feud">Feud: ' + esc(f.sides[0]) + ' against ' + esc(f.sides[1]) +
+        ' — over ' + esc(f.cause) + '; ' + esc(f.state) + '.</div>').join('');
   }
 
   function renderStrip() {
     renderSettlementBox();
+    // Keep the print-summary sheet current with the active company.
+    $('#print-summary').innerHTML = state.group ? EXPORT.companySummaryHTML(state.group) : '';
+    $('#print-summary-btn').disabled = !state.group;
+    $('#print-summary-btn').title = state.group ? 'Print a one-page roster of the whole company'
+      : 'Generate a household, warband, or settlement first';
     const strip = $('#group-strip');
     if (!state.group) { strip.style.display = 'none'; strip.innerHTML = ''; return; }
     strip.style.display = '';
@@ -2792,9 +2977,18 @@ if (typeof document !== 'undefined') (function () {
         'application/json');
       else EXPORT.download(state.seed + '.json', EXPORT.toJSON(state.char, state.locks), 'application/json');
     };
-    $('#export-md-btn').onclick = () => EXPORT.download(state.seed + '.md', EXPORT.toMarkdown(state.char), 'text/markdown');
+    $('#export-md-btn').onclick = () => {
+      if (state.group) EXPORT.download(state.seed + '-' + state.group.kind + '.md', EXPORT.companyMarkdown(state.group), 'text/markdown');
+      else EXPORT.download(state.seed + '.md', EXPORT.toMarkdown(state.char), 'text/markdown');
+    };
     $('#export-png-btn').onclick = () => EXPORT.toPNG(state.char);
     $('#print-btn').onclick = () => window.print();
+    $('#print-summary-btn').onclick = () => {
+      if (!state.group) return;
+      document.body.classList.add('summary-mode');
+      window.print();
+    };
+    window.addEventListener('afterprint', () => document.body.classList.remove('summary-mode'));
     $('#import-input').onchange = (e) => {
       const f = e.target.files[0];
       if (!f) return;
