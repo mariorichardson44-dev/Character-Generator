@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Low-Fantasy Medieval Character Generator</title>
+<style>
+/* ---- design tokens ---- */
+:root {
+  --parch: #ece1c8;
+  --parch-dark: #ddceac;
+  --ink: #2b2118;
+  --ink-soft: #4a3c2e;
+  --accent: #8a5a3a;
+  --rule: #b9a482;
+  --serif-display: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --serif-body: Georgia, "Times New Roman", serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--parch);
+  color: var(--ink);
+  font-family: var(--serif-body);
+  font-size: 15px;
+  line-height: 1.45;
+  background-image: radial-gradient(ellipse at 20% 10%, rgba(185,164,130,.25), transparent 60%),
+                    radial-gradient(ellipse at 90% 90%, rgba(185,164,130,.3), transparent 55%);
+  min-height: 100vh;
+}
+h1 { font-family: var(--serif-display); font-size: 1.25rem; letter-spacing: .04em; margin: 0; }
+button, select, input {
+  font-family: var(--serif-body); font-size: .9rem;
+  background: var(--parch-dark); color: var(--ink);
+  border: 1.5px solid var(--ink-soft); border-radius: 3px;
+  padding: .35rem .6rem; cursor: pointer;
+}
+button:hover:not(:disabled) { background: var(--rule); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+input[type=text], input[type=password] { cursor: text; width: 100%; }
+
+/* ---- layout: three columns desktop, stacked mobile ---- */
+header {
+  display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+  padding: .7rem 1.2rem; border-bottom: 2.5px solid var(--ink);
+}
+header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic; margin-left: auto; }
+#layout {
+  display: grid; grid-template-columns: 240px minmax(320px, 1.1fr) minmax(340px, 1.4fr);
+  gap: 1.2rem; padding: 1.2rem; max-width: 1400px; margin: 0 auto;
+}
+@media (max-width: 980px) { #layout { grid-template-columns: 1fr; } }
+
+/* ---- left: controls ---- */
+#controls { display: flex; flex-direction: column; gap: .55rem; align-content: start; }
+#controls label { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+#controls .group { display: flex; flex-direction: column; gap: .3rem; padding-bottom: .6rem; border-bottom: 1px solid var(--rule); }
+#generate-btn { font-weight: bold; font-size: 1rem; }
+#settings-panel { display: none; flex-direction: column; gap: .4rem; padding: .6rem; border: 1.5px dashed var(--ink-soft); background: var(--parch-dark); }
+#settings-panel.open { display: flex; }
+#settings-panel .warn { font-size: .74rem; font-style: italic; }
+
+/* ---- centre ---- */
+#centre { text-align: center; }
+#face-arms { display: flex; gap: 1rem; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+#portrait-box { width: 240px; max-width: 46vw; }
+#arms-box { width: 150px; max-width: 34vw; padding-top: 1.4rem; }
+.portrait-svg, .arms-svg, .mark-svg { width: 100%; height: auto; display: block; }
+.mark-svg { background: var(--parch); }
+.mark-note { font-size: .74rem; font-style: italic; margin-top: .3rem; }
+#char-name { font-family: var(--serif-display); font-size: 1.7rem; margin: .8rem 0 .1rem; }
+#char-sub { color: var(--ink-soft); font-style: italic; }
+#blazon { font-style: italic; font-variant: small-caps; font-size: .85rem; margin-top: .5rem; color: var(--ink-soft); }
+#violation-note { color: #7a1d1d; font-size: .8rem; font-style: italic; }
+#tale-box { text-align: left; margin-top: 1rem; padding: .8rem; border: 1.5px solid var(--rule); background: rgba(255,252,240,.5); white-space: pre-wrap; font-size: .9rem; }
+#tale-err { color: #7a1d1d; font-size: .85rem; margin-top: .4rem; }
+#tale-controls { margin-top: 1rem; }
+
+/* ---- right: the sheet ---- */
+#sheet details { border: 1px solid var(--rule); margin-bottom: .5rem; background: rgba(255,252,240,.35); }
+#sheet summary {
+  font-family: var(--serif-display); font-variant: small-caps; letter-spacing: .05em;
+  padding: .35rem .6rem; cursor: pointer; background: var(--parch-dark);
+  border-bottom: 1px solid var(--rule);
+}
+.row { display: flex; gap: .5rem; padding: .45rem .6rem; border-bottom: 1px dotted var(--rule); align-items: flex-start; }
+.row:last-child { border-bottom: none; }
+.row:hover { background: rgba(185,164,130,.18); }
+.row-label { flex: 0 0 88px; font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); padding-top: .15rem; }
+.row-value { flex: 1; font-size: .88rem; }
+.row-value ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+.row-value li { margin-bottom: .12rem; }
+.lock { flex: 0 0 auto; border: none; background: none; font-size: .95rem; padding: 0 .2rem; opacity: .35; }
+.lock:hover { opacity: 1; background: none; }
+.lock.locked { opacity: 1; }
+
+/* ---- debug ---- */
+#debug-box { grid-column: 1 / -1; border: 2px dashed var(--accent); padding: .8rem; font-size: .78rem; }
+#debug-box .trace { max-height: 320px; overflow: auto; font-family: monospace; background: rgba(0,0,0,.04); padding: .5rem; }
+#debug-box .clamp { color: #7a1d1d; font-weight: bold; }
+
+/* ---- print: one clean page ---- */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff; font-size: 10.5px; }
+  header, #controls, .lock, #tale-controls, #debug-box { display: none !important; }
+  #layout { display: block; padding: 0; }
+  #centre { page-break-inside: avoid; }
+  #face-arms svg { max-height: 150px; width: auto; margin: 0 auto; }
+  #portrait-box { width: 130px; } #arms-box { width: 85px; }
+  #sheet details { break-inside: avoid; border-color: #999; }
+  #sheet summary { background: #eee; }
+  .row:hover { background: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Low-Fantasy Character Generator</h1>
+  <span class="kbd-hint">Space: reroll &nbsp;·&nbsp; L: lock hovered field &nbsp;·&nbsp; C: copy link</span>
+</header>
+<div id="layout">
+  <div id="controls">
+    <div class="group">
+      <label for="seed-input">Seed</label>
+      <input type="text" id="seed-input" spellcheck="false" autocomplete="off">
+      <button id="generate-btn">Generate</button>
+      <button id="reroll-btn">Reroll (new seed)</button>
+      <button id="copy-link-btn">Copy share link</button>
+    </div>
+    <div class="group">
+      <label for="ov-region">Constrain the roll</label>
+      <select id="ov-region"></select>
+      <select id="ov-class"></select>
+      <select id="ov-sex"></select>
+    </div>
+    <div class="group">
+      <label>Export</label>
+      <button id="export-json-btn">JSON</button>
+      <button id="export-md-btn">Markdown</button>
+      <button id="export-png-btn">PNG card</button>
+      <button id="print-btn">Print</button>
+      <label for="import-input" style="margin-top:.3rem;">Import JSON</label>
+      <input type="file" id="import-input" accept=".json,application/json">
+    </div>
+    <div class="group">
+      <button id="settings-btn">Settings</button>
+      <div id="settings-panel">
+        <label for="api-key-input">Anthropic API key</label>
+        <input type="password" id="api-key-input" spellcheck="false" autocomplete="off">
+        <div class="warn">This is a local file. The key is stored only in this browser's
+        localStorage and is sent nowhere but api.anthropic.com, and only when you press
+        &ldquo;Write the tale.&rdquo;</div>
+        <button id="api-key-save">Save key</button>
+        <button id="api-key-clear">Clear key</button>
+      </div>
+    </div>
+  </div>
+  <div id="centre">
+    <div id="face-arms">
+      <div id="portrait-box"></div>
+      <div id="arms-box"></div>
+    </div>
+    <div id="char-name"></div>
+    <div id="char-sub"></div>
+    <div id="blazon"></div>
+    <div id="violation-note"></div>
+    <div id="tale-controls"><button id="tale-btn" disabled>Write the tale</button></div>
+    <div id="tale-box" style="display:none"><div id="tale-out"></div></div>
+    <div id="tale-err"></div>
+  </div>
+  <div id="sheet"></div>
+  <div id="debug-box" style="display:none"></div>
+</div>
+<script>
+/* ============================== RNG ==============================
+   Seeded PRNG. Every character is a pure function of its seed string.
+   No Math.random() anywhere in the generation pipeline.            */
+'use strict';
+
+function cyrb128(str) {
+  let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
+  for (let i = 0, k; i < str.length; i++) {
+    k = str.charCodeAt(i);
+    h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+    h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+    h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+    h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+  }
+  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+  return [(h1 ^ h2 ^ h3 ^ h4) >>> 0, (h2 ^ h1) >>> 0, (h3 ^ h1) >>> 0, (h4 ^ h1) >>> 0];
+}
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function makeRng(seedStr) {
+  const h = cyrb128(String(seedStr));
+  return mulberry32(h[0] ^ h[1]);
+}
+
+/* Generation trace for ?debug=1 — every roll, weight, clamp. */
+const TRACE = { on: false, rows: [] };
+function traceRoll(label, detail) { if (TRACE.on) TRACE.rows.push({ t: 'roll', label, detail }); }
+function traceClamp(rule, detail) {
+  if (TRACE.on) TRACE.rows.push({ t: 'clamp', rule, detail });
+  if (typeof console !== 'undefined' && console.debug) console.debug('[clamp]', rule, detail);
+}
+
+/* Weighted pick. entries: array of {w, v} or bare values (w defaults 1). */
+function entW(e) { return (e && typeof e === 'object' && 'w' in e) ? e.w : 1; }
+function entV(e) { return (e && typeof e === 'object' && 'v' in e) ? e.v : e; }
+
+function pick(rng, entries, label) {
+  let total = 0;
+  for (const e of entries) total += entW(e);
+  let r = rng() * total;
+  for (const e of entries) {
+    r -= entW(e);
+    if (r < 0) { const v = entV(e); traceRoll(label || 'pick', { total, chosen: summarize(v), w: entW(e) }); return v; }
+  }
+  return entV(entries[entries.length - 1]);
+}
+
+function pickN(rng, entries, n, opts) {
+  const unique = !opts || opts.unique !== false;
+  const out = [];
+  if (!unique) { for (let i = 0; i < n; i++) out.push(pick(rng, entries)); return out; }
+  const pool = entries.slice();
+  n = Math.min(n, pool.length);
+  for (let i = 0; i < n; i++) {
+    let total = 0;
+    for (const e of pool) total += entW(e);
+    let r = rng() * total, idx = pool.length - 1;
+    for (let j = 0; j < pool.length; j++) { r -= entW(pool[j]); if (r < 0) { idx = j; break; } }
+    out.push(entV(pool[idx]));
+    pool.splice(idx, 1);
+  }
+  return out;
+}
+
+function roll(rng, min, max) { // inclusive int
+  const v = min + Math.floor(rng() * (max - min + 1));
+  traceRoll('roll', { min, max, v });
+  return v;
+}
+function chance(rng, p) { const v = rng() < p; traceRoll('chance', { p, v }); return v; }
+
+function summarize(v) {
+  if (v == null) return v;
+  if (typeof v === 'string') return v.length > 60 ? v.slice(0, 57) + '...' : v;
+  if (typeof v === 'object') return v.name || v.label || v.v || v.manifestation || JSON.stringify(v).slice(0, 60);
+  return v;
+}
+
+/* Human-readable default seeds: two words + 4-digit number. */
+const SEED_WORDS = ['thorn', 'ash', 'mire', 'fen', 'crow', 'wolf', 'briar', 'stone', 'rook', 'alder',
+  'harrow', 'gorse', 'moss', 'flint', 'reed', 'sallow', 'birch', 'heath', 'marl', 'tarn',
+  'grim', 'black', 'cold', 'grey', 'salt', 'iron', 'bone', 'elm', 'dun', 'wick',
+  'march', 'ford', 'holt', 'combe', 'garth', 'fell', 'hithe', 'weald', 'stang', 'byre'];
+
+function randomSeed() {
+  // Uses Math.random deliberately: only for *choosing* a fresh seed, never inside the pipeline.
+  const w1 = SEED_WORDS[Math.floor(Math.random() * SEED_WORDS.length)];
+  let w2 = SEED_WORDS[Math.floor(Math.random() * SEED_WORDS.length)];
+  if (w2 === w1) w2 = SEED_WORDS[(SEED_WORDS.indexOf(w1) + 7) % SEED_WORDS.length];
+  return w1 + w2 + '-' + (1000 + Math.floor(Math.random() * 9000));
+}
+/* ============================== DATA (part 1 of 2) ==============================
+   All static tables. Assembled onto one DATA object, frozen at the end of part 2.
+   Keep logic out of here — GEN reads these, never the reverse.                  */
+'use strict';
+const DATA = {};
+
+/* ---- 3.1 Regions (8) ------------------------------------------------------ */
+// Weights: interior farm regions hold most people; the free city and the marches are thinner.
+DATA.regions = [
+  { w: 20, v: { key: 'thornmarch', name: 'The Thornmarch', terrain: 'hedged clay lowlands and old war-dykes', economy: 'rye, geese, and toll-roads', temperament: 'suspicious of strangers, slow to anger and slower to forgive', faith: 'devout on the surface, hedge-rites underneath', namePool: 'aldmark', settlements: ['Harrowick', 'Dykenend', 'Gallowmere'], disaster: 'the Red Murrain of nine winters past, which emptied every byre in a season' } },
+  { w: 18, v: { key: 'veldenweald', name: 'The Veldenweald', terrain: 'deep oak forest cut by charcoal tracks', economy: 'timber, charcoal, swine-mast, and poaching', faith: 'the Kirk is far away; the wood is near', temperament: 'close-mouthed, clannish, generous only at funerals', namePool: 'brakkish', settlements: ['Kolbrand', 'Aschenfeld', 'Wurmstat'], disaster: 'the Great Burning, when a charcoal camp fired ten leagues of forest and three villages' } },
+  { w: 16, v: { key: 'saltings', name: 'The Saltings', terrain: 'grey tidal flats, eel-fens, and drowned meadows', economy: 'salt-panning, eels, wildfowl, wrecking', faith: 'they pray loudest at sea and forget it ashore', temperament: 'fatalistic, humorous in a flat way, hard to shock', namePool: 'aldmark', settlements: ['Sealdham', 'Merefleet', 'Cockleshaw'], disaster: 'the Drowning Tide of Saint Osyth’s Eve, which took the church bell and forty souls' } },
+  { w: 14, v: { key: 'ostervail', name: 'The Ostervail', terrain: 'birch steppes and river bluffs on the eastern road', economy: 'horses, hides, amber carried west, and border tolls', faith: 'the Kirk’s newest ground; the old gods are barely buried', temperament: 'proud, hospitable to guests, merciless to horse-thieves', namePool: 'ostrav', settlements: ['Zelengrad', 'Vostrov', 'Kamenets'], disaster: 'the raiding summer, when riders out of the steppe burned the granaries at Vostrov' } },
+  { w: 12, v: { key: 'karstfells', name: 'The Karstfells', terrain: 'limestone uplands, sinkholes, and thin sheep pasture', economy: 'wool, lead-mining, and smuggling through the caves', faith: 'stern, plain-chapel Kirk; they distrust relics and love sermons', temperament: 'dour, thrifty, secretly sentimental about sheep and dead kin', namePool: 'brakkish', settlements: ['Graustein', 'Bleihalde', 'Sankt Falk'], disaster: 'the collapse of the Bleihalde workings, thirty men sealed in the dark' } },
+  { w: 10, v: { key: 'brennalow', name: 'The Brennalow', terrain: 'rich river vale of vineyards and walled abbeys', economy: 'wine, wheat, parchment, and pilgrim traffic', faith: 'the Kirk owns half the vale and lends money on the other half', temperament: 'polished, litigious, convinced of their own refinement', namePool: 'veyric', settlements: ['Aubremont', 'Chalsigny', 'Pontverre'], disaster: 'the Vintner’s Frost, three springs running, which broke half the growers into tenancy' } },
+  { w: 6, v: { key: 'freihafen', name: 'Freihafen', terrain: 'a walled free city on a cold estuary, and its cabbage-garden hinterland', economy: 'herring, cloth, coin-changing, and every guild you can name', faith: 'the Kirk preaches; the guilds decide', temperament: 'sharp, showy, contemptuous of the countryside they eat from', namePool: 'brakkish', settlements: ['Freihafen itself', 'Neuwerk quay-town', 'Kesselgate suburb'], disaster: 'the Weavers’ Rising, put down with hangings that the city still argues about' } },
+  { w: 4, v: { key: 'grauvane', name: 'The Grauvane Marches', terrain: 'contested hill country of burned towers and new gibbets', economy: 'cattle-raiding, garrison wages, and ransom', faith: 'chaplains bless both sides; saints’ days are for truces', temperament: 'wary, dark-humoured, loyal to kin over any banner', namePool: 'veyric', settlements: ['Fort Maligne', 'Croixhaut', 'Dernier Gué'], disaster: 'the sack of Croixhaut, two years gone, still half-roofless' } },
+];
+
+/* ---- 3.2 Social classes (9) ------------------------------------------------ */
+// ~85% peasant-or-below (serf+freePeasant+outcast+lower craft); nobility vanishingly rare.
+DATA.classes = [
+  { w: 640, v: { key: 'serf', label: 'Serf', tier: 0, wealth: 0, desc: 'bound to the land and the lord’s week-work' } },
+  { w: 470, v: { key: 'freePeasant', label: 'Free peasant', tier: 1, wealth: 1, desc: 'holds a few strips and owes rent, not blood' } },
+  { w: 45, v: { key: 'outcast', label: 'Outcast', tier: 0, wealth: 0, desc: 'outside parish and law — vagrant, leper, branded, or worse' } },
+  { w: 78, v: { key: 'craftsman', label: 'Craftsman', tier: 2, wealth: 2, desc: 'a trade in the hands and a place in a village or town' } },
+  { w: 26, v: { key: 'burgher', label: 'Burgher', tier: 3, wealth: 3, desc: 'town citizen with guild rights and money troubles' } },
+  { w: 26, v: { key: 'clergy', label: 'Clergy', tier: 3, wealth: 2, desc: 'sworn to the Kirk — priest, monk, nun, or clerk in minor orders' } },
+  { w: 10, v: { key: 'minorGentry', label: 'Minor gentry', tier: 4, wealth: 4, desc: 'a hall, a horse, and debts to match the pretensions' } },
+  { w: 6, v: { key: 'knightly', label: 'Knightly', tier: 5, wealth: 4, desc: 'belted or squired; arms-bearing by right and obligation' } },
+  { w: 2, v: { key: 'noble', label: 'Noble', tier: 6, wealth: 5, desc: 'blood that shows up in chronicles, for good or ill' } },
+];
+// Region adjustments applied multiplicatively in GEN (free city → more burghers/craftsmen, etc.)
+DATA.classRegionMod = {
+  freihafen: { serf: 0.05, freePeasant: 0.5, craftsman: 2.5, burgher: 4, clergy: 1.2, outcast: 1.5 },
+  brennalow: { clergy: 2.5, burgher: 1.5, serf: 1.2 },
+  grauvane: { knightly: 3, outcast: 2, serf: 0.8, minorGentry: 1.5 },
+  ostervail: { serf: 0.6, freePeasant: 1.4, minorGentry: 1.3 },
+  karstfells: { craftsman: 1.4, serf: 0.7, freePeasant: 1.3 },
+  saltings: { serf: 0.8, freePeasant: 1.3, outcast: 1.3 },
+};
+
+/* ---- 3.3 Birth circumstances (30) ------------------------------------------ */
+// Mostly unremarkable births; omens weighted rare. Each entry is a concrete remark.
+DATA.birthCircumstances = [
+  { w: 8, v: 'born in the ordinary way, on straw, in the dark of the year' },
+  { w: 6, v: 'born at harvest, the mother back binding sheaves within the week' },
+  { w: 5, v: 'born small and early, not expected to see a name-day, and here anyway' },
+  { w: 5, v: 'born the night the byre roof fell in, which the family still calls an omen of nothing' },
+  { w: 4, v: 'born with the caul, which the midwife dried and sold to a sailor against drowning' },
+  { w: 4, v: 'born feet-first, so the grandmothers said: a healer’s sign, or a hanged one’s' },
+  { w: 4, v: 'born during the procession of Saint Varro, bells going the whole labour' },
+  { w: 4, v: 'a twin — the other died before baptism and has no name anyone says aloud' },
+  { w: 3, v: 'born in a hay-cart between villages, the parish still disputed at law' },
+  { w: 3, v: 'born on a fast-day, which the priest called unfortunate and the father called typical' },
+  { w: 3, v: 'the mother laboured three days; the midwife swore never again for that house' },
+  { w: 3, v: 'born under a red moon, which the neighbours remembered only years later, when it suited them' },
+  { w: 3, v: 'baptised twice by mistake — two priests, a feud, and a snowstorm were involved' },
+  { w: 3, v: 'born the same hour the old lord died, and named in half-mockery for him' },
+  { w: 3, v: 'born to the sound of the mill burning across the water' },
+  { w: 2, v: 'born with a birthmark the midwife pressed with a cold key and pronounced harmless' },
+  { w: 2, v: 'born in the plague-spring, one of only three infants alive by autumn' },
+  { w: 2, v: 'left at the church door in a fish basket, age perhaps three days' },
+  { w: 2, v: 'born at sea-harvest on the flats; the tide nearly had them both' },
+  { w: 2, v: 'the cord was round the neck; the midwife’s quick knife is owed a debt no one names' },
+  { w: 2, v: 'born on the road during the family’s eviction, a fact used in every quarrel since' },
+  { w: 2, v: 'a first cry so loud the dogs answered from three farms over' },
+  { w: 2, v: 'no cry at all for a long minute; the midwife spat left and it came' },
+  { w: 2, v: 'born on Saint Merrow’s day, so the feast-day alms have always felt personal' },
+  { w: 1, v: 'born with six fingers on the left hand; the extra was tied off, and the scar remains' },
+  { w: 1, v: 'the seventh child of a seventh child, a fact the family suppresses' },
+  { w: 1, v: 'born the night lightning split the gallows-oak, which everyone agrees meant something' },
+  { w: 1, v: 'swapped at nurse for a fortnight through sheer muddle; both mothers deny it now' },
+  { w: 1, v: 'born in the church porch during sanctuary, the father inside with a bloody axe' },
+  { w: 1, v: 'the midwife looked at the child a long moment and said only: “well, we’ll see”' },
+];
+DATA.seasons = [
+  { w: 26, v: 'winter-born' }, { w: 25, v: 'spring-born' }, { w: 24, v: 'summer-born' }, { w: 25, v: 'autumn-born' },
+];
+// Legitimacy: bastardy uncommon but far from rare.
+DATA.legitimacy = [
+  { w: 84, v: 'trueborn' },
+  { w: 9, v: 'baseborn, acknowledged' },
+  { w: 5, v: 'baseborn, unacknowledged' },
+  { w: 2, v: 'legitimacy disputed — the dates do not quite work, and people count' },
+];
+
+/* ---- 3.4 Family structures (25) -------------------------------------------- */
+DATA.familyStructures = [
+  { w: 10, v: 'both parents living, still working the same holding they were born to' },
+  { w: 8, v: 'father dead of a winter fever; mother remarried within the year, as one must' },
+  { w: 7, v: 'mother died in a later childbed; the eldest daughter became mother at eleven' },
+  { w: 6, v: 'raised half by a grandmother who remembered the old rites and used them' },
+  { w: 6, v: 'father alive but broken — a kicked hip — and the household bends around his temper' },
+  { w: 5, v: 'parents living apart since the bad year; the parish pretends not to notice' },
+  { w: 5, v: 'father gone for a soldier and returned strange; he sleeps in the byre by choice' },
+  { w: 5, v: 'an uncle holds the tenancy and never lets anyone forget whose bread it is' },
+  { w: 4, v: 'mother’s people were from away, and the village has never fully unbent about it' },
+  { w: 4, v: 'father drowned at the ford with the rent money; both losses are still spoken of' },
+  { w: 4, v: 'raised in a stepfather’s house on sufferance, fed last, blamed first' },
+  { w: 4, v: 'the family holds two strips less each decade; everyone knows, no one says it' },
+  { w: 4, v: 'a house of women — the men taken by war, water, or the road — run better than most' },
+  { w: 3, v: 'father is the village’s quiet moneylender; the family is needed and hated in equal parts' },
+  { w: 3, v: 'fostered out at seven to a childless cousin, and never quite called home again' },
+  { w: 3, v: 'the eldest brother inherited everything and the rest were told to be grateful' },
+  { w: 3, v: 'mother does the healing the priest pretends not to know about' },
+  { w: 3, v: 'raised in the almonry of an abbey among other spare children' },
+  { w: 3, v: 'the family keeps the ferry, which is to say the family keeps everyone’s secrets' },
+  { w: 2, v: 'father hanged for taking the lord’s deer; the family kept the rope, out of spite or grief' },
+  { w: 2, v: 'both parents dead of the sweat in one week; kin divided the children like chattels' },
+  { w: 2, v: 'the family fled another lordship at night and does not talk about why' },
+  { w: 2, v: 'father excommunicate these five years over a boundary stone; mass is awkward' },
+  { w: 2, v: 'a foundling raised by the parish, owing everyone and belonging to no one' },
+  { w: 1, v: 'the family’s name is old and briefly grand; a chest of worthless charters proves it' },
+];
+// Parents' trades assigned in GEN from occupation table filtered by class.
+
+/* ---- 3.5 Age brackets (6), weighted downward hard --------------------------- */
+DATA.ageBrackets = [
+  { w: 24, v: { label: '14–17', min: 14, max: 17 } },
+  { w: 30, v: { label: '18–24', min: 18, max: 24 } },
+  { w: 24, v: { label: '25–34', min: 25, max: 34 } },
+  { w: 13, v: { label: '35–44', min: 35, max: 44 } },
+  { w: 7, v: { label: '45–59', min: 45, max: 59 } },
+  { w: 2, v: { label: '60+', min: 60, max: 74 } },
+];
+DATA.sexes = [ { w: 50, v: 'male' }, { w: 50, v: 'female' } ];
+
+/* ---- 3.6 Name pools: 4 cultures, 60+ given names each ----------------------- */
+// aldmark = Anglo-flavoured, brakkish = Germanic, veyric = Frankish, ostrav = Slavic.
+// All invented-but-plausible; none are straight real-world names of famous bearers.
+DATA.names = {
+  aldmark: {
+    patronymicSuffix: { male: 'son', female: 'daughter' },
+    male: ['Aldwin', 'Beorn', 'Cenred', 'Dunstan', 'Eadric', 'Fenwick', 'Godric', 'Hereward', 'Ivo', 'Kenelm',
+      'Leofric', 'Maddock', 'Nothelm', 'Osric', 'Penda', 'Rendel', 'Sighard', 'Tancred', 'Ulfric', 'Wystan',
+      'Alnoth', 'Brictmer', 'Cuthwin', 'Deorwin', 'Ealdstan', 'Grimbald', 'Hroth', 'Ordgar', 'Saebert', 'Wulfnoth'],
+    female: ['Aeldith', 'Bericha', 'Cwenhild', 'Deorwen', 'Eadgyth', 'Frideswide', 'Godgifu', 'Hildreth', 'Isolde', 'Kineburh',
+      'Leofwen', 'Merewen', 'Nesta', 'Osgyth', 'Rowena', 'Saethryth', 'Tofa', 'Wilfrun', 'Wynflaed', 'Aelfled',
+      'Brunhild', 'Cyneth', 'Eanswith', 'Goldwyn', 'Hollis', 'Maethild', 'Ostrith', 'Sunniva', 'Werburh', 'Ymma'],
+    neutral: ['Hedley', 'Marden', 'Stanhope', 'Wilm', 'Aster', 'Corby'],
+  },
+  brakkish: {
+    patronymicSuffix: { male: 'sohn', female: 'stochter' },
+    male: ['Adalbrecht', 'Baldemar', 'Conz', 'Dietwald', 'Eckhart', 'Falko', 'Gernot', 'Hartmut', 'Ingram', 'Jorg',
+      'Kunz', 'Lampert', 'Meinolf', 'Notker', 'Ortwin', 'Poppo', 'Reinmar', 'Sigenot', 'Tammo', 'Utz',
+      'Volkmar', 'Wendel', 'Anshelm', 'Brandolf', 'Degen', 'Eitel', 'Gozwin', 'Hunold', 'Ludeger', 'Rutger'],
+    female: ['Adelheit', 'Brunngard', 'Clarissa', 'Dietlind', 'Ermgard', 'Frieda', 'Gerhild', 'Hedwig', 'Irmel', 'Jutte',
+      'Kunigund', 'Liutgard', 'Mechthild', 'Notburga', 'Ortrun', 'Petrissa', 'Reinhild', 'Swanhild', 'Tilla', 'Uote',
+      'Volkhild', 'Walpurg', 'Alheydis', 'Berchta', 'Engeltrud', 'Gisela', 'Hiltrud', 'Osterhild', 'Richenza', 'Wibke'],
+    neutral: ['Anno', 'Bodo', 'Friedel', 'Gero', 'Sturmi', 'Wiggo'],
+  },
+  veyric: {
+    patronymicSuffix: { male: '', female: '' }, // Veyric uses "fitz-" prefix style instead
+    male: ['Amalric', 'Baudouin', 'Clotaire', 'Drogo', 'Enguerrand', 'Foulques', 'Gauvain', 'Herluin', 'Isembard', 'Jocelin',
+      'Lambert', 'Maugis', 'Norbert', 'Odo', 'Pepin', 'Rainald', 'Sicard', 'Thibaut', 'Ursion', 'Vulgrin',
+      'Waleran', 'Anseau', 'Bertrand', 'Chlodio', 'Ebles', 'Gontran', 'Hugon', 'Milon', 'Renier', 'Tancrede'],
+    female: ['Adelais', 'Berthe', 'Clemence', 'Doette', 'Ermessent', 'Fredegonde', 'Guiborc', 'Heloys', 'Ide', 'Jehanne',
+      'Luitgarde', 'Mahaut', 'Nicolette', 'Orable', 'Peronelle', 'Richilde', 'Sibylle', 'Typhaine', 'Ursanne', 'Vierna',
+      'Ysabeau', 'Aelis', 'Blancheflor', 'Constance', 'Esclarmonde', 'Ganor', 'Hermesent', 'Melisent', 'Rohese', 'Ysolt'],
+    neutral: ['Ame', 'Loup', 'Regne', 'Saveri', 'Toussaint', 'Vespre'],
+  },
+  ostrav: {
+    patronymicSuffix: { male: 'ic', female: 'eva' },
+    male: ['Bogdan', 'Casimir', 'Dobromil', 'Gostislav', 'Iziaslav', 'Jaromir', 'Kresimir', 'Lubomir', 'Mstislav', 'Nemanja',
+      'Ondrej', 'Predslav', 'Radomir', 'Stanimir', 'Tvrtko', 'Vratislav', 'Wenzel', 'Zbigniev', 'Boleslav', 'Drahomir',
+      'Gniewko', 'Havel', 'Ivano', 'Krystof', 'Lech', 'Milosz', 'Ratibor', 'Svetopolk', 'Vojtech', 'Zdeslav'],
+    female: ['Bozena', 'Ceslava', 'Dobrava', 'Gorislava', 'Iveta', 'Jarmila', 'Krasomila', 'Ludmila', 'Milena', 'Nadezda',
+      'Olyena', 'Premysla', 'Radka', 'Stanislava', 'Tvorimira', 'Vaclava', 'Wieslawa', 'Zbyslava', 'Bogna', 'Dragana',
+      'Gniewa', 'Hana', 'Iskra', 'Kvetka', 'Lyudmila', 'Mira', 'Rostislava', 'Svetlana', 'Vesna', 'Zorka'],
+    neutral: ['Blazh', 'Duszan', 'Kaz', 'Ogni', 'Slav', 'Zima'],
+  },
+};
+
+/* ---- 3.6 Byname material: 40 keyed epithets --------------------------------
+   These are NOT picked at random. GEN matches keys against the character's own
+   generated fields (feature/scar/ailment/build/deed text) and only an epithet
+   whose key matches may be used. A byname that contradicts the body is a bug. */
+DATA.descriptiveEpithets = [
+  { key: 'sallow', epithet: 'the Sallow' },
+  { key: 'pock', epithet: 'the Pocked' },
+  { key: 'red hair|copper', epithet: 'the Red' },
+  { key: 'black hair|raven', epithet: 'the Black' },
+  { key: 'white hair|snow-white|grey hair', epithet: 'the White' },
+  { key: 'bald', epithet: 'the Bald' },
+  { key: 'tall|towering', epithet: 'Longshanks' },
+  { key: 'short|small-boned', epithet: 'the Short' },
+  { key: 'heavy|stout|fat', epithet: 'the Stout' },
+  { key: 'gaunt|lean|starved', epithet: 'the Lean' },
+  { key: 'one eye|milky eye|lost an eye', epithet: 'One-Eye' },
+  { key: 'missing.*finger|lost.*finger|nine finger', epithet: 'Nine-Finger' },
+  { key: 'limp|badly-set|lame', epithet: 'the Lame' },
+  { key: 'stammer|halting speech', epithet: 'the Stammerer' },
+  { key: 'scar.*mouth|split lip|harelip', epithet: 'Twist-Mouth' },
+  { key: 'broken nose|nose.*flattened', epithet: 'Flatnose' },
+  { key: 'squint', epithet: 'the Squint' },
+  { key: 'deaf', epithet: 'the Deaf' },
+  { key: 'silent|seldom speaks|few words', epithet: 'the Quiet' },
+  { key: 'loud|carrying voice|booming', epithet: 'the Loud' },
+  { key: 'fair|handsome|comely', epithet: 'the Fair' },
+  { key: 'birthmark|wine-stain', epithet: 'the Marked' },
+  { key: 'crooked back|bent|stooped', epithet: 'the Crooked' },
+  { key: 'burn|burned|burnt', epithet: 'the Burned' },
+  { key: 'grey eyes', epithet: 'Grey-Eye' },
+  { key: 'strong|ox|broad', epithet: 'the Strong' },
+  { key: 'trembl|shakes|palsy', epithet: 'the Palsied' },
+  { key: 'yellow teeth|black teeth|toothless|no teeth', epithet: 'Gap-Tooth' },
+  { key: 'freckl', epithet: 'the Speckled' },
+  { key: 'left-hand|left hand', epithet: 'the Left-Handed' },
+];
+DATA.deedEpithets = [
+  { key: 'fire|burning|burned', epithet: 'Ashwalker' },
+  { key: 'drown|tide|flood|water|ford', epithet: 'who the water gave back' },
+  { key: 'plague|sweat|murrain|fever', epithet: 'who buried the rest' },
+  { key: 'wolf|wolves', epithet: 'Wolf-Ward' },
+  { key: 'caul', epithet: 'Caulborn' },
+  { key: 'twin', epithet: 'Half-Soul' },
+  { key: 'gallows|hanged|rope', epithet: 'Gallows-Get' },
+  { key: 'lightning|storm', epithet: 'Storm-Named' },
+  { key: 'war|soldier|raid|sack', epithet: 'who came back' },
+  { key: 'foundling|church door|basket|parish', epithet: 'Nobody’s' },
+];
+
+/* ---- Guardians for orphaned minors (coherence rule) ------------------------- */
+DATA.guardians = ['a widowed aunt with opinions', 'the parish, grudgingly', 'a master who takes the wage', 'an elder sibling barely grown', 'the abbey almoner', 'a grandmother too old for it and doing it anyway'];
+/* ============================== DATA (part 2 of 2) ============================== */
+'use strict';
+
+/* ---- 3.7 Occupations (60) ---------------------------------------------------
+   classes: which class keys may hold it. sex: 'any'|'male'|'female' (legal norm,
+   not capability — GEN may transgress ~5% with a matching secret). lit: literacy
+   required. wealth: 0..5 tier. injuries: keywords biasing the scar/ailment pick.
+   skills: trade skills granted. minAge: youngest plausible practitioner.        */
+DATA.occupations = [
+  { w: 30, name: 'field labourer', classes: ['serf', 'freePeasant', 'outcast'], sex: 'any', lit: false, wealth: 0, injuries: ['back', 'sickle', 'sun'], skills: ['Ploughing', 'Scything', 'Weather-sense'], minAge: 10 },
+  { w: 18, name: 'ploughman', classes: ['serf', 'freePeasant'], sex: 'male', lit: false, wealth: 1, injuries: ['back', 'ox', 'crush'], skills: ['Ploughing', 'Ox-handling', 'Weather-sense'], minAge: 14 },
+  { w: 16, name: 'dairymaid', classes: ['serf', 'freePeasant'], sex: 'female', lit: false, wealth: 0, injuries: ['kick', 'chilblain'], skills: ['Cheesemaking', 'Animal husbandry', 'Haggling'], minAge: 12 },
+  { w: 14, name: 'shepherd', classes: ['serf', 'freePeasant'], sex: 'any', lit: false, wealth: 0, injuries: ['weather', 'fall', 'dog'], skills: ['Herding', 'Sling', 'Weather-sense'], minAge: 10 },
+  { w: 12, name: 'swineherd', classes: ['serf', 'freePeasant'], sex: 'any', lit: false, wealth: 0, injuries: ['bite', 'tusk'], skills: ['Herding', 'Foraging', 'Knife-work'], minAge: 10 },
+  { w: 12, name: 'goodwife of a small holding', classes: ['serf', 'freePeasant'], sex: 'female', lit: false, wealth: 1, injuries: ['burn', 'lye'], skills: ['Brewing', 'Physic & herbs', 'Spinning'], minAge: 16 },
+  { w: 10, name: 'woodcutter', classes: ['serf', 'freePeasant', 'craftsman'], sex: 'male', lit: false, wealth: 1, injuries: ['axe', 'crush', 'fall'], skills: ['Felling', 'Hauling', 'Woodcraft'], minAge: 14 },
+  { w: 10, name: 'charcoal-burner', classes: ['serf', 'freePeasant', 'outcast'], sex: 'any', lit: false, wealth: 0, injuries: ['burn', 'smoke'], skills: ['Charcoaling', 'Woodcraft', 'Solitude'], minAge: 14 },
+  { w: 10, name: 'fisherman', classes: ['freePeasant', 'craftsman'], sex: 'male', lit: false, wealth: 1, injuries: ['hook', 'rope', 'cold water'], skills: ['Netting', 'Boat-handling', 'Weather-sense'], minAge: 12 },
+  { w: 9, name: 'eel-trapper', classes: ['serf', 'freePeasant'], sex: 'any', lit: false, wealth: 0, injuries: ['marsh', 'ague'], skills: ['Trapping', 'Marsh-craft', 'Boat-handling'], minAge: 12 },
+  { w: 9, name: 'salt-panner', classes: ['serf', 'freePeasant'], sex: 'any', lit: false, wealth: 0, injuries: ['brine', 'burn'], skills: ['Salt-work', 'Hauling', 'Weather-sense'], minAge: 12 },
+  { w: 9, name: 'spinster (wool-spinner)', classes: ['serf', 'freePeasant', 'craftsman'], sex: 'female', lit: false, wealth: 1, injuries: ['finger', 'eye-strain'], skills: ['Spinning', 'Carding', 'Haggling'], minAge: 10 },
+  { w: 8, name: 'weaver', classes: ['craftsman', 'burgher'], sex: 'any', lit: false, wealth: 2, injuries: ['finger', 'back', 'eye-strain'], skills: ['Weaving', 'Dyeing', 'Guild-lore'], minAge: 14 },
+  { w: 8, name: 'miller', classes: ['craftsman', 'freePeasant'], sex: 'male', lit: false, wealth: 2, injuries: ['crush', 'dust', 'machinery'], skills: ['Milling', 'Accounting by tally', 'Haggling'], minAge: 18 },
+  { w: 8, name: 'alewife', classes: ['freePeasant', 'craftsman'], sex: 'female', lit: false, wealth: 2, injuries: ['burn', 'scald'], skills: ['Brewing', 'Haggling', 'Gossip-craft'], minAge: 18 },
+  { w: 8, name: 'blacksmith', classes: ['craftsman'], sex: 'male', lit: false, wealth: 2, injuries: ['burn', 'spark', 'hammer'], skills: ['Smithing', 'Farriery', 'Haggling'], minAge: 16 },
+  { w: 7, name: 'carpenter', classes: ['craftsman'], sex: 'male', lit: false, wealth: 2, injuries: ['chisel', 'fall', 'splinter'], skills: ['Carpentry', 'Joinery', 'Reckoning'], minAge: 16 },
+  { w: 7, name: 'thatcher', classes: ['craftsman', 'freePeasant'], sex: 'male', lit: false, wealth: 1, injuries: ['fall', 'reed-cut'], skills: ['Thatching', 'Climbing', 'Weather-sense'], minAge: 14 },
+  { w: 7, name: 'cooper', classes: ['craftsman'], sex: 'male', lit: false, wealth: 2, injuries: ['stave', 'adze'], skills: ['Coopering', 'Woodcraft', 'Guild-lore'], minAge: 16 },
+  { w: 7, name: 'tanner', classes: ['craftsman', 'outcast'], sex: 'male', lit: false, wealth: 1, injuries: ['lime', 'stench', 'knife'], skills: ['Tanning', 'Knife-work', 'Haggling'], minAge: 14 },
+  { w: 6, name: 'seamstress', classes: ['craftsman', 'burgher', 'freePeasant'], sex: 'female', lit: false, wealth: 1, injuries: ['needle', 'eye-strain'], skills: ['Needlework', 'Mending', 'Discretion'], minAge: 12 },
+  { w: 6, name: 'midwife', classes: ['freePeasant', 'craftsman'], sex: 'female', lit: false, wealth: 1, injuries: ['long nights'], skills: ['Midwifery', 'Physic & herbs', 'Discretion'], minAge: 25 },
+  { w: 6, name: 'herb-woman', classes: ['freePeasant', 'outcast'], sex: 'female', lit: false, wealth: 0, injuries: ['thorn', 'suspicion'], skills: ['Physic & herbs', 'Foraging', 'Discretion'], minAge: 20 },
+  { w: 6, name: 'wet nurse', classes: ['serf', 'freePeasant'], sex: 'female', lit: false, wealth: 1, injuries: ['exhaustion'], skills: ['Nursing', 'Lullaby & lore', 'Discretion'], minAge: 16 },
+  { w: 6, name: 'carter', classes: ['freePeasant', 'craftsman'], sex: 'male', lit: false, wealth: 1, injuries: ['wheel', 'horse', 'road'], skills: ['Driving', 'Horse-handling', 'Road-lore'], minAge: 14 },
+  { w: 6, name: 'drover', classes: ['freePeasant'], sex: 'male', lit: false, wealth: 1, injuries: ['horn', 'weather', 'road'], skills: ['Herding', 'Road-lore', 'Haggling'], minAge: 14 },
+  { w: 6, name: 'ratcatcher', classes: ['outcast', 'freePeasant'], sex: 'any', lit: false, wealth: 0, injuries: ['bite', 'ferret'], skills: ['Trapping', 'Dog-handling', 'City-craft'], minAge: 10 },
+  { w: 6, name: 'gravedigger', classes: ['freePeasant', 'outcast'], sex: 'male', lit: false, wealth: 0, injuries: ['back', 'spade'], skills: ['Digging', 'Silence', 'Bone-lore'], minAge: 14 },
+  { w: 5, name: 'ferryman', classes: ['freePeasant', 'craftsman'], sex: 'male', lit: false, wealth: 1, injuries: ['rope', 'river'], skills: ['Boat-handling', 'Haggling', 'Gossip-craft'], minAge: 16 },
+  { w: 5, name: 'innkeeper', classes: ['burgher', 'craftsman'], sex: 'any', lit: false, wealth: 3, injuries: ['brawl'], skills: ['Brewing', 'Haggling', 'Reading faces'], minAge: 22 },
+  { w: 5, name: 'butcher', classes: ['craftsman', 'burgher'], sex: 'male', lit: false, wealth: 2, injuries: ['cleaver', 'hook'], skills: ['Butchery', 'Knife-work', 'Haggling'], minAge: 15 },
+  { w: 5, name: 'baker', classes: ['craftsman', 'burgher'], sex: 'any', lit: false, wealth: 2, injuries: ['burn', 'flour-lung'], skills: ['Baking', 'Reckoning', 'Guild-lore'], minAge: 14 },
+  { w: 5, name: 'mason', classes: ['craftsman'], sex: 'male', lit: false, wealth: 3, injuries: ['crush', 'fall', 'stone-dust'], skills: ['Masonry', 'Geometry by rule', 'Scaffolding'], minAge: 16 },
+  { w: 5, name: 'dyer', classes: ['craftsman'], sex: 'any', lit: false, wealth: 2, injuries: ['dye', 'scald', 'stench'], skills: ['Dyeing', 'Guild-lore', 'Haggling'], minAge: 14 },
+  { w: 5, name: 'chandler', classes: ['craftsman', 'burgher'], sex: 'any', lit: false, wealth: 2, injuries: ['scald', 'tallow'], skills: ['Chandlery', 'Reckoning', 'Haggling'], minAge: 14 },
+  { w: 5, name: 'fowler', classes: ['freePeasant'], sex: 'any', lit: false, wealth: 0, injuries: ['marsh', 'net'], skills: ['Snaring', 'Marsh-craft', 'Stillness'], minAge: 12 },
+  { w: 5, name: 'poacher (calls it "warrener")', classes: ['serf', 'freePeasant', 'outcast'], sex: 'any', lit: false, wealth: 0, injuries: ['mantrap', 'arrow', 'dog'], skills: ['Snaring', 'Stealth', 'Woodcraft'], minAge: 12 },
+  { w: 4, name: 'household servant in the manor', classes: ['serf', 'freePeasant'], sex: 'any', lit: false, wealth: 1, injuries: ['scald', 'stairs'], skills: ['Service', 'Discretion', 'Reading faces'], minAge: 10 },
+  { w: 4, name: 'cook in a great kitchen', classes: ['freePeasant', 'craftsman'], sex: 'any', lit: false, wealth: 2, injuries: ['burn', 'scald', 'knife'], skills: ['Cookery', 'Butchery', 'Command of scullions'], minAge: 18 },
+  { w: 4, name: 'falconer', classes: ['freePeasant', 'minorGentry'], sex: 'male', lit: false, wealth: 2, injuries: ['talon', 'beak'], skills: ['Falconry', 'Animal husbandry', 'Patience'], minAge: 16 },
+  { w: 4, name: 'huntsman to the lord', classes: ['freePeasant', 'minorGentry'], sex: 'male', lit: false, wealth: 2, injuries: ['boar', 'thorn', 'arrow'], skills: ['Hunting', 'Dog-handling', 'Woodcraft'], minAge: 16 },
+  { w: 4, name: 'miner (lead and silver)', classes: ['freePeasant', 'craftsman'], sex: 'male', lit: false, wealth: 1, injuries: ['rockfall', 'damp', 'lung'], skills: ['Mining', 'Timbering', 'Bone-lore'], minAge: 14 },
+  { w: 4, name: 'boatwright', classes: ['craftsman'], sex: 'male', lit: false, wealth: 2, injuries: ['adze', 'splinter'], skills: ['Boatbuilding', 'Carpentry', 'Tar-work'], minAge: 16 },
+  { w: 4, name: 'peddler of pins, ribbons, and news', classes: ['freePeasant', 'outcast'], sex: 'any', lit: false, wealth: 1, injuries: ['road', 'dog', 'weather'], skills: ['Haggling', 'Road-lore', 'Gossip-craft'], minAge: 14 },
+  { w: 4, name: 'town watchman', classes: ['burgher', 'craftsman'], sex: 'male', lit: false, wealth: 2, injuries: ['brawl', 'knife', 'cudgel'], skills: ['Cudgel-work', 'City-craft', 'Reading faces'], minAge: 18 },
+  { w: 4, name: 'mercenary, between wars', classes: ['outcast', 'freePeasant', 'knightly'], sex: 'male', lit: false, wealth: 1, injuries: ['blade', 'arrow', 'siege'], skills: ['Spear & shield', 'Looting politely', 'Dice'], minAge: 17 },
+  { w: 3, name: 'clerk in minor orders', classes: ['clergy', 'burgher'], sex: 'male', lit: true, wealth: 2, injuries: ['ink-stain', 'eye-strain'], skills: ['Letters', 'Latin of the Kirk', 'Accounting'], minAge: 15 },
+  { w: 3, name: 'parish priest', classes: ['clergy'], sex: 'male', lit: true, wealth: 2, injuries: ['none to speak of'], skills: ['Letters', 'Latin of the Kirk', 'Confession-craft'], minAge: 25 },
+  { w: 3, name: 'monk (choir and scriptorium)', classes: ['clergy'], sex: 'male', lit: true, wealth: 1, injuries: ['ink-stain', 'kneeling'], skills: ['Letters', 'Illumination', 'Herb-garden physic'], minAge: 16 },
+  { w: 3, name: 'nun (infirmary sister)', classes: ['clergy'], sex: 'female', lit: true, wealth: 1, injuries: ['long nights'], skills: ['Letters', 'Physic & herbs', 'Discretion'], minAge: 16 },
+  { w: 3, name: 'friar of the begging orders', classes: ['clergy', 'outcast'], sex: 'male', lit: true, wealth: 0, injuries: ['road', 'dog'], skills: ['Preaching', 'Road-lore', 'Begging with dignity'], minAge: 18 },
+  { w: 3, name: 'merchant of wool and salt', classes: ['burgher'], sex: 'any', lit: true, wealth: 4, injuries: ['road', 'ledger'], skills: ['Accounting', 'Haggling', 'Letters'], minAge: 20 },
+  { w: 3, name: 'moneychanger', classes: ['burgher'], sex: 'any', lit: true, wealth: 4, injuries: ['none visible'], skills: ['Accounting', 'Assaying coin', 'Reading faces'], minAge: 22 },
+  { w: 3, name: 'apothecary', classes: ['burgher', 'craftsman'], sex: 'any', lit: true, wealth: 3, injuries: ['fume', 'burn'], skills: ['Physic & herbs', 'Letters', 'Discretion'], minAge: 20 },
+  { w: 3, name: 'barber-surgeon', classes: ['craftsman', 'burgher'], sex: 'male', lit: false, wealth: 2, injuries: ['razor', 'patient'], skills: ['Surgery of a sort', 'Tooth-pulling', 'Gossip-craft'], minAge: 18 },
+  { w: 2, name: 'steward of the manor', classes: ['minorGentry', 'burgher'], sex: 'male', lit: true, wealth: 3, injuries: ['saddle'], skills: ['Accounting', 'Law of the manor', 'Command'], minAge: 28 },
+  { w: 2, name: 'squire in a knight’s service', classes: ['knightly', 'minorGentry', 'noble'], sex: 'male', lit: false, wealth: 3, injuries: ['tilt', 'blade', 'horse'], skills: ['Horsemanship', 'Sword & lance', 'Armory-craft'], minAge: 12 },
+  { w: 2, name: 'lay sister of the convent', classes: ['clergy'], sex: 'female', lit: false, wealth: 1, injuries: ['scald', 'kneeling'], skills: ['Service', 'Physic & herbs', 'Cookery'], minAge: 14 },
+  { w: 2, name: 'lay brother of the abbey', classes: ['clergy'], sex: 'male', lit: false, wealth: 1, injuries: ['back', 'ox'], skills: ['Ploughing', 'Service', 'Brewing'], minAge: 14 },
+  { w: 2, name: 'gentlewoman of the hall', classes: ['minorGentry', 'knightly', 'noble'], sex: 'female', lit: false, wealth: 3, injuries: ['needle'], skills: ['Needlework', 'Household command', 'Reading faces'], minAge: 14 },
+  { w: 2, name: 'knight of one manor', classes: ['knightly'], sex: 'male', lit: false, wealth: 4, injuries: ['blade', 'tilt', 'siege', 'horse'], skills: ['Sword & lance', 'Horsemanship', 'Command'], minAge: 18 },
+  { w: 2, name: 'lady of the hall (rules it in fact)', classes: ['minorGentry', 'knightly', 'noble'], sex: 'female', lit: true, wealth: 4, injuries: ['none visible'], skills: ['Household command', 'Letters', 'Physic & herbs'], minAge: 16 },
+  { w: 1, name: 'lord of the district', classes: ['noble'], sex: 'male', lit: true, wealth: 5, injuries: ['tilt', 'gout'], skills: ['Command', 'Law & council', 'Hunting'], minAge: 16 },
+];
+
+/* Occupational byname nouns for trades whose names don't reduce cleanly.
+   Anything not listed falls back to the first meaningful word of the trade. */
+DATA.occupationalNouns = {
+  'field labourer': 'Ackerman',
+  'goodwife of a small holding': 'Goodwife',
+  'poacher (calls it "warrener")': 'Warrener', // "the Poacher" would be a confession
+  'household servant in the manor': 'Servant',
+  'cook in a great kitchen': 'Cook',
+  'town watchman': 'Watchman',
+  'wet nurse': 'Nurse',
+  'parish priest': 'Priest',
+  'lay sister of the convent': 'Sister',
+  'lay brother of the abbey': 'Brother',
+  'huntsman to the lord': 'Huntsman',
+  'steward of the manor': 'Steward',
+  'squire in a knight’s service': 'Squire',
+  'knight of one manor': 'Knight',
+  'lady of the hall (rules it in fact)': 'Lady',
+  'lord of the district': 'Lord',
+  'friar of the begging orders': 'Friar',
+  'peddler of pins, ribbons, and news': 'Peddler',
+  'merchant of wool and salt': 'Merchant',
+  'clerk in minor orders': 'Clerk',
+  'monk (choir and scriptorium)': 'Monk',
+  'nun (infirmary sister)': 'Nun',
+  'mercenary, between wars': 'Freesword',
+  'gentlewoman of the hall': 'Gentlewoman',
+};
+
+/* ---- 3.8 Physical ----------------------------------------------------------- */
+DATA.builds = [
+  { w: 14, v: 'wiry from work, no spare flesh anywhere' }, { w: 12, v: 'broad-shouldered and heavy in the arm' },
+  { w: 12, v: 'lean and long-limbed' }, { w: 10, v: 'stocky, low-built, hard to knock over' },
+  { w: 8, v: 'gaunt, the ribs of a lean year still showing' }, { w: 8, v: 'soft-bodied, unusual in the country and remarked on' },
+  { w: 8, v: 'thick-waisted and strong as an ox in short bursts' }, { w: 7, v: 'small-boned and quick' },
+  { w: 7, v: 'round-shouldered from the loom, the desk, or the hoe' }, { w: 6, v: 'big-framed but half-starved into angles' },
+  { w: 5, v: 'burly, running to fat where the trade allows it' }, { w: 3, v: 'towering, a head above the crowd — a nuisance in low doorways' },
+];
+DATA.heights = [
+  { w: 6, v: 'well under common height' }, { w: 12, v: 'a little short of common height' },
+  { w: 30, v: 'of common height' }, { w: 14, v: 'a shade above common height' },
+  { w: 8, v: 'tall' }, { w: 3, v: 'very tall' }, { w: 4, v: 'short and never lets it matter' }, { w: 2, v: 'tall and stooped to hide it' },
+];
+DATA.hair = [
+  { w: 14, v: 'brown hair, hacked short with shears' }, { w: 12, v: 'dark brown hair, greasy under the cap' },
+  { w: 10, v: 'black hair, thick and unruly' }, { w: 9, v: 'mousy hair, thinning early' },
+  { w: 8, v: 'fair hair gone dull with dirt' }, { w: 7, v: 'red hair, the kind that gets remembered by witnesses' },
+  { w: 7, v: 'grey hair before its time' }, { w: 6, v: 'dark hair silvering at the temples' },
+  { w: 6, v: 'straw-coloured hair, forever escaping the coif' }, { w: 5, v: 'black hair kept severely braided' },
+  { w: 5, v: 'bald but for a fringe, like a tonsure earned honestly' }, { w: 4, v: 'copper hair, kept covered to avoid comment' },
+  { w: 4, v: 'white hair, startling above a young face' }, { w: 3, v: 'bald as a river stone' },
+];
+DATA.eyes = [
+  { w: 16, v: 'brown eyes' }, { w: 12, v: 'dark eyes, near black in lamplight' },
+  { w: 12, v: 'grey eyes' }, { w: 10, v: 'blue eyes, pale as whey' },
+  { w: 8, v: 'hazel eyes' }, { w: 7, v: 'green eyes, remarked on by the superstitious' },
+  { w: 6, v: 'deep-set eyes that make every glance an accusation' }, { w: 6, v: 'one wandering eye that unsettles strangers' },
+  { w: 5, v: 'a permanent squint from sun or forge-glare' }, { w: 5, v: 'red-rimmed eyes, smoke or weeping, hard to say' },
+  { w: 4, v: 'one milky eye, sight long gone from it' }, { w: 4, v: 'quick pale eyes that miss nothing at market' },
+];
+DATA.features = [
+  'a nose broken at least once and set by an amateur', 'heavy freckles over nose and forearms', 'a wine-stain birthmark on the neck',
+  'ears that stick out enough for a lifetime of jokes', 'a jaw always dark with stubble by noon', 'a long scar-white line where a hairline parted a scalp',
+  'brows so pale the face looks perpetually surprised', 'a harelip stitched in infancy, the seam still showing', 'high colour in the cheeks, weather or drink',
+  'a lazy eyelid that droops when tired', 'a chin that never grew to match the boasting', 'weather-cracked lips in every season',
+  'pox-pits across both cheeks', 'a mole at the corner of the mouth the midwife once frowned at', 'a neck too long for any collar',
+  'hands and face two different colours, glove-line sharp', 'a front tooth chipped into a fang', 'a widow’s peak like a drawn dagger',
+  'the flattened knuckles of someone who settles things simply', 'an old brand scar on the ball of the thumb, kept covered',
+  'a spine that lists a little to the left after years of one-sided labour', 'strikingly comely, which has caused more trouble than plainness would have',
+  'so ordinary of face that witnesses genuinely cannot describe them', 'skin tanned to saddle-leather from the eyebrows down',
+  'a bald patch where a scald took the hair', 'six toes on one foot, known only to the household', 'a laugh that shows every tooth remaining',
+  'the shoulders of a bigger person, inherited from nowhere', 'sunken temples from lean winters', 'a stiff ring finger that never bends',
+  'a face wide and flat as a skillet', 'cheekbones sharp enough to look ill even in health', 'a birthmark shaped, if you squint, like a running hare',
+  'ink-dark circles beneath the eyes in every season', 'an ear thickened and folded from an old blow', 'legs bowed from rickets ridden out in childhood',
+  'a whistling gap where two front teeth should be', 'the pallor of someone who works indoors, suspicious in a village', 'forearms mapped with tiny burn scars',
+  'a habit of standing with the weight all on the left leg, the right one lying about something',
+];
+// Scars carry a `loc` used by the portrait overlay and an implicit source vocabulary for coherence checks.
+DATA.scars = [
+  { w: 4, v: 'a sickle-cut across the left palm from harvest haste', loc: 'hand', src: ['sickle', 'harvest'] },
+  { w: 4, v: 'a dog bite long healed on the right calf', loc: 'leg', src: ['dog', 'bite'] },
+  { w: 3, v: 'a burn-slick patch on one forearm from a tipped pot', loc: 'arm', src: ['burn', 'scald'] },
+  { w: 3, v: 'a thin white line through one eyebrow, a childhood fall against the hearthstone', loc: 'brow', src: ['fall'] },
+  { w: 3, v: 'rope-burn ridges across both palms', loc: 'hand', src: ['rope', 'net'] },
+  { w: 3, v: 'a puckered scar under the jaw where a boil was lanced badly', loc: 'jaw', src: [] },
+  { w: 3, v: 'the top joint of the left little finger missing to a mill wheel', loc: 'hand', src: ['crush', 'machinery', 'mill'] },
+  { w: 3, v: 'a scald-mark down the neck, kept under the collar', loc: 'neck', src: ['scald', 'burn'] },
+  { w: 2, v: 'a whip-line across the shoulders that a shirt hides and a bath-house doesn’t', loc: 'body', src: [] },
+  { w: 2, v: 'an arrow-pucker in the left shoulder, gone stiff before rain', loc: 'body', src: ['arrow', 'war'] },
+  { w: 2, v: 'a sword-nick along the right forearm, sworn to be from a scythe', loc: 'arm', src: ['blade', 'war'] },
+  { w: 2, v: 'a cheekbone seam from a fair-day cudgel', loc: 'cheek', src: ['cudgel', 'brawl'] },
+  { w: 2, v: 'the pale glove of an old lime-burn on the right hand', loc: 'hand', src: ['lime', 'lye', 'tanning'] },
+  { w: 2, v: 'a stitched lip that healed into a permanent half-sneer', loc: 'lip', src: ['brawl', 'blade'] },
+  { w: 2, v: 'a horse-kick dent in the left shin that aches at frost', loc: 'leg', src: ['horse', 'kick'] },
+  { w: 2, v: 'a brand — a felon’s mark — on the base of the right thumb, explained as a burn', loc: 'hand', src: ['brand', 'law'] },
+  { w: 2, v: 'three parallel claw-lines on the forearm; the story changes with the audience', loc: 'arm', src: ['boar', 'dog', 'talon'] },
+  { w: 2, v: 'a crushed and blackened big toenail that never grew back right', loc: 'body', src: ['crush', 'stone'] },
+  { w: 2, v: 'a hayfork puncture in the right foot, one wet June', loc: 'body', src: ['harvest'] },
+  { w: 2, v: 'a razor-line below the ear from a barber with the shakes', loc: 'jaw', src: ['razor'] },
+  { w: 1, v: 'a knife-slash across the ribs, souvenir of a road not taken twice', loc: 'body', src: ['knife', 'road', 'brawl'] },
+  { w: 1, v: 'the smooth pit of a tusk-wound in the right thigh', loc: 'leg', src: ['tusk', 'boar'] },
+  { w: 1, v: 'frost-lost tips of two toes, a winter crossing gone wrong', loc: 'body', src: ['weather', 'cold'] },
+  { w: 1, v: 'a bald seam through the scalp where a roof-beam ended an argument', loc: 'scalp', src: ['fall', 'crush'] },
+  { w: 1, v: 'a pilgrim’s cross scarred deliberately into the left shoulder', loc: 'body', src: ['faith'] },
+  { w: 1, v: 'an eye lost to a splinter of shield-wood; the lid sits sunken over the socket', loc: 'eye', src: ['war', 'blade', 'siege'] },
+  { w: 1, v: 'a mantrap’s toothmarks ringing the left ankle', loc: 'leg', src: ['mantrap', 'poaching'] },
+  { w: 1, v: 'a powder of tiny spark-scars up both forearms', loc: 'arm', src: ['spark', 'forge', 'hammer'] },
+  { w: 1, v: 'a rope’s kiss around the neck, faint now, from a hanging that didn’t take', loc: 'neck', src: ['rope', 'gallows'] },
+  { w: 1, v: 'the star of an old trepanning above the right temple, priest-forbidden to touch', loc: 'scalp', src: ['surgery'] },
+];
+DATA.ailments = [
+  { w: 5, v: 'a limp from a badly-set femur, worse in cold', src: ['fall', 'crush', 'horse'] },
+  { w: 5, v: 'a wet cough every winter that the family pretends not to hear', src: ['smoke', 'dust', 'lung', 'flour-lung'] },
+  { w: 4, v: 'chilblains that split and weep from first frost to thaw', src: ['cold water', 'chilblain', 'brine'] },
+  { w: 4, v: 'a back that seizes without warning, a legacy of the hoe', src: ['back'] },
+  { w: 4, v: 'marsh-ague: the shakes and sweats returning every few months', src: ['marsh', 'ague'] },
+  { w: 3, v: 'eyes failing at close work; needles and letters swim', src: ['eye-strain', 'ink-stain'] },
+  { w: 3, v: 'a shoulder that unships itself if raised too fast', src: ['hammer', 'hauling', 'rope'] },
+  { w: 3, v: 'gut-gripes after milk, meaning half the village diet is a gamble' },
+  { w: 3, v: 'headaches that arrive with thunder, sometimes before it' },
+  { w: 3, v: 'three teeth lost to the barber’s pliers and two more loose', src: ['tooth'] },
+  { w: 3, v: 'a whistling in one ear since a fever at nine' },
+  { w: 2, v: 'joints that swell in autumn like a much older person’s', src: ['damp', 'mining'] },
+  { w: 2, v: 'the falling sickness, twice a year perhaps, hidden with great care' },
+  { w: 2, v: 'a hand with a fine tremor, steady only mid-task', src: ['palsy'] },
+  { w: 2, v: 'breath that whistles after a hundred paces uphill', src: ['lung', 'stone-dust'] },
+  { w: 2, v: 'an old rupture kept in place with a truss and stubbornness', src: ['hauling', 'crush'] },
+  { w: 2, v: 'night-blindness; after dusk, the world is guesswork' },
+  { w: 2, v: 'a stammer that vanishes when singing or swearing' },
+  { w: 2, v: 'skin that blisters in strong sun within the hour' },
+  { w: 2, v: 'a jaw that clicks and locks over hard bread' },
+  { w: 1, v: 'stone in the bladder, and the terror of the cutting that would fix it' },
+  { w: 1, v: 'the itch — recurring, humiliating, and blamed on other households' },
+  { w: 1, v: 'a numb white finger in each hand come winter', src: ['axe', 'hammer'] },
+  { w: 1, v: 'dreams so violent the household moved the sleeping bench away from the wall' },
+  { w: 1, v: 'a heart that flutters like a caged bird after fright, then rights itself' },
+];
+DATA.teeth = [
+  { w: 20, v: 'a workable set, yellowed but mostly present' }, { w: 15, v: 'strong teeth, the one inheritance worth having' },
+  { w: 14, v: 'a gap where a front tooth should be' }, { w: 12, v: 'ground flat from grit in the bread' },
+  { w: 10, v: 'crowded and crooked, but sound' }, { w: 9, v: 'brown at the roots, aching in cold water' },
+  { w: 6, v: 'more gaps than teeth past the smile' }, { w: 4, v: 'nearly none left; food is soup and patience' },
+];
+DATA.hands = [
+  { w: 16, v: 'calloused hard as hoof, cracked at every knuckle' }, { w: 12, v: 'big-knuckled, nails broken to the quick' },
+  { w: 10, v: 'rope-burned and salt-cracked' }, { w: 10, v: 'small and quick, made for fiddly work' },
+  { w: 9, v: 'stained — dye, ink, or walnut, depending who’s asking' }, { w: 9, v: 'scarred with the trade’s whole history' },
+  { w: 8, v: 'strong but gone stiff in the mornings' }, { w: 8, v: 'surprisingly gentle for their size' },
+  { w: 5, v: 'soft palms that would betray any claim to field work' }, { w: 4, v: 'missing something — a fingertip, a nail, a straight bone' },
+];
+DATA.voices = [
+  { w: 14, v: 'low and unhurried, hard to imagine shouting' }, { w: 12, v: 'carrying — a field voice, indoors' },
+  { w: 11, v: 'quiet, so people lean in and remember it' }, { w: 10, v: 'rasped by smoke or screaming, take your pick' },
+  { w: 10, v: 'quick and clipped, always halfway out the door' }, { w: 9, v: 'a singer’s voice wasted on market prices' },
+  { w: 9, v: 'flat and even, giving nothing away' }, { w: 9, v: 'warm, the kind debts get forgiven for' },
+  { w: 8, v: 'high and reedy, mocked and then obeyed' }, { w: 8, v: 'with a burr from a childhood somewhere else' },
+];
+DATA.smells = [
+  { w: 18, v: 'of woodsmoke and wet wool' }, { w: 15, v: 'of the byre, faint and permanent' },
+  { w: 13, v: 'of tallow and onions' }, { w: 12, v: 'of the trade — you could name it blindfolded' },
+  { w: 11, v: 'of river water and pitch' }, { w: 11, v: 'of clean straw, an achievement out here' },
+  { w: 10, v: 'of old incense that never quite washes out' }, { w: 10, v: 'of horse, leather, and liniment' },
+];
+
+/* ---- 3.9 Mental -------------------------------------------------------------- */
+DATA.virtues = [
+  'keeps every promise, at whatever stupid cost', 'shares food first and counts later', 'utterly steady in a crisis, falls apart afterwards in private',
+  'cannot watch cruelty to animals without intervening', 'pays debts to the halfpenny and forgives them whole', 'tells the truth even when a lie would be kinder and easier',
+  'works to the standard even when no one will ever inspect it', 'defends the absent against gossip', 'gentle with children, including the unlovable ones',
+  'never repeats what is told at night', 'gives honest measure — famous for it at three markets', 'sits with the dying when everyone else finds work elsewhere',
+  'admits fault fast and fully, disarming everyone', 'loyal past the point of sense to old companions', 'brave in the small daily ways nobody ballads about',
+  'patient with the slow, the old, and the mad', 'stands up in the moot and says the unpopular true thing', 'keeps the fast days honestly when no one is checking',
+  'forgives injuries that others would nurse into feuds', 'notices who has not eaten and arranges accidents of surplus', 'can be trusted with money, keys, and other people’s spouses',
+  'teaches the trade freely instead of hoarding it', 'mends quarrels between neighbours without taking a side', 'faces bad news standing up and passes it on gently',
+  'carries the heavy end without being asked', 'refuses spoils that smell of another’s ruin', 'keeps courage aloud when everyone else is losing theirs',
+  'treats beggars as if they might be saints in disguise, as the Kirk says and nobody does', 'holds their drink and other people’s secrets equally well', 'does the ugly necessary chores no one else will name',
+];
+DATA.vices = [
+  'drinks past the singing stage into the ugly one', 'cannot let an insult lie, ever, from anyone', 'lies by reflex about small unimportant things',
+  'envies the neighbour’s luck loudly and constantly', 'gambles with dice, then with truth about the dice', 'cruel in argument, aiming always for the soft place',
+  'tight-fisted to the point of family scandal', 'lazy in a way disguised as bad luck', 'a coward about pain, confession, and cold water',
+  'nurses grudges like lambs through winter', 'flatters upward and kicks downward', 'cannot resist a locked box, a sealed letter, a closed door',
+  'eats more than their share when no one watches', 'quick fists, slow apologies', 'gossips even when it draws blood, especially then',
+  'vain about one feature and blind about the rest', 'sulks for days over slights nobody else noticed', 'borrows tools and returns them broken or never',
+  'takes credit smoothly for other people’s work', 'superstitious to the point of paying for it', 'lecherous in a way the village maps carefully',
+  'holds the purse strings of the household like a garrote', 'picks at other people’s grief for entertainment', 'always certain, most certain when wrong',
+  'steals small things — pins, eggs, buttons — needing none of them', 'bitter about a promotion, inheritance, or marriage lost decades back', 'bullies the one person in the house who cannot leave',
+  'prays loudly and tithes short', 'abandons projects at the four-fifths mark', 'blames the dead — they are never around to argue',
+];
+DATA.fears = [
+  'deep water and honest about it', 'the dark between the last house and the first tree', 'dogs, since the bite',
+  'fire in the thatch — wakes at the smell of smoke two farms off', 'the lord’s bailiff’s knock', 'being buried wrong and walking after',
+  'the pest returning, as it does', 'dying unshriven on a road somewhere', 'wells and what looks back from them',
+  'the workhouse ward of the abbey, having seen inside once', 'horses’ hooves at speed behind them', 'the moment the trade fails the hands',
+  'crowds pressing tight — market days are endured', 'the sea, even from the shore', 'being laughed at in the moot',
+  'the tax roll and the letters they cannot read', 'thunder, hidden badly behind jokes', 'childbed, having heard it through a wall',
+  'the forest at midday, oddly, not at night', 'mirrors and still water at night', 'the old stone rows on the hill and being near them at dusk',
+  'that the one great sin is written on their face', 'hunger — not death, hunger — remembered from the bad year', 'lepers’ bells, out of proportion to the danger',
+  'their own temper and what it nearly did once', 'oaths — will not swear on anything, which looks worse', 'the Kirk’s questions getting specific',
+  'growing like the parent they swore not to', 'being forgotten entire — no stone, no name, no mass said', 'nothing — claims to fear nothing, which is itself the fear showing',
+];
+DATA.ambitions = [
+  'to buy the family’s freedom from the week-work, in coin, on the manor rolls', 'to own the strip of land they were whipped on as a child',
+  'to see the sea once before the end', 'to put a slate roof where the thatch leaks', 'to bury their parents in the churchyard proper, paid in full',
+  'to be made guildmaster and wear the chain at the procession', 'to learn letters, in secret if need be', 'to marry into the house on the hill, or failing that, burn it — no, marry into it',
+  'to walk the great pilgrimage and come back changed or not at all', 'to see their child apprenticed to a clean trade indoors',
+  'to own a horse — a real one, not a shared plough-beast', 'to be believed, once, in the moot, over a better-born liar',
+  'to find the father who left and stand in front of him, just stand there', 'to pay off the debt before it eats the second field',
+  'to sing the great mass in the abbey choir just once', 'to be feared a little — just a little — by the right people',
+  'to die in a bed, of age, an ambition the family calls modest and history calls vast', 'to open an inn at the crossroads and hear every story that passes',
+  'to reclaim the marsh-field their grandfather drowned trying to drain', 'to be the one the village sends for when it matters',
+  'to see the city once — the real one, with the towers', 'to breed the perfect sheepdog line; everything else is means to this',
+  'to be shriven of the one thing and sleep whole after', 'to out-live the rival, pettily, gloriously, completely',
+  'to keep every one of the children alive to adulthood, breaking the family’s run of luck', 'to hang the man who burned the mill, lawfully if possible',
+  'to write — or dictate, letters willing — the true history of what happened at the ford', 'to hold the tenancy against the cousin’s claim, whatever it costs',
+  'to make one thing — one — that outlasts them: a bridge, a bell, a name', 'to be left alone entirely, which is the most expensive ambition of all',
+];
+DATA.temperaments = [
+  { w: 12, v: 'phlegmatic: slow to move, immovable once moving' }, { w: 11, v: 'dour and dry, mistaken for humourless by the humourless' },
+  { w: 10, v: 'cheerful on a dark foundation' }, { w: 10, v: 'watchful — counts exits, counts knives, counts friends' },
+  { w: 9, v: 'quick-tempered, quick to laugh, exhausting either way' }, { w: 9, v: 'melancholic, told often to smile, doesn’t' },
+  { w: 8, v: 'placid until the exact wrong day' }, { w: 8, v: 'restless; feet point at the horizon in every season' },
+  { w: 7, v: 'anxious and thorough — the two are related' }, { w: 7, v: 'sanguine past the evidence' },
+  { w: 6, v: 'cold in manner, scalding in loyalty' }, { w: 5, v: 'pious calm with a locked cellar underneath' },
+  { w: 5, v: 'sly and delighted by it' }, { w: 4, v: 'grave beyond their years, whatever their years' },
+  { w: 4, v: 'giddy, unserious, and smarter than they let show' },
+];
+DATA.faithStances = [
+  { w: 16, v: 'devout in the ordinary way: mass, tithes, and no questions asked aloud' },
+  { w: 13, v: 'devout and fearful — sin is a ledger and someone is keeping it' },
+  { w: 12, v: 'observant in public, indifferent in private' },
+  { w: 11, v: 'trusts the saints but not their sellers' },
+  { w: 10, v: 'hedges every prayer with something older — iron, salt, spit' },
+  { w: 9, v: 'genuinely comforted by the rites; the Kirk works as advertised, for them' },
+  { w: 8, v: 'quietly angry at heaven since the loss, still attends, sits at the back' },
+  { w: 7, v: 'believes fiercely in the Kirk and not at all in its clergy' },
+  { w: 6, v: 'drawn to the preaching friars and their talk of poverty, which worries the family' },
+  { w: 4, v: 'doubts everything, tells no one, and takes communion with a straight face' },
+  { w: 3, v: 'holds a private heresy — small, homemade, and hanging-grade if spoken' },
+  { w: 2, v: 'touched by a genuine religious experience once, and unable to make it happen again' },
+];
+DATA.educationLevels = [
+  { w: 46, v: { label: 'unlettered', lit: false, desc: 'no letters; counts on fingers, tallies on sticks, remembers everything' } },
+  { w: 20, v: { label: 'unlettered but numerate', lit: false, desc: 'no letters, but reckons sums faster than the clerk likes' } },
+  { w: 14, v: { label: 'knows the alphabet', lit: false, desc: 'can pick out names and shop-signs, letter by letter' } },
+  { w: 9, v: { label: 'reads slowly', lit: true, desc: 'reads the vernacular haltingly aloud; writing is a battle' } },
+  { w: 6, v: { label: 'reads and writes the vernacular', lit: true, desc: 'a fair hand, learned from a priest or a guild school' } },
+  { w: 4, v: { label: 'Kirk-schooled', lit: true, desc: 'reads the Kirk’s Latin, writes a clerk’s hand, sings the offices' } },
+  { w: 1, v: { label: 'scholar', lit: true, desc: 'studied at a cathedral school; argues doctrine for pleasure, dangerously' } },
+];
+DATA.superstitions = [
+  'never puts new shoes on the table', 'spits left when a magpie crosses alone', 'won’t count lambs aloud until weaning',
+  'keeps a hag-stone on a thong against the night-mare', 'bows to the new moon and turns a coin over', 'never says "drowned" on a boat, says "went under"',
+  'leaves the last swallow of ale for the house-ghost', 'won’t start a journey on the Kirk’s fast-days', 'touches iron after speaking of the dead',
+  'keeps bread and salt in a new house’s wall', 'won’t whistle indoors — it calls wind down the chimney', 'crosses the door-sill right foot first, always',
+  'buries the first tooth of each child under the hearth', 'won’t lend fire from the house after sundown', 'ties red thread on anything newly born or newly bought',
+  'reads omens in the way smoke leans', 'never thanks anyone for a knife — pays a pin for it', 'won’t cut nails on a holy day',
+  'pours a drop on the ground at the first cup', 'keeps rowan over the byre door', 'holds the breath passing the gallows-hill',
+  'never sweeps dust out the front door — carries it out the back', 'won’t wear green to a wedding', 'salts the doorstep the night of a death in the street',
+  'a coin in the mouth of every corpse they help lay out, Kirk’s frown notwithstanding', 'won’t name a child after a living relative — it splits the luck',
+  'covers mirrors and still water in a storm', 'won’t eat where a priest has quarrelled', 'plants nothing on the day of a hanging',
+  'the first pancake goes to the fire, no argument', 'won’t hand anything across a threshold — steps through first', 'wears the shirt inside-out home after dark to confuse followers',
+  'never tells a dream before breakfast', 'knocks on the beam before boasting', 'won’t kill a spider in the house — carriers of house-luck',
+  'braids a wheat-plait at harvest and keeps last year’s till the new one’s made', 'won’t look a corpse-cart driver in the eye', 'gives every well a greeting, by name if it has one',
+  'stirs everything sunwise, and has stopped others’ pots to correct it', 'keeps a written charm they cannot read sewn into the hem',
+];
+DATA.tics = [
+  'cracks each knuckle in order before hard work', 'quotes their dead mother mid-sentence without noticing', 'hums one tune — always the same one — when lying',
+  'touches the doorframe twice, coming and going', 'talks to animals with more courtesy than to people', 'counts under the breath when anxious — hayricks, coins, sins',
+  'rubs the old scar when a decision is coming', 'laughs one beat too late', 'stands too close; a lifetime of small rooms',
+  'never sits with a back to the door', 'apologises to furniture when bumping it', 'repeats the last three words of what people say — say — say',
+  'whittles when thinking; the house is full of small wooden birds', 'pulls the ear-lobe when about to bargain', 'eats fast, arm curled round the bowl, and knows it looks bad',
+  'goes silent and pleasant when truly furious, which those who know them dread', 'chews a straw or a thumbnail to the quick', 'blinks hard twice before answering any question from an official',
+  'always tests a bench before sitting, since the wedding incident', 'names tools; the good axe is "Widow"',
+];
+
+/* ---- 3.10 The Touch (20) — every entry deniable ------------------------------- */
+DATA.touch = [
+  { w: 4, manifestation: 'Bread will not mould in the same room as her.', mundane: 'The room is dry and she eats it fast.' },
+  { w: 4, manifestation: 'Dogs that bite everyone go quiet and lie down at his feet.', mundane: 'He moves slowly and smells of the kennel he grew up beside.' },
+  { w: 3, manifestation: 'Dreamed the mill fire three nights before it happened, and said so beforehand to two people.', mundane: 'Everyone dreams of fire; the mill was old and everyone expected it.' },
+  { w: 3, manifestation: 'Bees swarm to her and have never once stung her, even the day the hive fell.', mundane: 'She is calm, slow-handed, and was probably lucky that day.' },
+  { w: 3, manifestation: 'Wounds he binds go bad far less often than the barber’s.', mundane: 'He washes his hands and his linen, an eccentricity learned from a strange old soldier.' },
+  { w: 3, manifestation: 'Can find water with a forked hazel wand; three wells in the parish prove it.', mundane: 'Three wells dug in a wet valley would find water wherever you put them.' },
+  { w: 3, manifestation: 'The cattle turn to face her when she enters the byre, all together, every time.', mundane: 'She brings the feed. Cattle are not complicated.' },
+  { w: 2, manifestation: 'Candles gutter when he is angry, even in still air.', mundane: 'An angry man breathes hard and moves suddenly; no air indoors is truly still.' },
+  { w: 2, manifestation: 'Knew the church bell would crack before it did; refused to stand under it a week before.', mundane: 'The bell had sounded wrong for months to anyone who listened.' },
+  { w: 2, manifestation: 'Her mother’s ghost speaks to her in the smoke of the fire, or so she has said twice, both times right.', mundane: 'Grief, smoke-staring, and knowing her mother’s mind better than anyone living.' },
+  { w: 2, manifestation: 'Ice will bear him when it will bear no one else of his weight.', mundane: 'He grew up on the fen ice and reads it; the one time it was witnessed, it may have been thicker at his crossing.' },
+  { w: 2, manifestation: 'A dying man asked for her by name — a stranger who had never met her.', mundane: 'Delirium, a common name, and a story polished in the telling.' },
+  { w: 2, manifestation: 'The rain came the day after he ploughed the fallow widdershins, both years he tried it.', mundane: 'It was ploughing season. It rains in ploughing season.' },
+  { w: 2, manifestation: 'No lice, ever. In a house full of them, none will board him.', mundane: 'Some people are simply not to a louse’s taste; his family finds it insulting.' },
+  { w: 2, manifestation: 'Told a woman her lost ring was in the goose-yard, and it was.', mundane: 'Geese steal shining things; anyone who kept geese would have guessed it.' },
+  { w: 1, manifestation: 'Woke the whole house the night the dyke broke — screaming of black water — an hour before it broke.', mundane: 'The dyke groaned all that week and sleeping minds hear what waking ones dismiss.' },
+  { w: 1, manifestation: 'A hanged man’s cart-horse, unmanageable since the hanging, will work for her alone.', mundane: 'She feeds it apples and does not shout, unlike its owner.' },
+  { w: 1, manifestation: 'His touch soured three batches of cream the week his brother died, say the dairy-women.', mundane: 'Thunder-weather sours cream, and the week was full of thunder and grief alike.' },
+  { w: 1, manifestation: 'Was pronounced dead of the sweat at seven, laid out and washed, and sat up at the vigil.', mundane: 'The sweat drops people into a death-sleep; the marvel is only that they checked twice.' },
+  { w: 1, manifestation: 'The priest’s holy water hisses — very faintly — when it touches her skin, says the sexton.', mundane: 'Cold water on warm skin after the walk to the Kirk; the sexton drinks.' },
+];
+
+/* ---- 3.11 Skills (50), tiered ------------------------------------------------- */
+// tierCap: highest tier plausibly reachable; GEN assigns actual tier from age + occupation.
+DATA.skillTiers = ['unskilled', 'apprentice', 'journeyman', 'master'];
+DATA.skills = [
+  { name: 'Ploughing', cap: 3 }, { name: 'Scything', cap: 3 }, { name: 'Weather-sense', cap: 3 }, { name: 'Ox-handling', cap: 3 },
+  { name: 'Cheesemaking', cap: 3 }, { name: 'Animal husbandry', cap: 3 }, { name: 'Herding', cap: 3 }, { name: 'Sling', cap: 2 },
+  { name: 'Foraging', cap: 3 }, { name: 'Knife-work', cap: 3 }, { name: 'Brewing', cap: 3 }, { name: 'Physic & herbs', cap: 3 },
+  { name: 'Spinning', cap: 3 }, { name: 'Felling', cap: 3 }, { name: 'Hauling', cap: 2 }, { name: 'Woodcraft', cap: 3 },
+  { name: 'Charcoaling', cap: 3 }, { name: 'Netting', cap: 3 }, { name: 'Boat-handling', cap: 3 }, { name: 'Trapping', cap: 3 },
+  { name: 'Marsh-craft', cap: 3 }, { name: 'Salt-work', cap: 3 }, { name: 'Carding', cap: 2 }, { name: 'Weaving', cap: 3 },
+  { name: 'Dyeing', cap: 3 }, { name: 'Milling', cap: 3 }, { name: 'Smithing', cap: 3 }, { name: 'Farriery', cap: 3 },
+  { name: 'Carpentry', cap: 3 }, { name: 'Joinery', cap: 3 }, { name: 'Thatching', cap: 3 }, { name: 'Coopering', cap: 3 },
+  { name: 'Tanning', cap: 3 }, { name: 'Needlework', cap: 3 }, { name: 'Midwifery', cap: 3 }, { name: 'Masonry', cap: 3 },
+  { name: 'Butchery', cap: 3 }, { name: 'Baking', cap: 3 }, { name: 'Cookery', cap: 3 }, { name: 'Haggling', cap: 3 },
+  { name: 'Letters', cap: 3 }, { name: 'Latin of the Kirk', cap: 3 }, { name: 'Accounting', cap: 3 }, { name: 'Hunting', cap: 3 },
+  { name: 'Dog-handling', cap: 3 }, { name: 'Falconry', cap: 3 }, { name: 'Horsemanship', cap: 3 }, { name: 'Sword & lance', cap: 3 },
+  { name: 'Spear & shield', cap: 3 }, { name: 'Stealth', cap: 3 }, { name: 'Dice', cap: 2 }, { name: 'Singing', cap: 3 },
+  { name: 'Storytelling', cap: 3 }, { name: 'Swimming', cap: 2 }, { name: 'Mining', cap: 3 }, { name: 'Reading faces', cap: 3 },
+];
+// "Unlikely" skills — one per character, mildly out of place for their station.
+DATA.unlikelySkills = [
+  'Singing', 'Storytelling', 'Swimming', 'Dice', 'Stealth', 'Reading faces', 'Letters', 'Physic & herbs',
+  'Horsemanship', 'Falconry', 'Latin of the Kirk', 'Sword & lance', 'Accounting', 'Dog-handling',
+];
+
+/* ---- 3.12 Possessions (80). tier 0..5, price in copper pennies (d), silver shillings (s), gold marks (m) ---- */
+DATA.possessions = [
+  { t: 0, p: '1d', v: 'a wooden spoon worn to the grain of the hand' }, { t: 0, p: '2d', v: 'a knife, whetted to a sliver of its former self' },
+  { t: 0, p: '1d', v: 'a hazel walking staff, thumb-polished' }, { t: 0, p: '3d', v: 'a patched wool hood, twice re-dyed' },
+  { t: 0, p: '2d', v: 'a clay bowl with a mended crack riveted in lead' }, { t: 0, p: '1d', v: 'a lump of tallow soap, guarded jealously' },
+  { t: 0, p: '2d', v: 'a fire-steel and a pouch of dry punk-wood' }, { t: 0, p: '1d', v: 'a hag-stone on a leather thong' },
+  { t: 0, p: '0d', v: 'a smooth river pebble from a day that mattered' }, { t: 0, p: '0d', v: 'a dead sibling’s carved wooden bird' },
+  { t: 0, p: '1d', v: 'a sack, and the standing of one who owns a sack' }, { t: 0, p: '2d', v: 'footwraps and one pair of wooden pattens' },
+  { t: 0, p: '1d', v: 'a bone comb missing four teeth' }, { t: 0, p: '2d', v: 'a rush-light holder of bent iron wire' },
+  { t: 0, p: '0d', v: 'a pressed flower in a scrap of waxed cloth, never explained' }, { t: 0, p: '1d', v: 'a sling and six chosen stones' },
+  { t: 1, p: '6d', v: 'a hooded cloak of undyed wool, oiled against rain' }, { t: 1, p: '4d', v: 'a belt-pouch with a bone toggle' },
+  { t: 1, p: '8d', v: 'a hand-axe, head loose but trustworthy' }, { t: 1, p: '5d', v: 'a fishing net in constant repair' },
+  { t: 1, p: '9d', v: 'a straw mattress and a feather pillow — the pillow is the boast' }, { t: 1, p: '6d', v: 'an iron cooking pot, the household’s spine' },
+  { t: 1, p: '4d', v: 'a wooden pilgrim’s badge from a shrine two days off' }, { t: 1, p: '7d', v: 'a hen and her tempers' },
+  { t: 1, p: '5d', v: 'a horn cup with a brass rim' }, { t: 1, p: '8d', v: 'a spade with an iron-shod edge' },
+  { t: 1, p: '6d', v: 'a distaff and spindle, never far from the hand' }, { t: 1, p: '10d', v: 'a pig, half-owned with a brother-in-law, source of endless accounting' },
+  { t: 1, p: '4d', v: 'a rushlight’s worth of written charm, folded eight times, unread' }, { t: 1, p: '9d', v: 'a bow of elm, kept unstrung and undeclared' },
+  { t: 1, p: '5d', v: 'a small crock of honey, medicinal, allegedly' }, { t: 1, p: '7d', v: 'good boots, second-foot, resold by the gravedigger' },
+  { t: 2, p: '2s', v: 'a linen shirt for feast days, whiter than the neighbours’' }, { t: 2, p: '3s', v: 'the tools of the trade, each one named and worn to fit' },
+  { t: 2, p: '2s', v: 'a pewter plate, displayed more than used' }, { t: 2, p: '4s', v: 'a milk cow of good temper and better yield' },
+  { t: 2, p: '3s', v: 'a locked wooden coffer, key worn at the neck' }, { t: 2, p: '2s', v: 'a brass buckle kept polished for market days' },
+  { t: 2, p: '5s', v: 'a donkey, elderly, opinionated, indispensable' }, { t: 2, p: '3s', v: 'a feather bed inherited over two better claims' },
+  { t: 2, p: '2s', v: 'a horn lantern with real glass on one face' }, { t: 2, p: '4s', v: 'a half-share in a fishing boat and the feuds that come with it' },
+  { t: 2, p: '2s', v: 'a woollen gown dyed madder-red, worn thrice a year' }, { t: 2, p: '3s', v: 'a silver penny of the old king, drilled and worn hidden' },
+  { t: 2, p: '6s', v: 'an apprentice’s indenture, half-served, transferable at a price' }, { t: 2, p: '3s', v: 'a crossbow kept from soldiering days, string kept dry' },
+  { t: 3, p: '12s', v: 'a guild livery hood and the dues receipts to match' }, { t: 3, p: '15s', v: 'a strongbox with two locks and one honest key' },
+  { t: 3, p: '10s', v: 'a psalter with a scandalous marginal drawing on one page' }, { t: 3, p: '20s', v: 'a riding horse, cob-bred, no beauty, tireless' },
+  { t: 3, p: '14s', v: 'a fur-trimmed winter cloak, fur legally questionable for their station' }, { t: 3, p: '12s', v: 'a set of balance scales, sealed by the town assayer' },
+  { t: 3, p: '18s', v: 'a house-plot deed with one contested boundary' }, { t: 3, p: '10s', v: 'a silver ring bearing another family’s worn arms' },
+  { t: 3, p: '16s', v: 'a stall’s standing rights at two market towns' }, { t: 3, p: '11s', v: 'a sword, plain, legal, and conspicuously well-kept' },
+  { t: 3, p: '13s', v: 'a glass goblet, survivor of a set of six and a marriage' }, { t: 3, p: '15s', v: 'a bale of dyed cloth held against a rise in prices' },
+  { t: 4, p: '2m', v: 'a mail shirt, patched at the left shoulder where it failed once' }, { t: 4, p: '3m', v: 'a destrier-bred stallion, worth more than the hall’s roof' },
+  { t: 4, p: '1m', v: 'a signet ring and the sealing wax nobody else may touch' }, { t: 4, p: '2m', v: 'a book of hours with the family’s dead listed in the calendar' },
+  { t: 4, p: '4m', v: 'plate harness for the joust, two generations old, refitted' }, { t: 4, p: '1m', v: 'a falcon, hooded, with a lineage recited like scripture' },
+  { t: 4, p: '2m', v: 'a tapestry of a hunt, moth-holed exactly where the quarry should be' }, { t: 4, p: '3m', v: 'the wardship papers of a rich orphan, profitable and shaming' },
+  { t: 4, p: '1m', v: 'a reliquary pendant holding a splinter of Saint Varro’s cart' }, { t: 4, p: '2m', v: 'a sword with a named blade and an unverifiable history' },
+  { t: 5, p: '8m', v: 'the charters of three manors, one badly encumbered' }, { t: 5, p: '10m', v: 'a gold chain of office weighing as much as its obligations' },
+  { t: 5, p: '6m', v: 'a jewelled reliquary the abbey wants back and says so yearly' }, { t: 5, p: '12m', v: 'a stud of warhorses and the debts bred alongside them' },
+  { t: 5, p: '7m', v: 'a silver dinner service counted, piece by piece, after every feast' }, { t: 5, p: '9m', v: 'a private chapel’s endowment and the right to name its priest' },
+  { t: 0, p: '0d', v: 'a letter they cannot read, kept since the messenger died' }, { t: 1, p: '3d', v: 'a set of knucklebone dice, suspiciously lucky' },
+  { t: 0, p: '1d', v: 'a lock of hair sewn into the shirt hem' }, { t: 2, p: '2s', v: 'a small icon of Saint Merrow, paint worn away at the kissed corner' },
+  { t: 1, p: '5d', v: 'a wooden whistle shaped like a wren, a fair-day extravagance' }, { t: 3, p: '10s', v: 'a map of the district, wrong in ways only locals would catch' },
+];
+
+/* ---- 3.13 Relationship types (30) — tie + tension; NPC name generated in GEN ---- */
+DATA.relationships = [
+  { tie: 'elder brother', tension: 'who forgave you too easily, which is its own accusation' },
+  { tie: 'younger sister', tension: 'who knows what you did and prices her silence in favours' },
+  { tie: 'mother', tension: 'who compares you, unfavourably and constantly, to a dead sibling' },
+  { tie: 'father', tension: 'whose praise arrives only secondhand, through neighbours' },
+  { tie: 'childhood friend', tension: 'now sworn to the household of your family’s rival' },
+  { tie: 'the parish priest', tension: 'who heard your confession and has been strange with you since' },
+  { tie: 'a moneylender', tension: 'polite, patient, and holding your mark for more than you can raise' },
+  { tie: 'the miller', tension: 'who shorted your family’s flour for years, and only you noticed' },
+  { tie: 'a first love', tension: 'married elsewhere by arrangement, and living three doors away' },
+  { tie: 'the lord’s bailiff', tension: 'who owes you an unspoken favour and hates you for the weight of it' },
+  { tie: 'a former master', tension: 'who taught you everything and now calls your work theft of his custom' },
+  { tie: 'an old soldier comrade', tension: 'who tells the story of the bridge differently, and louder' },
+  { tie: 'a widowed neighbour', tension: 'whose fences you mend and whose name you cannot say without colouring' },
+  { tie: 'the midwife', tension: 'who was there the night in question and has never once mentioned it — deliberately' },
+  { tie: 'a cousin', tension: 'raised alongside you, with a claim to the tenancy exactly as good as yours' },
+  { tie: 'the alewife', tension: 'who lets your debts ride and collects in gossip you must supply' },
+  { tie: 'a guild brother', tension: 'who blackballed your advancement, smiling, over dinner at your table' },
+  { tie: 'the sexton', tension: 'who saw where you buried it — whatever it was — and nods to you oddly' },
+  { tie: 'a shepherd on the far hill', tension: 'the only person you have ever told, safe by distance and silence' },
+  { tie: 'your betrothed', tension: 'chosen by the families, and the two of you circling politely, strangers' },
+  { tie: 'a leper at the crossroads', tension: 'who was once your friend, and you pass with alms and averted eyes' },
+  { tie: 'the reeve', tension: 'your mother’s rejected suitor, with a long memory and the tax roll' },
+  { tie: 'an aunt in the convent', tension: 'holy, admired, and the one who informed on your father' },
+  { tie: 'a pedlar', tension: 'who arrives twice a year carrying letters, news, and one recurring lie' },
+  { tie: 'the blacksmith', tension: 'whose son drowned at the ford the day you swam back alone' },
+  { tie: 'a foster-brother', tension: 'placed in your family for coin, and loved better than the blood-children' },
+  { tie: 'the lord’s youngest child', tension: 'who talks to you as an equal, which flatters and endangers you in equal parts' },
+  { tie: 'a rival for the same office', tension: 'better born, worse at the work, and everyone knows both things' },
+  { tie: 'an outlaw in the greenwood', tension: 'your kin, fed in secret at the cost of everything if it’s found out' },
+  { tie: 'the ferryman', tension: 'who carried you across the night you left and has kept the fare — and the hour — to himself' },
+];
+
+/* ---- 3.14 Secrets (40) — actionable and dangerous ------------------------------ */
+DATA.secrets = [
+  'moved the boundary stone two paces the winter the reeve was ill; the extra strip has fed the family since',
+  'is the true father/mother of the child raised as a sibling’s',
+  'took the lord’s deer in the famine winter — the antlers are buried under the byre floor',
+  'keeps the old rites at the stone row each quarter-day, and not alone',
+  'saw who really started the mill fire and has let another carry the blame',
+  'has a first spouse, abandoned but living, two lordships away',
+  'skims the tithe-grain by a fortieth and gives it to the widow-row',
+  'once sold a false relic — the pilgrim who bought it was later called healed by it',
+  'can read, learned in secret, and has read the letters carried for others',
+  'was the informer whose word hanged the outlaw the ballads now mourn',
+  'is owed money by the priest, for a matter neither can name aloud',
+  'broke sanctuary once — helped drag a man from the altar — and dreams of it',
+  'knows the ford was passable that night; the drowning story the family tells is arranged',
+  'holds a charter that would unmake the lord’s claim to the east pasture, and cannot use it safely',
+  'fathered/bore a child in service at the manor; the child waits at table there now',
+  'poisoned the rival’s prize bull — slowly, deniably — and would do it again',
+  'has never once believed, not since childhood, and performs every rite perfectly',
+  'took a dead comrade’s name, pay, and history after the rout; the real name is on no roll',
+  'stole the guild’s die-stamp for one night; somewhere, coins from that night still pass',
+  'was paid to lame the horse before the wager-race, and did it',
+  'knows which grave in the churchyard is empty and why',
+  'promised the dying mother to keep the sister from marrying him — and arranged it so, invisibly',
+  'has the falling sickness, concealed even at the cost of refusing the pilgrimage',
+  'hid a heretic preacher for a season; the man’s books are still under the floor',
+  'is the one leaving hares at the widow’s door — poached hares, on gallows terms',
+  'swore false oath at the boundary trial, hand on the reliquary, and won the case',
+  'knows the steward keeps two rolls, and copied a page of the true one',
+  'lay with the enemy scout the summer of the raids, and traded words as well',
+  'keeps the excommunicate father’s grave green inside consecrated ground, moved by night',
+  'was in the tower the night the old lord fell; nothing was said, and everything was arranged',
+  'sells physic-herbs that are half prayer and half poison, dosed by grudge',
+  'has been paying the hangman’s widow, monthly, for years, and could not stop now if it were noticed',
+  'let the plague-cart take a living man — a bad man, but living',
+  'is not the sex the parish roll records; the bishop’s visitation is next spring',
+  'knows where the wreck went down with the salt-tax silver, and dives it alone at neap tides',
+  'wrote the anonymous bill nailed to the Kirk door that started all of it',
+  'took the bribe to misremember the will; the disinherited niece serves them ale every market day',
+  'kept the sword of the man they killed on the road — marked with arms someone will eventually recognise',
+  'is feeding information about the garrison to a man who pays in foreign coin',
+  'once cursed a neighbour aloud, alone, with the old words — and the neighbour sickened, and the guilt is worse than the fear',
+];
+
+/* ---- 3.15 Current problems (30) — the wound in the world ----------------------- */
+DATA.problems = [
+  'the rent is due at Martinmas and the money is not there, and the bailiff has begun looking at the cow',
+  'a summons to the manor court, cause unstated, which is the worst way',
+  'the well has gone bad and someone must be blamed',
+  'a pregnancy that cannot be explained inside the arithmetic of the marriage',
+  'a body turned up in the flood-wrack wearing a jacket everyone recognises',
+  'the promise made at a deathbed is coming due, and keeping it means breaking something else',
+  'no rain since the Feast of Saint Osyth — the barley is failing and the muttering has started',
+  'the lord is mustering men for the border, and the levy list has the wrong name on it — or the right one',
+  'a letter arrived, sealed, addressed correctly, and no one in the house can read it',
+  'the pest is in the next valley; the roads are closing one by one',
+  'a brother has taken to the greenwood, and men come asking at the house',
+  'the guild has called an inquiry into short-weight goods, and the trail ends at a friend',
+  'the new priest is asking precise, patient questions about the old customs',
+  'a marriage is being arranged, and the intended has kind eyes and a bad reputation, or the reverse — accounts differ',
+  'the tithe-barn burned, and the parish must remake what was lost or answer for it',
+  'an inheritance has fallen open two lordships away, and claiming it means going back',
+  'the moneylender has sold the debt to someone with different manners',
+  'the winter stores will not stretch; someone must go on the road or everyone gets thinner',
+  'a stranger has been asking for them by name at the market — by their old name',
+  'the mill-dam is failing and the two villages it serves have started blaming each other',
+  'the wardship of a dead sibling’s children has landed on the household like a dropped beam',
+  'the relic procession route was changed to skip the village, and trade — and faith — bleed from the cut',
+  'an accusation of hex-craft is circling the neighbourhood, looking for somewhere to land',
+  'the old enemy has come home rich, generous, and smiling, and everyone else has forgotten',
+  'a survey commission is remeasuring the hides, and the family’s quiet arrangements will not survive honest measurement',
+  'the eldest child’s apprenticeship fee is due in full, or the place goes to the miller’s boy',
+  'a soldier billeted on the household refuses to leave and outranks every argument',
+  'the salt price has doubled, which for a fishing family is arithmetic with teeth',
+  'a vow made in fear at sea — pilgrimage, barefoot, this year — is now inconvenient and unpaid',
+  'someone has been moving the fish-traps, and the night watch drawn up to catch them includes the person doing it',
+];
+
+/* ---- Heraldry data (§4) --------------------------------------------------------- */
+DATA.tinctures = {
+  metals: [{ key: 'or', fill: '#d4a017', label: 'or' }, { key: 'argent', fill: '#e8e4d8', label: 'argent' }],
+  colours: [
+    { key: 'gules', fill: '#8f1d1d', label: 'gules' }, { key: 'azure', fill: '#1f3a6e', label: 'azure' },
+    { key: 'vert', fill: '#2d5c2f', label: 'vert' }, { key: 'sable', fill: '#1a1a1a', label: 'sable' },
+    { key: 'purpure', fill: '#5c2d5c', label: 'purpure' },
+  ],
+  furs: [{ key: 'ermine', label: 'ermine' }, { key: 'vair', label: 'vair' }],
+};
+DATA.divisions = [
+  { key: 'perPale', blazon: 'Per pale' }, { key: 'perFess', blazon: 'Per fess' }, { key: 'perBend', blazon: 'Per bend' },
+  { key: 'perChevron', blazon: 'Per chevron' }, { key: 'quarterly', blazon: 'Quarterly' }, { key: 'perSaltire', blazon: 'Per saltire' },
+  { key: 'gyronny', blazon: 'Gyronny' }, { key: 'barry', blazon: 'Barry of six' }, { key: 'paly', blazon: 'Paly of six' }, { key: 'checky', blazon: 'Checky' },
+];
+DATA.ordinaries = [
+  { key: 'fess', blazon: 'a fess' }, { key: 'pale', blazon: 'a pale' }, { key: 'bend', blazon: 'a bend' },
+  { key: 'bendSinister', blazon: 'a bend sinister' }, { key: 'chevron', blazon: 'a chevron' }, { key: 'cross', blazon: 'a cross' },
+  { key: 'saltire', blazon: 'a saltire' }, { key: 'chief', blazon: 'a chief' }, { key: 'pile', blazon: 'a pile' },
+  { key: 'bordure', blazon: 'a bordure' }, { key: 'canton', blazon: 'a canton' }, { key: 'orle', blazon: 'an orle' },
+];
+DATA.charges = [
+  { key: 'stag', blazon: 'a stag at gaze' }, { key: 'boar', blazon: 'a boar passant' }, { key: 'wolf', blazon: 'a wolf rampant' },
+  { key: 'raven', blazon: 'a raven close' }, { key: 'tower', blazon: 'a tower embattled' }, { key: 'key', blazon: 'a key wards upward' },
+  { key: 'sheaf', blazon: 'a garb (wheat-sheaf)' }, { key: 'hammer', blazon: 'a hammer' }, { key: 'oak', blazon: 'an oak tree eradicated' },
+  { key: 'thistle', blazon: 'a thistle slipped' }, { key: 'ship', blazon: 'a lymphad under sail' }, { key: 'sun', blazon: 'a sun in splendour' },
+  { key: 'moon', blazon: 'a crescent moon' }, { key: 'star', blazon: 'a mullet of six points' }, { key: 'cross2', blazon: 'a cross crosslet' },
+  { key: 'axe', blazon: 'an axe erect' }, { key: 'sword', blazon: 'a sword point upward' }, { key: 'arrow', blazon: 'three arrows in sheaf' },
+  { key: 'bell', blazon: 'a bell' }, { key: 'bridge', blazon: 'a bridge of two arches' }, { key: 'well', blazon: 'a well-head' },
+  { key: 'fish', blazon: 'a pike naiant' }, { key: 'eel', blazon: 'an eel nowed' }, { key: 'bee', blazon: 'a bee volant' },
+  { key: 'ram', blazon: 'a ram’s head cabossed' }, { key: 'bull', blazon: 'a bull’s head erased' }, { key: 'horseshoe', blazon: 'a horseshoe' },
+  { key: 'millrind', blazon: 'a millrind' }, { key: 'anvil', blazon: 'an anvil' }, { key: 'gallows', blazon: 'a gallows-tree (rare, and remembered)' },
+];
+DATA.cadency = [
+  { order: 1, key: 'label', blazon: 'a label of three points' }, { order: 2, key: 'crescent', blazon: 'a crescent' },
+  { order: 3, key: 'mullet', blazon: 'a mullet' }, { order: 4, key: 'martlet', blazon: 'a martlet' },
+  { order: 5, key: 'annulet', blazon: 'an annulet' }, { order: 6, key: 'fleur', blazon: 'a fleur-de-lis' },
+];
+DATA.markPlaces = ['burned into the lintel and every gatepost', 'scratched on the tools and the byre door', 'notched into the boundary willows', 'chalked fresh on the cart each market day', 'branded on the cattle’s left horn', 'cut into the boat’s stem-post'];
+
+Object.freeze(DATA);
+/* ============================== GEN ==============================
+   Generation pipeline. Strict order (§2): each step may narrow later pools.
+   Locks: state paths whose values survive a reroll; the pipeline consumes
+   identical RNG draws either way, then overwrites with the locked value so
+   downstream logic reads the locked field.                                */
+'use strict';
+
+const GEN = (function () {
+  const VERSION = '1.0.0';
+
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function getPath(obj, path) {
+    return path.split('.').reduce((a, k) => (a == null ? a : a[k]), obj);
+  }
+  function setPath(obj, path, val) {
+    const parts = path.split('.');
+    let cur = obj;
+    for (let i = 0; i < parts.length - 1; i++) { if (cur[parts[i]] == null) cur[parts[i]] = {}; cur = cur[parts[i]]; }
+    cur[parts[parts.length - 1]] = val;
+  }
+
+  /* Weighted class pick with region multipliers. */
+  function pickClass(rng, regionKey, constraint) {
+    const mods = DATA.classRegionMod[regionKey] || {};
+    let entries = DATA.classes.map(e => ({ w: e.w * (mods[e.v.key] || 1), v: e.v }));
+    if (constraint) entries = entries.filter(e => e.v.key === constraint);
+    return deepClone(pick(rng, entries, 'class'));
+  }
+
+  function givenName(rng, culture, sex) {
+    const pool = DATA.names[culture];
+    // Small chance of a neutral name regardless of sex.
+    if (chance(rng, 0.06)) return pick(rng, pool.neutral, 'name:neutral');
+    return pick(rng, sex === 'male' ? pool.male : pool.female, 'name:given');
+  }
+
+  function matchEpithet(table, texts) {
+    const hay = texts.filter(Boolean).join(' || ').toLowerCase();
+    const hits = [];
+    for (const e of table) {
+      const re = new RegExp(e.key, 'i');
+      if (re.test(hay)) hits.push(e.epithet);
+    }
+    return hits;
+  }
+
+  const WAR_SRC = ['war', 'siege', 'blade', 'arrow', 'brand', 'gallows', 'mantrap'];
+
+  function generate(seedStr, opts) {
+    opts = opts || {};
+    const locks = opts.locks || {};
+    const overrides = opts.overrides || {};
+    const rng = makeRng(seedStr);
+    const c = { seed: seedStr, version: VERSION, flags: [], clamps: [] };
+    const clamp = (rule, detail) => { c.clamps.push({ rule, detail }); traceClamp(rule, detail); };
+    // L: generate normally (consuming RNG draws), then apply lock if present,
+    // so identical seeds stay identical whether or not fields are locked.
+    const L = (path, fn) => {
+      const v = fn();
+      if (path in locks) { setPath(c, path, deepClone(locks[path])); return getPath(c, path); }
+      setPath(c, path, v);
+      return v;
+    };
+
+    /* -- 2. Region ----------------------------------------------------- */
+    L('region', () => {
+      let entries = DATA.regions;
+      if (overrides.region) entries = entries.filter(e => e.v.key === overrides.region);
+      return deepClone(pick(rng, entries, 'region'));
+    });
+
+    /* -- 3. Culture: region's pool, with a minority chance -------------- */
+    L('culture', () => {
+      if (chance(rng, 0.1)) {
+        const others = Object.keys(DATA.names).filter(k => k !== c.region.namePool);
+        c.flags.push('minority culture — the family came from away, and the village remembers');
+        return pick(rng, others, 'culture:minority');
+      }
+      return c.region.namePool;
+    });
+
+    /* -- 4. Social class ------------------------------------------------ */
+    L('socialClass', () => pickClass(rng, c.region.key, overrides.socialClass));
+
+    /* -- 5. Birth circumstances ----------------------------------------- */
+    L('birth', () => ({
+      circumstance: pick(rng, DATA.birthCircumstances, 'birth'),
+      season: pick(rng, DATA.seasons, 'season'),
+      legitimacy: pick(rng, DATA.legitimacy, 'legitimacy'),
+      order: roll(rng, 1, 6), // among live-born siblings; heraldic cadency reads this
+    }));
+
+    /* -- 6. Family ------------------------------------------------------- */
+    L('family', () => {
+      const structure = pick(rng, DATA.familyStructures, 'family');
+      // Sibling generator: 0–9 born (weighted to middling broods), ~40% infant mortality.
+      const born = pick(rng, [
+        { w: 4, v: 0 }, { w: 8, v: 1 }, { w: 12, v: 2 }, { w: 14, v: 3 }, { w: 14, v: 4 },
+        { w: 12, v: 5 }, { w: 8, v: 6 }, { w: 5, v: 7 }, { w: 2, v: 8 }, { w: 1, v: 9 }], 'siblings:born');
+      const siblings = [];
+      for (let i = 0; i < born; i++) {
+        siblings.push({
+          sex: pick(rng, DATA.sexes, 'sibling:sex'),
+          older: chance(rng, 0.5),
+          alive: chance(rng, 0.6), // ~40% died in infancy or since
+        });
+      }
+      const fatherName = givenName(rng, c.culture, 'male');
+      const s = structure.toLowerCase();
+      const fatherAlive = !(s.includes('father dead') || s.includes('father drowned') || s.includes('father hanged') || s.includes('both parents dead'));
+      const motherAlive = !(s.includes('mother died') || s.includes('both parents dead'));
+      return { structure, siblings, father: { name: fatherName, alive: fatherAlive }, mother: { alive: motherAlive }, guardian: null };
+    });
+
+    /* -- 7. Sex & age ----------------------------------------------------- */
+    L('sex', () => (overrides.sex ? overrides.sex : pick(rng, DATA.sexes, 'sex')));
+    L('ageBracket', () => deepClone(pick(rng, DATA.ageBrackets, 'ageBracket')));
+    L('age', () => roll(rng, c.ageBracket.min, c.ageBracket.max));
+    // Coherence: orphaned minor gets a guardian.
+    if (!c.family.father.alive && !c.family.mother.alive && c.age < 16 && !c.family.guardian) {
+      c.family.guardian = pick(rng, DATA.guardians, 'guardian');
+      clamp('orphan-guardian', 'both parents dead at age ' + c.age + ' — guardian assigned: ' + c.family.guardian);
+    }
+    L('marital', () => {
+      if (c.age < 16) return 'unwed';
+      const pWed = c.age < 20 ? 0.25 : c.age < 30 ? 0.6 : 0.75;
+      if (chance(rng, pWed)) return chance(rng, 0.85) ? 'wed' : 'widowed';
+      return 'unwed';
+    });
+
+    /* -- 11a. Education drawn early: occupations gate on literacy (§2 step 9). */
+    L('education', () => {
+      const classEdu = { serf: 0.15, freePeasant: 0.3, outcast: 0.2, craftsman: 0.7, burgher: 1.6, clergy: 12, minorGentry: 2.5, knightly: 1.6, noble: 4 };
+      const m = classEdu[c.socialClass.key] || 1;
+      const entries = DATA.educationLevels.map(e => ({ w: e.v.lit ? e.w * m : e.w, v: e.v }));
+      return deepClone(pick(rng, entries, 'education'));
+    });
+    // Coherence: a literate serf is allowed only via a Church path, and flagged.
+    if (c.socialClass.key === 'serf' && c.education.lit && !('education' in locks)) {
+      if (chance(rng, 0.25)) {
+        c.flags.push('remarkable: a serf with letters — taught by the parish priest, who had reasons');
+      } else {
+        clamp('serf-literacy', 'literate serf clamped to "knows the alphabet"');
+        c.education = deepClone(DATA.educationLevels[2].v);
+      }
+    }
+
+    /* -- 9. Occupation (gated by class + sex + age + literacy) ------------- */
+    L('occupation', () => {
+      const pool = DATA.occupations.filter(o =>
+        o.classes.includes(c.socialClass.key) && c.age >= o.minAge && (!o.lit || c.education.lit));
+      const sexPool = pool.filter(o => o.sex === 'any' || o.sex === c.sex);
+      const barred = pool.filter(o => o.sex !== 'any' && o.sex !== c.sex);
+      // ~5% of the time a legally-barred trade is allowed as a flagged transgression (§2.1).
+      if (barred.length && chance(rng, 0.05)) {
+        const chosen = deepClone(pick(rng, barred.map(o => ({ w: o.w, v: o })), 'occupation:transgression'));
+        c.flags.push('transgression: practises a trade the law reserves for ' + chosen.sex + 's — interesting, and dangerous');
+        c.forcedSecret = 'is not the sex the parish roll records; the bishop’s visitation is next spring';
+        return chosen;
+      }
+      if (!sexPool.length) { // outcast corner cases etc. — fall back to labourer
+        clamp('occupation-pool-empty', 'no occupation fits ' + c.socialClass.key + '/' + c.sex + '/' + c.age + ' — defaulted to field labourer');
+        return deepClone(DATA.occupations[0]);
+      }
+      return deepClone(pick(rng, sexPool.map(o => ({ w: o.w, v: o })), 'occupation'));
+    });
+
+    /* -- 10. Body ----------------------------------------------------------- */
+    L('body', () => {
+      const body = {
+        build: pick(rng, DATA.builds, 'build'),
+        height: pick(rng, DATA.heights, 'height'),
+        hair: pick(rng, DATA.hair, 'hair'),
+        eyes: pick(rng, DATA.eyes, 'eyes'),
+        teeth: pick(rng, DATA.teeth, 'teeth'),
+        hands: pick(rng, DATA.hands, 'hands'),
+        voice: pick(rng, DATA.voices, 'voice'),
+        smell: pick(rng, DATA.smells, 'smell'),
+        features: pickN(rng, DATA.features, roll(rng, 1, 3)),
+        scars: [],
+        ailments: [],
+      };
+      // Scar count scales with age; picks are biased 4x toward the trade's typical injuries.
+      const maxScars = c.age < 18 ? 1 : c.age < 25 ? 2 : c.age < 45 ? 3 : 4;
+      const nScars = roll(rng, c.age < 18 ? 0 : 1, maxScars);
+      const inj = c.occupation.injuries || [];
+      const martial = ['mercenary, between wars', 'knight of one manor', 'squire in a knight’s service', 'town watchman', 'huntsman to the lord'].includes(c.occupation.name) || c.socialClass.key === 'knightly';
+      const scarEntries = DATA.scars.map(e => {
+        let w = e.w;
+        if (e.src && e.src.some(s => inj.includes(s))) w *= 4;
+        return { w, v: e };
+      });
+      const picked = pickN(rng, scarEntries, nScars);
+      for (const s of picked) {
+        // Coherence: a fresh-faced youth in a mild trade doesn't carry a fighter's wounds.
+        if (s.src && s.src.some(x => WAR_SRC.includes(x)) && !martial && !s.src.some(x => inj.includes(x)) && c.age < 25) {
+          clamp('scar-occupation', 'dropped "' + s.v + '" — martial scar on a ' + c.age + '-year-old ' + c.occupation.name);
+          continue;
+        }
+        body.scars.push({ v: s.v, loc: s.loc });
+      }
+      // Ailments: 0 at 14–17 usually, accumulate with age; biased toward the trade.
+      const nAil = c.age < 18 ? (chance(rng, 0.25) ? 1 : 0) : c.age < 35 ? roll(rng, 0, 1) : c.age < 50 ? roll(rng, 1, 2) : roll(rng, 1, 3);
+      const ailEntries = DATA.ailments.map(e => {
+        let w = e.w;
+        if (e.src && e.src.some(s => inj.includes(s))) w *= 4;
+        return { w, v: e };
+      });
+      body.ailments = pickN(rng, ailEntries, nAil).map(a => a.v);
+      return body;
+    });
+    // Coherence: peasant field-trades don't have soft palms.
+    if (!('body' in locks) && /soft palms/.test(c.body.hands) && c.socialClass.tier <= 1 && !c.occupation.lit) {
+      clamp('hands-occupation', 'soft palms on a ' + c.occupation.name + ' — rerolled to calloused');
+      c.body.hands = 'calloused hard as hoof, cracked at every knuckle';
+    }
+
+    /* -- 11. Mind ------------------------------------------------------------ */
+    L('mind', () => ({
+      virtue: pick(rng, DATA.virtues, 'virtue'),
+      vice: pick(rng, DATA.vices, 'vice'),
+      fear: pick(rng, DATA.fears, 'fear'),
+      ambition: pick(rng, DATA.ambitions, 'ambition'),
+      temperament: pick(rng, DATA.temperaments, 'temperament'),
+      faith: pick(rng, DATA.faithStances, 'faith'),
+      superstitions: pickN(rng, DATA.superstitions, roll(rng, 1, 3)),
+      tic: pick(rng, DATA.tics, 'tic'),
+    }));
+
+    /* -- 12. The Touch (~4%) -------------------------------------------------- */
+    L('touch', () => {
+      if (!chance(rng, 0.04)) return null;
+      const t = pick(rng, DATA.touch.map(e => ({ w: e.w, v: e })), 'touch');
+      return { manifestation: t.manifestation, mundaneExplanation: t.mundane };
+    });
+
+    /* -- 13. Skills ------------------------------------------------------------ */
+    L('skills', () => {
+      const tierFor = () => {
+        if (c.age < 18) return 1;
+        if (c.age < 25) return chance(rng, 0.5) ? 2 : 1;
+        if (c.age < 35) return 2;
+        return chance(rng, 0.35) ? 3 : 2;
+      };
+      const out = [];
+      const seen = new Set();
+      for (const name of c.occupation.skills) {
+        if (seen.has(name)) continue; seen.add(name);
+        const def = DATA.skills.find(s => s.name === name) || { cap: 3 };
+        out.push({ name, tier: DATA.skillTiers[Math.min(tierFor(), def.cap)] });
+      }
+      // One "unlikely" skill (§3.11) — mildly out of place for the station.
+      const odd = pick(rng, DATA.unlikelySkills.filter(s => !seen.has(s)), 'skill:unlikely');
+      out.push({ name: odd, tier: DATA.skillTiers[chance(rng, 0.3) ? 1 : 0], unlikely: true });
+      // Everyone can do something general.
+      const general = pick(rng, ['Foraging', 'Haggling', 'Weather-sense', 'Storytelling', 'Swimming', 'Knife-work'].filter(s => !seen.has(s) && s !== odd), 'skill:general');
+      out.push({ name: general, tier: DATA.skillTiers[1] });
+      return out;
+    });
+
+    /* -- 14. Possessions (budgeted by class wealth, §2.1) ----------------------- */
+    L('possessions', () => {
+      const wealth = Math.max(c.socialClass.wealth, c.occupation.wealth - 1);
+      const n = 3 + wealth + roll(rng, 0, 2);
+      const pool = DATA.possessions.filter(p => p.t <= wealth).map(p => ({ w: p.t === wealth ? 3 : (p.t >= wealth - 1 ? 2 : 1), v: p }));
+      return pickN(rng, pool, n).map(p => ({ item: p.v, tier: p.t, price: p.p }));
+    });
+
+    /* -- 15. Relationships (2–5, each with a name, tie, tension) ---------------- */
+    L('relationships', () => {
+      const nRel = roll(rng, 2, 5);
+      const hasOlderBro = c.family.siblings.some(s => s.alive && s.older && s.sex === 'male');
+      const hasYoungerSis = c.family.siblings.some(s => s.alive && !s.older && s.sex === 'female');
+      const pool = DATA.relationships.filter(r => {
+        if (r.tie === 'elder brother' && !hasOlderBro) return false;
+        if (r.tie === 'younger sister' && !hasYoungerSis) return false;
+        if (r.tie === 'mother' && !c.family.mother.alive) return false;
+        if (r.tie === 'father' && !c.family.father.alive) return false;
+        if (r.tie === 'your betrothed' && c.marital !== 'unwed') return false;
+        return true;
+      });
+      return pickN(rng, pool, nRel).map(r => {
+        const npcSex = /brother|father|priest|bailiff|reeve|sexton|blacksmith|ferryman|soldier/.test(r.tie) ? 'male'
+          : /sister|mother|aunt|alewife|midwife|widow/.test(r.tie) ? 'female'
+            : pick(rng, DATA.sexes, 'npc:sex');
+        return { name: givenName(rng, c.culture, npcSex), tie: r.tie, tension: r.tension };
+      });
+    });
+
+    /* -- 16. Secret (exactly one) ------------------------------------------------ */
+    L('secret', () => {
+      if (c.forcedSecret) return c.forcedSecret;
+      let s = pick(rng, DATA.secrets, 'secret');
+      if (c.education.lit && s.startsWith('can read')) s = pick(rng, DATA.secrets.filter(x => !x.startsWith('can read')), 'secret:reroll');
+      return s;
+    });
+    delete c.forcedSecret;
+
+    /* -- 17. Wound in the world --------------------------------------------------- */
+    L('problem', () => pick(rng, DATA.problems, 'problem'));
+
+    /* -- 8 (finalized late). Name & byname ----------------------------------------
+       Given name draws happen here but the byname must see the whole character:
+       every byname is derived from this character's own generated fields (§3.6). */
+    L('name', () => buildName(rng, c));
+
+    /* -- 18. Heraldry params ------------------------------------------------------- */
+    L('heraldry', () => HERALDRY.generateParams(rng, c));
+
+    /* -- 19. Portrait params -------------------------------------------------------- */
+    L('portrait', () => PORTRAIT.generateParams(rng, c));
+
+    validate(c, clamp, locks);
+    return c;
+  }
+
+  /* Byname formation — all five rules (§3.6), weighted, derived from own fields. */
+  function buildName(rng, c) {
+    const given = givenName(rng, c.culture, c.sex);
+    const bodyTexts = [c.body.build, c.body.height, c.body.hair, c.body.eyes, c.body.teeth, c.body.hands, c.body.voice]
+      .concat(c.body.features, c.body.scars.map(s => s.v), c.body.ailments);
+    const deedTexts = [c.birth.circumstance, c.family.structure, c.problem];
+    const descHits = matchEpithet(DATA.descriptiveEpithets, bodyTexts);
+    const deedHits = matchEpithet(DATA.deedEpithets, deedTexts);
+
+    const rules = [
+      { w: 28, v: 'patronymic' }, { w: 20, v: 'toponymic' }, { w: 20, v: 'occupational' },
+      { w: descHits.length ? 22 : 0, v: 'descriptive' }, { w: deedHits.length ? 12 : 0, v: 'deed' },
+    ].filter(r => r.w > 0);
+    const rule = pick(rng, rules, 'byname:rule');
+    let byname = '', source = '';
+    if (rule === 'patronymic') {
+      const f = c.family.father.name;
+      if (c.culture === 'veyric') byname = 'fitz-' + f;
+      else byname = f + DATA.names[c.culture].patronymicSuffix[c.sex === 'male' ? 'male' : 'female'];
+      source = 'father: ' + f;
+    } else if (rule === 'toponymic') {
+      const s = pick(rng, c.region.settlements, 'byname:place');
+      byname = chance(rng, 0.5) ? 'of ' + s : s + '-born';
+      source = 'settlement: ' + s;
+    } else if (rule === 'occupational') {
+      let noun = DATA.occupationalNouns[c.occupation.name];
+      if (!noun) {
+        noun = c.occupation.name.replace(/\(.*?\)/g, '').split(/[,(]/)[0].trim().split(' ')
+          .filter(w => !['of', 'a', 'the', 'in', 'to'].includes(w))[0] || 'Worker';
+        noun = noun.charAt(0).toUpperCase() + noun.slice(1);
+      }
+      byname = c.culture === 'veyric' ? (c.sex === 'male' ? 'le ' : 'la ') + noun : 'the ' + noun;
+      source = 'trade: ' + c.occupation.name;
+    } else if (rule === 'descriptive') {
+      byname = pick(rng, descHits, 'byname:descriptive');
+      source = 'body: matched own feature/scar/ailment';
+    } else {
+      byname = pick(rng, deedHits, 'byname:deed');
+      source = 'deed: matched birth/family/problem';
+    }
+    return { given, byname, rule, source, full: given + ' ' + byname };
+  }
+
+  /* -- 2.1 validate(): final coherence pass; every fix logs a clamp. ------------- */
+  function validate(c, clamp, locks) {
+    // Possessions never exceed class budget.
+    const wealth = Math.max(c.socialClass.wealth, c.occupation.wealth - 1);
+    const over = c.possessions.filter(p => p.tier > wealth);
+    if (over.length && !('possessions' in locks)) {
+      clamp('possession-budget', over.length + ' item(s) above wealth tier ' + wealth + ' removed');
+      c.possessions = c.possessions.filter(p => p.tier <= wealth);
+    }
+    // Master-tier trade requires age ≥ 14 handled by brackets; master skill needs age.
+    if (c.age < 25 && !('skills' in locks)) {
+      for (const s of c.skills) {
+        if (s.tier === 'master') { clamp('skill-age', s.name + ' master tier at age ' + c.age + ' → journeyman'); s.tier = 'journeyman'; }
+      }
+    }
+    // Peasant's hands vs lord's heraldry: arms only for tier ≥ 4.
+    if (c.heraldry && c.heraldry.type === 'arms' && c.socialClass.tier < 4 && !('heraldry' in locks)) {
+      clamp('heraldry-class', 'arms on class ' + c.socialClass.key + ' — demoted to house mark');
+      c.heraldry = HERALDRY.generateParams(makeRng(c.seed + ':markfix'), c, true);
+    }
+    // Literacy-required occupation on an unlettered character (possible via locks).
+    if (c.occupation.lit && !c.education.lit) {
+      clamp('occupation-literacy', c.occupation.name + ' requires letters; education says otherwise — flagged, kept (locked fields win)');
+      c.flags.push('incoherent under locks: an unlettered ' + c.occupation.name);
+    }
+    for (const [k, v] of Object.entries(c)) {
+      if (v === undefined) { clamp('undefined-field', k); delete c[k]; }
+    }
+  }
+
+  return { generate, VERSION, getPath, setPath };
+})();
+/* ============================== HERALDRY ==============================
+   generateParams(rng, c) runs inside the pipeline (consumes seeded draws);
+   render(params) is a pure function of the params object. The blazon is
+   emitted from the SAME object that drives the drawing, so they cannot
+   disagree.                                                              */
+'use strict';
+
+const HERALDRY = (function () {
+
+  const cat = t => t.startsWith('ermine') || t.startsWith('vair') ? 'fur'
+    : (t === 'or' || t === 'argent') ? 'metal' : 'colour';
+  const clash = (a, b) => cat(a) !== 'fur' && cat(a) === cat(b);
+
+  const ALL_TINCTURES = () => [
+    { w: 10, v: 'or' }, { w: 12, v: 'argent' },
+    { w: 12, v: 'gules' }, { w: 11, v: 'azure' }, { w: 9, v: 'vert' }, { w: 10, v: 'sable' }, { w: 4, v: 'purpure' },
+    { w: 2, v: 'ermine' }, { w: 2, v: 'vair' },
+  ];
+
+  function contrasting(rng, base) {
+    let t = pick(rng, ALL_TINCTURES(), 'tincture');
+    let guard = 0;
+    while (clash(t, base) && guard++ < 20) t = pick(rng, ALL_TINCTURES(), 'tincture:reroll');
+    return t;
+  }
+
+  function generateParams(rng, c, forceMark) {
+    if (forceMark || c.socialClass.tier < 4) {
+      // Non-gentry: a house/guild mark of 3–5 stroke primitives (§4).
+      const n = roll(rng, 3, 5);
+      const strokes = pickN(rng, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], n);
+      return {
+        type: 'mark',
+        frame: (c.socialClass.key === 'craftsman' || c.socialClass.key === 'burgher') ? 'roundel' : 'none',
+        strokes,
+        place: pick(rng, DATA.markPlaces, 'mark:place'),
+      };
+    }
+    const p = { type: 'arms', violation: false };
+    p.escutcheon = (c.sex === 'female' && c.marital !== 'wed') ? 'lozenge'
+      : c.socialClass.key === 'noble' ? 'french' : 'heater';
+    // Field: 45% plain, 55% divided.
+    if (chance(rng, 0.55)) {
+      p.division = pick(rng, DATA.divisions.map(d => ({ w: 1, v: d.key })), 'division');
+      p.t1 = pick(rng, ALL_TINCTURES().filter(e => cat(e.v) !== 'fur'), 'field:t1');
+      p.t2 = contrasting(rng, p.t1);
+      if (cat(p.t2) === 'fur') p.t2 = cat(p.t1) === 'metal' ? 'gules' : 'argent'; // keep divisions readable
+    } else {
+      p.division = null;
+      p.t1 = pick(rng, ALL_TINCTURES(), 'field:plain');
+      p.t2 = null;
+    }
+    // Ordinary ~50%.
+    if (chance(rng, 0.5)) {
+      p.ordinary = pick(rng, DATA.ordinaries.map(o => ({ w: 1, v: o.key })), 'ordinary');
+      p.ordT = p.division ? pick(rng, ALL_TINCTURES().filter(e => cat(e.v) !== 'fur'), 'ordinary:t')
+        : contrasting(rng, p.t1);
+    } else { p.ordinary = null; p.ordT = null; }
+    // Charge ~75%.
+    if (chance(rng, 0.75)) {
+      p.charge = pick(rng, DATA.charges.map(ch => ({ w: ch.key === 'gallows' ? 0.2 : 1, v: ch.key })), 'charge');
+      if (p.division && chance(rng, 0.4)) {
+        p.chargeT = 'counterchanged';
+      } else if (p.division) {
+        p.chargeT = contrasting(rng, p.t1);
+      } else {
+        // Rule of tincture (§4): reroll clashes, but keep a ~7% deliberate break, flagged.
+        let t = pick(rng, ALL_TINCTURES(), 'charge:t');
+        if (clash(t, p.t1)) {
+          if (chance(rng, 0.07)) {
+            p.violation = true; // "arms in violation — the herald noted it"
+          } else {
+            t = contrasting(rng, p.t1);
+          }
+        }
+        p.chargeT = t;
+      }
+    } else { p.charge = null; p.chargeT = null; }
+    if (!p.ordinary && !p.charge) { // never a totally empty field
+      p.charge = pick(rng, DATA.charges.map(ch => ({ w: 1, v: ch.key })), 'charge:forced');
+      p.chargeT = p.division ? 'counterchanged' : contrasting(rng, p.t1);
+    }
+    // Cadency for birth order (§3.3 → §4). Eldest bears a label only while the father lives.
+    const ord = Math.min(c.birth.order, 6);
+    if (ord === 1) p.cadency = c.family.father.alive ? 'label' : null;
+    else p.cadency = DATA.cadency.find(x => x.order === ord).key;
+    if (p.cadency) p.cadT = p.division ? (cat(p.t1) === 'metal' ? 'gules' : 'argent') : contrasting(rng, p.t1);
+    return p;
+  }
+
+  /* ---------- blazon ---------- */
+  function tName(t) { return t; }
+  function blazon(p) {
+    if (p.type === 'mark') return null;
+    const parts = [];
+    if (p.division) {
+      const d = DATA.divisions.find(x => x.key === p.division).blazon;
+      parts.push(d + ' ' + tName(p.t1) + ' and ' + tName(p.t2));
+    } else {
+      parts.push(tName(p.t1).charAt(0).toUpperCase() + tName(p.t1).slice(1));
+    }
+    if (p.ordinary) parts.push(DATA.ordinaries.find(x => x.key === p.ordinary).blazon + ' ' + tName(p.ordT));
+    if (p.charge) {
+      const chB = DATA.charges.find(x => x.key === p.charge).blazon;
+      parts.push(chB + ' ' + (p.chargeT === 'counterchanged' ? 'counterchanged' : tName(p.chargeT)));
+    }
+    if (p.cadency) parts.push(DATA.cadency.find(x => x.key === p.cadency).blazon + ' for difference');
+    let s = parts.join(', ') + '.';
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+    if (p.violation) s += ' [arms in violation of the rule of tincture — the herald noted it]';
+    return s;
+  }
+
+  /* ---------- drawing ---------- */
+  const FILLS = { or: '#d4a017', argent: '#e8e4d8', gules: '#8f1d1d', azure: '#1f3a6e', vert: '#2d5c2f', sable: '#1a1a1a', purpure: '#5c2d5c' };
+  function fillFor(t, uid) {
+    if (t === 'ermine') return 'url(#' + uid + '-ermine)';
+    if (t === 'vair') return 'url(#' + uid + '-vair)';
+    return FILLS[t];
+  }
+
+  const SHIELDS = {
+    heater: 'M10,8 H90 V55 Q90,95 50,114 Q10,95 10,55 Z',
+    french: 'M10,8 H90 V90 Q90,106 74,106 Q60,106 56,114 L50,118 L44,114 Q40,106 26,106 Q10,106 10,90 Z',
+    lozenge: 'M50,4 L94,60 L50,118 L6,60 Z',
+    roundel: 'M50,61 m-46,0 a46,46 0 1,0 92,0 a46,46 0 1,0 -92,0',
+  };
+
+  // t2 overlay shapes for each division (full-bleed; the escutcheon clip trims them).
+  function divisionShape(key) {
+    switch (key) {
+      case 'perPale': return '<rect x="50" y="0" width="50" height="120"/>';
+      case 'perFess': return '<rect x="0" y="60" width="100" height="60"/>';
+      case 'perBend': return '<path d="M0,0 L100,120 L0,120 Z"/>';
+      case 'perChevron': return '<path d="M0,120 L0,75 L50,45 L100,75 L100,120 Z"/>';
+      case 'quarterly': return '<rect x="50" y="0" width="50" height="60"/><rect x="0" y="60" width="50" height="60"/>';
+      case 'perSaltire': return '<path d="M0,0 L50,60 L0,120 Z"/><path d="M100,0 L50,60 L100,120 Z"/>';
+      case 'gyronny': { let s = ''; const cx = 50, cy = 60; const pts = [[0, 0], [50, 0], [100, 0], [100, 60], [100, 120], [50, 120], [0, 120], [0, 60], [0, 0]]; for (let i = 0; i < 8; i += 2) s += '<path d="M' + cx + ',' + cy + ' L' + pts[i][0] + ',' + pts[i][1] + ' L' + pts[i + 1][0] + ',' + pts[i + 1][1] + ' Z"/>'; return s; }
+      case 'barry': return '<rect x="0" y="20" width="100" height="20"/><rect x="0" y="60" width="100" height="20"/><rect x="0" y="100" width="100" height="20"/>';
+      case 'paly': return '<rect x="16.6" y="0" width="16.6" height="120"/><rect x="50" y="0" width="16.6" height="120"/><rect x="83.3" y="0" width="16.7" height="120"/>';
+      case 'checky': { let s = ''; for (let r = 0; r < 6; r++) for (let col = 0; col < 5; col++) if ((r + col) % 2) s += '<rect x="' + col * 20 + '" y="' + r * 20 + '" width="20" height="20"/>'; return s; }
+      default: return '';
+    }
+  }
+
+  function ordinaryShape(key, shieldPath) {
+    switch (key) {
+      case 'fess': return '<rect x="0" y="45" width="100" height="28"/>';
+      case 'pale': return '<rect x="36" y="0" width="28" height="120"/>';
+      case 'bend': return '<path d="M-10,2 L12,-12 L110,102 L88,116 Z"/>';
+      case 'bendSinister': return '<path d="M110,2 L88,-12 L-10,102 L12,116 Z"/>';
+      case 'chevron': return '<path d="M0,95 L50,55 L100,95 L100,73 L50,33 L0,73 Z"/>';
+      case 'cross': return '<rect x="38" y="0" width="24" height="120"/><rect x="0" y="44" width="100" height="24"/>';
+      case 'saltire': return '<path d="M-8,6 L8,-8 L108,106 L92,120 Z"/><path d="M108,6 L92,-8 L-8,106 L8,120 Z"/>';
+      case 'chief': return '<rect x="0" y="0" width="100" height="32"/>';
+      case 'pile': return '<path d="M20,0 L80,0 L50,88 Z"/>';
+      case 'bordure': return '<path d="' + shieldPath + '" fill="none" class="ord-stroke"/>';
+      case 'canton': return '<rect x="0" y="0" width="38" height="38"/>';
+      case 'orle': return '<g transform="translate(50,61) scale(0.72) translate(-50,-61)"><path d="' + shieldPath + '" fill="none" class="ord-stroke"/></g>';
+      default: return '';
+    }
+  }
+
+  /* 30 charges, stylized woodcut silhouettes in a 40×40 local box. f=fill, s=stroke */
+  const CHARGES = {
+    stag: { s: 1, d: 'M12,38 L14,24 L12,14 M14,24 L26,24 L28,38 M26,24 L28,12 M13,14 L6,4 M13,14 L13,4 M13,10 L8,8 M28,12 L34,3 M28,12 L27,3 M28,8 L33,7 M12,14 Q20,10 28,12' },
+    boar: { f: 1, d: 'M4,28 Q4,18 14,16 L26,15 Q32,8 34,10 L32,16 Q38,18 37,26 L34,32 L30,32 L29,27 L12,27 L11,32 L7,32 Z' },
+    wolf: { s: 1, d: 'M8,38 L12,22 L10,12 L16,6 L20,10 L22,6 L26,12 Q34,14 36,22 L30,24 L28,38 M12,22 Q22,26 28,24' },
+    raven: { f: 1, d: 'M8,32 Q6,20 16,14 Q18,6 26,8 L34,12 L27,13 Q30,20 24,28 L28,38 L24,38 L21,30 L16,32 L18,38 L14,38 Z' },
+    tower: { f: 1, d: 'M8,38 L8,12 L12,12 L12,8 L16,8 L16,12 L18,12 L18,8 L22,8 L22,12 L24,12 L24,8 L28,8 L28,12 L32,12 L32,38 Z M17,38 L17,26 L23,26 L23,38 Z' },
+    key: { s: 1, d: 'M20,4 A6,6 0 1,0 20,16 A6,6 0 1,0 20,4 M20,16 L20,36 M20,30 L27,30 M20,36 L25,36' },
+    sheaf: { s: 1, d: 'M12,38 L20,8 M20,38 L20,8 M28,38 L20,8 M10,26 L30,26 M20,8 L16,3 M20,8 L24,3 M20,8 L20,2' },
+    hammer: { f: 1, d: 'M10,6 L30,6 L30,14 L23,14 L23,38 L17,38 L17,14 L10,14 Z' },
+    oak: { f: 1, d: 'M18,38 L18,28 Q6,26 8,16 Q10,8 20,8 Q30,8 32,16 Q34,26 22,28 L22,38 Z M13,38 L18,34 M27,38 L22,34' },
+    thistle: { s: 1, d: 'M20,38 L20,18 M20,18 Q14,16 14,10 Q20,6 26,10 Q26,16 20,18 M20,24 L12,20 M20,28 L28,24' },
+    ship: { f: 1, d: 'M6,28 L34,28 L28,36 L12,36 Z M19,28 L19,6 L21,6 L21,28 Z M21,8 L32,14 L21,20 Z' },
+    sun: { s: 1, d: 'M20,20 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 M20,2 L20,9 M20,31 L20,38 M2,20 L9,20 M31,20 L38,20 M7,7 L12,12 M33,7 L28,12 M7,33 L12,28 M33,33 L28,28' },
+    moon: { f: 1, d: 'M26,4 A16,16 0 1,0 26,36 A13,13 0 1,1 26,4 Z' },
+    star: { f: 1, d: 'M20,2 L24,14 L37,14 L26,21 L30,34 L20,26 L10,34 L14,21 L3,14 L16,14 Z' },
+    cross2: { f: 1, d: 'M17,4 L23,4 L23,12 L31,12 L31,18 L23,18 L23,26 L31,26 L31,26 L23,26 L23,36 L17,36 L17,26 L9,26 L9,18 L17,18 L17,12 L9,12 L9,12 L17,12 Z' },
+    axe: { f: 1, d: 'M18,38 L18,8 L22,8 L22,38 Z M22,6 Q34,8 32,20 Q28,14 22,14 Z' },
+    sword: { f: 1, d: 'M19,2 L21,2 L22,24 L18,24 Z M14,24 L26,24 L26,27 L14,27 Z M18,27 L22,27 L22,36 L20,38 L18,36 Z' },
+    arrow: { s: 1, d: 'M14,36 L20,6 M20,36 L20,6 M26,36 L20,6 M17,10 L20,4 L23,10 M12,32 L28,32' },
+    bell: { f: 1, d: 'M14,28 Q12,10 20,8 Q28,10 26,28 L32,32 L8,32 Z M18,32 L22,32 L21,36 L19,36 Z' },
+    bridge: { f: 1, d: 'M4,18 L36,18 L36,34 L30,34 L30,26 A5,6 0 0,0 20,26 L20,34 L20,26 A5,6 0 0,0 10,26 L10,34 L4,34 Z' },
+    well: { f: 1, d: 'M8,28 L32,28 L32,38 L8,38 Z M10,28 L20,16 L30,28 Z M19,4 L21,4 L21,20 L19,20 Z' },
+    fish: { f: 1, d: 'M4,20 Q14,10 26,16 L34,10 L32,20 L34,30 L26,24 Q14,30 4,20 Z' },
+    eel: { s: 1, d: 'M6,30 Q14,20 20,26 Q26,32 30,24 Q34,16 26,14 Q18,12 20,20 Q22,26 30,30' },
+    bee: { s: 1, d: 'M20,16 Q14,6 8,10 Q12,18 20,16 M20,16 Q26,6 32,10 Q28,18 20,16 M17,18 Q20,14 23,18 L23,30 Q20,36 17,30 Z M16,22 L24,22 M16,26 L24,26' },
+    ram: { s: 1, d: 'M14,10 A6,6 0 1,0 10,20 M26,10 A6,6 0 1,1 30,20 M14,12 Q20,8 26,12 L27,26 Q20,34 13,26 Z M17,20 L17,22 M23,20 L23,22' },
+    bull: { s: 1, d: 'M8,6 Q6,16 14,16 M32,6 Q34,16 26,16 M14,12 L26,12 L28,28 Q20,36 12,28 Z M16,18 L16,21 M24,18 L24,21 M18,30 L22,30' },
+    horseshoe: { s: 1, d: 'M10,34 Q4,18 12,9 Q20,2 28,9 Q36,18 30,34 M13,30 L16,29 M27,30 L24,29 M9,20 L13,20 M31,20 L27,20' },
+    millrind: { s: 1, d: 'M20,6 L20,34 M20,10 Q12,10 10,4 M20,10 Q28,10 30,4 M20,30 Q12,30 10,36 M20,30 Q28,30 30,36 M14,20 L26,20' },
+    anvil: { f: 1, d: 'M6,12 L34,12 L30,18 L24,18 L24,28 L30,32 L10,32 L16,28 L16,18 L10,18 Z' },
+    gallows: { s: 1, d: 'M10,38 L10,4 L28,4 L28,12 M6,38 L14,38 M10,10 L16,4' },
+  };
+
+  const CAD = {
+    label: '<path d="M2,4 L38,4 L38,8 L2,8 Z M8,8 L11,16 L5,16 Z M18,8 L21,16 L15,16 Z M28,8 L31,16 L25,16 Z"/>',
+    crescent: '<path d="M6,12 A14,14 0 0,0 34,12 A11,11 0 0,1 6,12 Z"/>',
+    mullet: '<path d="M20,2 L24,12 L34,12 L26,19 L29,30 L20,23 L11,30 L14,19 L6,12 L16,12 Z"/>',
+    martlet: '<path d="M8,16 Q14,6 22,10 L34,6 L24,14 Q28,20 20,24 L12,26 Q6,22 8,16 Z"/>',
+    annulet: '<path d="M20,4 A12,12 0 1,0 20,28 A12,12 0 1,0 20,4 M20,10 A6,6 0 1,1 20,22 A6,6 0 1,1 20,10 Z" fill-rule="evenodd"/>',
+    fleur: '<path d="M20,2 Q26,8 22,14 L22,18 Q30,10 34,16 Q34,22 24,22 L28,30 L12,30 L16,22 Q6,22 6,16 Q10,10 18,18 L18,14 Q14,8 20,2 Z"/>',
+  };
+
+  function furDefs(uid) {
+    return '<pattern id="' + uid + '-ermine" width="20" height="24" patternUnits="userSpaceOnUse">' +
+      '<rect width="20" height="24" fill="#e8e4d8"/>' +
+      '<g fill="#1a1a1a"><path d="M5,4 l1.5,4 l-3,0 Z M5,9 l0.8,2 M3,10 l1,1.4 M7,10 l-1,1.4"/><path d="M15,14 l1.5,4 l-3,0 Z M15,19 l0.8,2 M13,20 l1,1.4 M17,20 l-1,1.4"/></g></pattern>' +
+      '<pattern id="' + uid + '-vair" width="20" height="20" patternUnits="userSpaceOnUse">' +
+      '<rect width="20" height="20" fill="#e8e4d8"/>' +
+      '<path d="M0,10 L0,4 Q0,0 3,0 L7,0 Q10,0 10,4 L10,10 L5,15 Z" fill="#4a6da8"/>' +
+      '<path d="M10,20 L10,14 Q10,10 13,10 L17,10 Q20,10 20,14 L20,20 L15,25 Z" fill="#4a6da8"/></pattern>';
+  }
+
+  function render(p, uid) {
+    uid = uid || 'h';
+    if (!p) return { svg: '', blazon: null };
+    if (p.type === 'mark') return { svg: renderMark(p), blazon: null, place: p.place };
+    const sp = SHIELDS[p.escutcheon];
+    let s = '<svg viewBox="0 0 100 124" xmlns="http://www.w3.org/2000/svg" class="arms-svg">';
+    s += '<defs>' + furDefs(uid) + '<clipPath id="' + uid + '-clip"><path d="' + sp + '"/></clipPath></defs>';
+    s += '<g clip-path="url(#' + uid + '-clip)">';
+    s += '<rect x="0" y="0" width="100" height="124" fill="' + fillFor(p.t1, uid) + '"/>';
+    if (p.division) s += '<g fill="' + fillFor(p.t2, uid) + '">' + divisionShape(p.division) + '</g>';
+    if (p.ordinary) {
+      const shape = ordinaryShape(p.ordinary, sp);
+      s += '<g fill="' + fillFor(p.ordT, uid) + '">' +
+        shape.replace(/class="ord-stroke"/g, 'stroke-width="11" stroke="' + fillFor(p.ordT, uid) + '"') + '</g>';
+    }
+    if (p.charge) {
+      const ch = CHARGES[p.charge];
+      const draw = (fill) => '<g transform="translate(30,40)">' +
+        '<path d="' + ch.d + '" ' + (ch.s ? 'fill="none" stroke="' + fill + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"' : 'fill="' + fill + '"') + '/></g>';
+      if (p.chargeT === 'counterchanged') {
+        s += draw(fillFor(p.t2, uid));
+        s += '<defs><clipPath id="' + uid + '-cc">' + divisionShape(p.division) + '</clipPath></defs>';
+        s += '<g clip-path="url(#' + uid + '-cc)">' + draw(fillFor(p.t1, uid)) + '</g>';
+      } else {
+        s += draw(fillFor(p.chargeT, uid));
+      }
+    }
+    if (p.cadency) {
+      s += '<g transform="translate(41,12) scale(0.45)" fill="' + fillFor(p.cadT, uid) + '" stroke="' + fillFor(p.cadT, uid) + '" stroke-width="1">' + CAD[p.cadency] + '</g>';
+    }
+    s += '</g><path d="' + sp + '" fill="none" stroke="#2b2118" stroke-width="2.5"/></svg>';
+    return { svg: s, blazon: blazon(p) };
+  }
+
+  /* House/guild mark: 3–5 rune-like stroke primitives, black line on parchment. */
+  const MARK_STROKES = [
+    'M30,8 L30,52', 'M12,30 L48,30', 'M14,12 L46,48', 'M46,12 L14,48',
+    'M14,44 L30,16 L46,44', 'M30,30 m-13,0 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0',
+    'M18,10 L18,50 M18,22 L40,10', 'M12,40 Q30,10 48,40', 'M22,50 L30,34 L38,50', 'M30,14 L22,26 L38,38 L30,50',
+  ];
+  function renderMark(p) {
+    let s = '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" class="mark-svg">';
+    if (p.frame === 'roundel') s += '<circle cx="30" cy="30" r="28" fill="none" stroke="#2b2118" stroke-width="2"/>';
+    s += '<g fill="none" stroke="#2b2118" stroke-width="3" stroke-linecap="round">';
+    for (const i of p.strokes) s += '<path d="' + MARK_STROKES[i] + '"' + (p.frame === 'roundel' ? ' transform="translate(30,30) scale(0.72) translate(-30,-30)"' : '') + '/>';
+    s += '</g></svg>';
+    return s;
+  }
+
+  return { generateParams, render, blazon, cat, clash, CHARGES };
+})();
+/* ============================== PORTRAIT ==============================
+   Procedural layered SVG portrait in a woodcut idiom: parchment, ink, one
+   muted accent, hatching for shadow. Every layer reads a generated field;
+   generateParams() maps body text → variant indices (plus seeded picks for
+   slots the text leaves open), render() is pure.                          */
+'use strict';
+
+const PORTRAIT = (function () {
+  const INK = '#2b2118', PARCH = '#ece1c8', ACCENT = '#8a5a3a';
+
+  const has = (txt, re) => new RegExp(re, 'i').test(txt);
+
+  function generateParams(rng, c) {
+    const b = c.body;
+    const allBody = [b.build, b.hair, b.eyes, b.teeth].concat(b.features, b.ailments.map(String)).join(' | ');
+    const p = {};
+    // Head shape from build (§5: "Head shape from build").
+    p.head = has(b.build, 'gaunt|lean|starved|angles|wiry') ? 'gaunt'
+      : has(b.build, 'broad|heavy|stout|thick|burly|ox') ? 'wide'
+        : has(b.build, 'small-boned|quick') ? 'round' : 'oval';
+    // Hair from the hair table text.
+    p.hairColor = has(b.hair, 'black') ? '#191410' : has(b.hair, 'red|copper') ? '#7a3a20'
+      : has(b.hair, 'fair|straw') ? '#a98d4b' : has(b.hair, 'grey|white|silver') ? '#9a9284' : '#4a3826';
+    p.hair = has(b.hair, 'bald as') ? 'bald' : has(b.hair, 'bald but|thinning') ? 'fringe'
+      : has(b.hair, 'braid') ? 'braided' : has(b.hair, 'unruly|thick|escaping') ? 'shaggy'
+        : has(b.hair, 'covered') ? 'covered' : pick(rng, ['short', 'short', 'shaggy', 'lank'], 'portrait:hair');
+    // Clergy get the tonsure; women of any standing usually cover their hair.
+    const clergyMale = c.socialClass.key === 'clergy' && c.sex === 'male';
+    if (clergyMale && /monk|priest|friar|clerk/i.test(c.occupation.name)) p.hair = 'tonsure';
+    p.headgear = 'none';
+    if (c.sex === 'female') p.headgear = c.socialClass.key === 'clergy' ? 'wimple' : pick(rng, ['coif', 'coif', 'kerchief', 'none'], 'portrait:headgear');
+    else if (!clergyMale) p.headgear = pick(rng, c.socialClass.tier >= 4 ? ['none', 'felthat', 'none'] : ['hood', 'coif', 'strawhat', 'none', 'felthat'], 'portrait:headgear');
+    // Eyes.
+    p.eyes = has(b.eyes, 'squint') ? 'squint' : has(b.eyes, 'deep-set') ? 'deepset'
+      : has(b.eyes, 'wandering') ? 'wander' : pick(rng, ['plain', 'plain', 'narrow', 'heavy-lid'], 'portrait:eyes');
+    p.milky = has(b.eyes, 'milky');
+    p.lostEye = b.scars.some(s => s.loc === 'eye');
+    // Brows, nose, mouth.
+    p.brow = has(b.features.join(' '), 'brows so pale') ? 'pale' : pick(rng, ['thin', 'heavy', 'arch'], 'portrait:brow');
+    p.nose = has(b.features.join(' '), 'nose broken|flattened') ? 'broken'
+      : pick(rng, ['straight', 'long', 'broad', 'hooked'], 'portrait:nose');
+    p.mouth = pick(rng, ['line', 'down', 'half-smile', 'tight'], 'portrait:mouth');
+    p.gapTeeth = has(b.teeth + ' ' + b.features.join(' '), 'gap|nearly none|more gaps|whistling');
+    // Facial hair: adult men only; monks shave.
+    p.beard = (c.sex === 'male' && c.age >= 18 && !clergyMale)
+      ? pick(rng, c.age > 40 ? ['full', 'full', 'short', 'stubble'] : ['none', 'stubble', 'stubble', 'short', 'full'], 'portrait:beard')
+      : 'none';
+    p.beardGrey = c.age >= 45;
+    // Garment from class (+ mail for the knightly).
+    p.garment = c.socialClass.key === 'clergy' ? 'habit'
+      : c.socialClass.tier >= 5 ? 'fine' : c.socialClass.key === 'knightly' ? 'mail'
+        : c.socialClass.tier >= 3 ? 'burgher' : c.socialClass.tier === 2 ? 'craft' : 'rough';
+    // Face-visible scars with placement.
+    p.scars = b.scars.filter(s => ['brow', 'cheek', 'jaw', 'lip', 'scalp', 'neck', 'eye'].includes(s.loc)).map(s => s.loc);
+    p.pox = has(b.features.join(' '), 'pox-pits|freckles');
+    p.gauntCheeks = has(b.build + b.features.join(' '), 'gaunt|sunken|starved');
+    // The shakes → jittered line filter (§5).
+    p.jitter = has(allBody + b.hands, 'tremor|shakes|palsied|falling sickness');
+    p.grime = c.socialClass.tier <= 1 ? 2 : c.socialClass.tier <= 3 ? 1 : 0;
+    p.sideHatch = chance(rng, 0.5) ? 'left' : 'right';
+    return p;
+  }
+
+  const HEADS = {
+    oval: 'M100,58 Q136,58 137,108 Q137,148 100,164 Q63,148 63,108 Q64,58 100,58 Z',
+    long: 'M100,54 Q131,56 132,110 Q132,152 100,168 Q68,152 68,110 Q69,56 100,54 Z',
+    wide: 'M100,60 Q142,60 141,110 Q141,146 100,160 Q59,146 59,110 Q58,60 100,60 Z',
+    gaunt: 'M100,56 Q130,58 131,104 Q131,120 124,136 Q114,158 100,164 Q86,158 76,136 Q69,120 69,104 Q70,58 100,56 Z',
+    round: 'M100,64 Q134,64 134,112 Q134,146 100,158 Q66,146 66,112 Q66,64 100,64 Z',
+  };
+
+  function render(p, uid) {
+    uid = uid || 'p';
+    const W = 200, H = 240;
+    let s = '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" class="portrait-svg">';
+    s += '<defs>';
+    s += '<pattern id="' + uid + '-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="' + INK + '" stroke-width="0.9" opacity="0.5"/></pattern>';
+    s += '<pattern id="' + uid + '-crosshatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0,0 L6,6 M6,0 L0,6" stroke="' + INK + '" stroke-width="0.7" opacity="0.45"/></pattern>';
+    if (p.jitter) s += '<filter id="' + uid + '-jit"><feTurbulence type="turbulence" baseFrequency="0.09" numOctaves="2" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="2.4"/></filter>';
+    s += '<clipPath id="' + uid + '-headclip"><path d="' + HEADS[p.head] + '"/></clipPath>';
+    s += '</defs>';
+    // Background wash + frame.
+    s += '<rect width="200" height="240" fill="' + PARCH + '"/>';
+    s += '<rect width="200" height="240" fill="url(#' + uid + '-crosshatch)" opacity="0.25"/>';
+    s += '<rect x="5" y="5" width="190" height="230" fill="none" stroke="' + INK + '" stroke-width="2.5"/>';
+
+    s += '<g' + (p.jitter ? ' filter="url(#' + uid + '-jit)"' : '') + ' stroke-linecap="round" stroke-linejoin="round">';
+
+    // Hair back (behind head & shoulders).
+    if (['shaggy', 'braided', 'lank'].includes(p.hair)) {
+      s += '<path d="M62,90 Q54,140 60,175 L140,175 Q146,140 138,90 Q130,60 100,58 Q70,60 62,90 Z" fill="' + p.hairColor + '" stroke="' + INK + '" stroke-width="2"/>';
+      if (p.hair === 'braided') s += '<path d="M138,110 Q146,150 140,185 M132,112 Q140,150 134,185" stroke="' + INK + '" stroke-width="2" fill="none"/><path d="M135,120 l6,4 M133,134 l8,4 M133,148 l8,4 M134,162 l7,4" stroke="' + INK + '" stroke-width="1.4"/>';
+    }
+
+    // Neck & shoulders / garment (garment reads class).
+    s += '<path d="M86,150 L86,182 L114,182 L114,150 Z" fill="#d9c8a6" stroke="' + INK + '" stroke-width="2"/>';
+    const g = p.garment;
+    if (g === 'rough') {
+      s += '<path d="M30,238 Q36,192 84,180 L116,180 Q164,192 170,238 Z" fill="#b9a482" stroke="' + INK + '" stroke-width="2.5"/>';
+      s += '<path d="M84,180 L100,200 L116,180" fill="none" stroke="' + INK + '" stroke-width="2"/><path d="M60,206 l-4,26 M144,204 l3,28 M100,204 l0,30" stroke="' + INK + '" stroke-width="1.2" opacity="0.6"/>';
+      s += '<path d="M92,186 l16,0 M94,192 l12,0" stroke="' + INK + '" stroke-width="1.5"/>'; // patched yoke
+    } else if (g === 'craft') {
+      s += '<path d="M30,238 Q36,190 84,178 L116,178 Q164,190 170,238 Z" fill="#8a7a5a" stroke="' + INK + '" stroke-width="2.5"/>';
+      s += '<path d="M46,220 L154,220 L154,238 L46,238 Z" fill="#6a5a40" stroke="' + INK + '" stroke-width="2"/>'; // leather apron top
+      s += '<path d="M84,178 L100,196 L116,178" fill="none" stroke="' + INK + '" stroke-width="2"/>';
+    } else if (g === 'burgher') {
+      s += '<path d="M28,238 Q34,188 84,176 L116,176 Q166,188 172,238 Z" fill="#5c3a3a" stroke="' + INK + '" stroke-width="2.5"/>';
+      s += '<path d="M84,176 Q100,192 116,176 L112,238 L88,238 Z" fill="#d9c8a6" stroke="' + INK + '" stroke-width="2"/>';
+      s += '<circle cx="100" cy="204" r="2.4" fill="' + INK + '"/><circle cx="100" cy="216" r="2.4" fill="' + INK + '"/><circle cx="100" cy="228" r="2.4" fill="' + INK + '"/>';
+    } else if (g === 'habit') {
+      s += '<path d="M28,238 Q34,186 84,176 L116,176 Q166,186 172,238 Z" fill="#4a4038" stroke="' + INK + '" stroke-width="2.5"/>';
+      s += '<path d="M60,238 Q60,200 100,196 Q140,200 140,238" fill="none" stroke="' + INK + '" stroke-width="1.6" opacity="0.7"/>';
+      s += '<path d="M100,196 L100,224 M92,206 L108,206" stroke="#d9c8a6" stroke-width="3"/>'; // plain cross
+    } else if (g === 'mail') {
+      s += '<path d="M28,238 Q34,186 84,176 L116,176 Q166,186 172,238 Z" fill="#9a948a" stroke="' + INK + '" stroke-width="2.5"/>';
+      for (let y = 184; y < 236; y += 7) s += '<path d="M36,' + y + ' Q100,' + (y + 5) + ' 164,' + y + '" fill="none" stroke="' + INK + '" stroke-width="1" opacity="0.55"/>';
+      s += '<path d="M78,178 Q100,190 122,178 L122,238 L78,238 Z" fill="' + ACCENT + '" stroke="' + INK + '" stroke-width="2" opacity="0.9"/>'; // surcoat panel
+    } else { // fine
+      s += '<path d="M26,238 Q32,184 84,174 L116,174 Q168,184 174,238 Z" fill="#3a3a5c" stroke="' + INK + '" stroke-width="2.5"/>';
+      s += '<path d="M40,196 Q100,214 160,196 L160,206 Q100,224 40,206 Z" fill="' + ACCENT + '" stroke="' + INK + '" stroke-width="1.6"/>'; // chain of estate
+      s += '<path d="M84,174 Q100,190 116,174" fill="none" stroke="#d9c8a6" stroke-width="4"/>'; // fur collar hint
+    }
+
+    // Head.
+    s += '<path d="' + HEADS[p.head] + '" fill="#e2d2ae" stroke="' + INK + '" stroke-width="2.6"/>';
+    // Side shading hatch.
+    const hx = p.sideHatch === 'left' ? 'M63,80 Q60,130 82,158 L98,164 Q70,140 72,84 Z' : 'M137,80 Q140,130 118,158 L102,164 Q130,140 128,84 Z';
+    s += '<path d="' + hx + '" fill="url(#' + uid + '-hatch)" clip-path="url(#' + uid + '-headclip)"/>';
+    if (p.gauntCheeks) s += '<path d="M78,120 Q84,132 82,142 M122,120 Q116,132 118,142" fill="none" stroke="' + INK + '" stroke-width="1.4" opacity="0.7"/>';
+
+    // Ears.
+    s += '<path d="M62,106 Q54,102 56,114 Q58,124 66,122 M138,106 Q146,102 144,114 Q142,124 134,122" fill="#e2d2ae" stroke="' + INK + '" stroke-width="2"/>';
+
+    // Hair front.
+    const hc = p.hairColor;
+    if (p.hair === 'short') s += '<path d="M64,96 Q62,58 100,56 Q138,58 136,96 Q132,74 100,72 Q68,74 64,96 Z" fill="' + hc + '" stroke="' + INK + '" stroke-width="2"/>';
+    else if (p.hair === 'lank') s += '<path d="M63,104 Q60,56 100,54 Q140,56 137,104 Q136,78 124,76 Q128,94 120,80 Q118,92 108,76 Q100,90 92,76 Q82,92 80,78 Q72,90 76,76 Q64,78 63,104 Z" fill="' + hc + '" stroke="' + INK + '" stroke-width="2"/>';
+    else if (p.hair === 'shaggy') s += '<path d="M62,100 Q56,52 100,50 Q144,52 138,100 Q134,70 118,72 Q122,60 104,70 Q94,58 88,72 Q76,62 78,76 Q66,72 62,100 Z" fill="' + hc + '" stroke="' + INK + '" stroke-width="2"/>';
+    else if (p.hair === 'braided') s += '<path d="M64,98 Q62,58 100,56 Q138,58 136,98 Q130,76 100,74 Q70,76 64,98 Z" fill="' + hc + '" stroke="' + INK + '" stroke-width="2"/>';
+    else if (p.hair === 'fringe') s += '<path d="M63,102 Q64,88 74,84 Q70,96 78,90 L78,98 Q70,100 63,102 Z M137,102 Q136,88 126,84 Q130,96 122,90 L122,98 Q130,100 137,102 Z" fill="' + hc + '" stroke="' + INK + '" stroke-width="1.6"/>';
+    else if (p.hair === 'tonsure') s += '<path d="M66,92 Q66,80 76,76 L78,84 Q70,86 68,94 Z M134,92 Q134,80 124,76 L122,84 Q130,86 132,94 Z" fill="' + hc + '" stroke="' + INK + '" stroke-width="1.6"/><path d="M74,72 Q100,62 126,72" fill="none" stroke="' + hc + '" stroke-width="5"/>';
+    // bald & covered: nothing.
+
+    // Headgear layer (over hair).
+    if (p.headgear === 'hood') s += '<path d="M58,116 Q48,60 100,46 Q152,60 142,116 Q146,90 132,72 Q140,110 128,86 Q132,64 100,60 Q68,64 72,86 Q60,110 68,72 Q54,90 58,116 Z" fill="#6a5a40" stroke="' + INK + '" stroke-width="2.4"/><path d="M58,116 Q70,150 86,176 L60,180 Q50,150 58,116 M142,116 Q130,150 114,176 L140,180 Q150,150 142,116" fill="#6a5a40" stroke="' + INK + '" stroke-width="2"/>';
+    else if (p.headgear === 'coif') s += '<path d="M64,100 Q60,54 100,52 Q140,54 136,100 L132,96 Q134,62 100,60 Q66,62 68,96 Z" fill="#ded4bc" stroke="' + INK + '" stroke-width="2.2"/><path d="M66,98 Q64,120 74,138 M134,98 Q136,120 126,138" fill="none" stroke="' + INK + '" stroke-width="2"/>';
+    else if (p.headgear === 'kerchief') s += '<path d="M62,104 Q58,54 100,50 Q142,54 138,104 Q140,70 100,62 Q60,70 62,104 Z" fill="#b9a482" stroke="' + INK + '" stroke-width="2.2"/><path d="M138,100 Q150,120 144,140 L136,132" fill="#b9a482" stroke="' + INK + '" stroke-width="2"/>';
+    else if (p.headgear === 'wimple') s += '<path d="M60,108 Q56,52 100,48 Q144,52 140,108 Q142,66 100,58 Q58,66 60,108 Z" fill="#efe8d8" stroke="' + INK + '" stroke-width="2.2"/><path d="M62,106 Q62,150 84,170 L84,178 L116,178 L116,170 Q138,150 138,106 Q136,140 116,160 L84,160 Q64,140 62,106 Z" fill="#efe8d8" stroke="' + INK + '" stroke-width="2"/>';
+    else if (p.headgear === 'strawhat') s += '<ellipse cx="100" cy="76" rx="58" ry="13" fill="#c8b06a" stroke="' + INK + '" stroke-width="2.2"/><path d="M74,74 Q72,50 100,48 Q128,50 126,74 Z" fill="#c8b06a" stroke="' + INK + '" stroke-width="2.2"/><path d="M50,76 Q100,84 150,76" fill="none" stroke="' + INK + '" stroke-width="1.2" opacity="0.6"/>';
+    else if (p.headgear === 'felthat') s += '<path d="M66,80 L134,80 Q140,80 138,74 Q120,44 100,44 Q80,44 62,74 Q60,80 66,80 Z" fill="#5a4a3a" stroke="' + INK + '" stroke-width="2.2"/><path d="M66,80 Q100,88 134,80" fill="none" stroke="' + INK + '" stroke-width="1.6"/>';
+
+    // Brows.
+    const browW = p.brow === 'heavy' ? 3.6 : p.brow === 'pale' ? 1 : 1.8;
+    const browOp = p.brow === 'pale' ? 0.35 : 1;
+    const browY = p.brow === 'arch' ? 'M76,96 Q84,90 92,95 M108,95 Q116,90 124,96' : 'M76,96 L92,94 M108,94 L124,96';
+    s += '<path d="' + browY + '" fill="none" stroke="' + INK + '" stroke-width="' + browW + '" opacity="' + browOp + '"/>';
+
+    // Eyes.
+    const eye = (cx, milky, dropped) => {
+      let e = '';
+      if (dropped) { e += '<path d="M' + (cx - 8) + ',106 Q' + cx + ',110 ' + (cx + 8) + ',106" fill="none" stroke="' + INK + '" stroke-width="2"/>'; return e; }
+      const ry = p.eyes === 'squint' || p.eyes === 'narrow' ? 2.4 : 4;
+      e += '<ellipse cx="' + cx + '" cy="105" rx="8" ry="' + ry + '" fill="#f4ecd8" stroke="' + INK + '" stroke-width="1.8"/>';
+      e += '<circle cx="' + (cx + (p.eyes === 'wander' && cx > 100 ? 3 : 0)) + '" cy="105" r="' + (p.eyes === 'squint' ? 1.6 : 2.4) + '" fill="' + (milky ? '#c9c2b2' : INK) + '"/>';
+      if (p.eyes === 'heavy-lid') e += '<path d="M' + (cx - 8) + ',102 Q' + cx + ',99 ' + (cx + 8) + ',102" fill="none" stroke="' + INK + '" stroke-width="2"/>';
+      if (p.eyes === 'deepset') e += '<path d="M' + (cx - 9) + ',100 Q' + cx + ',96 ' + (cx + 9) + ',100" fill="none" stroke="' + INK + '" stroke-width="1.4" opacity="0.7"/>';
+      return e;
+    };
+    // The one-eyed get the left eye sunken shut (§5).
+    s += eye(84, false, p.lostEye);
+    s += eye(116, p.milky, false);
+
+    // Nose.
+    if (p.nose === 'broken') s += '<path d="M100,104 L96,116 L103,122 L98,128 L106,128" fill="none" stroke="' + INK + '" stroke-width="2.2"/>';
+    else if (p.nose === 'broad') s += '<path d="M100,106 L97,124 Q100,130 110,127 L104,124 L103,106" fill="none" stroke="' + INK + '" stroke-width="2.2"/>';
+    else if (p.nose === 'hooked') s += '<path d="M100,104 Q108,114 103,124 L96,127 L104,128" fill="none" stroke="' + INK + '" stroke-width="2.2"/>';
+    else if (p.nose === 'long') s += '<path d="M100,102 L99,128 L94,130 L105,130" fill="none" stroke="' + INK + '" stroke-width="2.2"/>';
+    else s += '<path d="M100,106 L98,124 L95,127 L104,127" fill="none" stroke="' + INK + '" stroke-width="2.2"/>';
+
+    // Mouth (missing teeth show).
+    const my = 142;
+    if (p.mouth === 'down') s += '<path d="M86,' + my + ' Q100,' + (my + 5) + ' 114,' + my + '" fill="none" stroke="' + INK + '" stroke-width="2.4"/>';
+    else if (p.mouth === 'half-smile') s += '<path d="M86,' + (my + 2) + ' Q102,' + (my - 4) + ' 114,' + my + '" fill="none" stroke="' + INK + '" stroke-width="2.4"/>';
+    else if (p.mouth === 'tight') s += '<path d="M88,' + my + ' L112,' + my + '" fill="none" stroke="' + INK + '" stroke-width="3"/>';
+    else s += '<path d="M86,' + my + ' Q100,' + (my + 1) + ' 114,' + my + '" fill="none" stroke="' + INK + '" stroke-width="2.4"/>';
+    if (p.gapTeeth) s += '<rect x="96" y="' + (my + 0.6) + '" width="4" height="3.4" fill="' + INK + '" opacity="0.85"/><rect x="104" y="' + (my + 0.4) + '" width="3" height="3" fill="' + INK + '" opacity="0.7"/>';
+
+    // Facial hair.
+    const bc = p.beardGrey ? '#8a8274' : p.hairColor;
+    if (p.beard === 'stubble') { for (let i = 0; i < 26; i++) { const a = (i * 137.5) % 360, r = 14 + (i % 9), x = 100 + Math.cos(a * Math.PI / 180) * r * 1.4, y = 146 + Math.sin(a * Math.PI / 180) * r * 0.5; if (y > 132) s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="0.7" fill="' + INK + '" opacity="0.55"/>'; } }
+    else if (p.beard === 'short') s += '<path d="M74,124 Q76,156 100,160 Q124,156 126,124 Q122,150 100,152 Q78,150 74,124 Z" fill="' + bc + '" stroke="' + INK + '" stroke-width="1.8"/>';
+    else if (p.beard === 'full') s += '<path d="M72,120 Q72,166 100,176 Q128,166 128,120 Q126,134 118,138 Q120,158 100,164 Q80,158 82,138 Q74,134 72,120 Z M92,136 L108,136" fill="' + bc + '" stroke="' + INK + '" stroke-width="2"/>';
+
+    // Scars & features overlay (placement from the scar table's loc).
+    const seenLoc = new Set();
+    for (const loc of p.scars) {
+      if (seenLoc.has(loc)) continue; seenLoc.add(loc);
+      if (loc === 'brow') s += '<path d="M74,92 L94,89" stroke="#a06a52" stroke-width="2.2" fill="none"/>';
+      if (loc === 'cheek') s += '<path d="M118,116 L128,132" stroke="#a06a52" stroke-width="2.2" fill="none"/><path d="M119,120 l3,-1 M122,125 l3,-1" stroke="#a06a52" stroke-width="1.1"/>';
+      if (loc === 'jaw') s += '<path d="M82,146 L90,152" stroke="#a06a52" stroke-width="2.2" fill="none"/>';
+      if (loc === 'lip') s += '<path d="M104,136 L106,146" stroke="#a06a52" stroke-width="2" fill="none"/>';
+      if (loc === 'scalp') s += '<path d="M88,64 L112,60" stroke="#a06a52" stroke-width="2.4" fill="none"/>';
+      if (loc === 'neck') s += '<path d="M90,168 L108,172" stroke="#a06a52" stroke-width="2.2" fill="none"/>';
+      if (loc === 'eye') s += '<path d="M74,100 L94,112 M94,100 L74,112" stroke="#a06a52" stroke-width="1.6" fill="none" opacity="0.8"/>';
+    }
+    if (p.pox) { for (let i = 0; i < 14; i++) { const a = i * 47 % 360, x = 100 + Math.cos(a) * (16 + i % 12), y = 118 + Math.sin(a) * 10; s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="0.8" fill="' + INK + '" opacity="0.35"/>'; } }
+
+    // Grime / wear pass.
+    if (p.grime) {
+      s += '<path d="M70,150 Q80,160 92,162" fill="none" stroke="' + INK + '" stroke-width="4" opacity="0.0"/>';
+      s += '<rect x="8" y="8" width="184" height="224" fill="url(#' + uid + '-hatch)" opacity="' + (p.grime === 2 ? 0.10 : 0.05) + '"/>';
+      s += '<circle cx="30" cy="215" r="5" fill="' + INK + '" opacity="0.08"/><circle cx="172" cy="30" r="7" fill="' + INK + '" opacity="0.07"/>';
+    }
+    s += '</g></svg>';
+    return s;
+  }
+
+  return { generateParams, render };
+})();
+/* ============================== AI / EXPORT / UI ============================== */
+'use strict';
+
+/* ---------- EXPORT ---------- */
+const EXPORT = (function () {
+  function esc(s) { return String(s == null ? '' : s); }
+
+  function toMarkdown(c) {
+    const lines = [];
+    const push = (s) => lines.push(s);
+    push('# ' + c.name.full);
+    push('');
+    push('*Seed: `' + c.seed + '` · generator v' + c.version + '*');
+    push('');
+    push('**' + c.socialClass.label + '** — ' + c.occupation.name + ' · ' + c.sex + ', ' + c.age + ' (' + c.marital + ')');
+    push('');
+    push('## Region');
+    push('- **' + c.region.name + '** — ' + c.region.terrain + '; lives by ' + c.region.economy + '.');
+    push('- Folk here are ' + c.region.temperament + '. Faith: ' + c.region.faith + '.');
+    push('- In living memory: ' + c.region.disaster + '.');
+    push('');
+    push('## Birth & family');
+    push('- ' + c.birth.season + ', ' + c.birth.legitimacy + ', ' + ordinal(c.birth.order) + '-born; ' + c.birth.circumstance + '.');
+    push('- ' + c.family.structure + '.');
+    const alive = c.family.siblings.filter(s => s.alive).length;
+    push('- Siblings: ' + c.family.siblings.length + ' born, ' + alive + ' living. Father: ' + c.family.father.name + (c.family.father.alive ? '' : ' (dead)') + '; mother ' + (c.family.mother.alive ? 'living' : 'dead') + '.');
+    if (c.family.guardian) push('- Guardian: ' + c.family.guardian + '.');
+    push('- Byname: *' + c.name.byname + '* (' + c.name.rule + ' — ' + c.name.source + ')');
+    push('');
+    push('## Body');
+    push('- ' + [c.body.build, c.body.height, c.body.hair, c.body.eyes].join('; ') + '.');
+    push('- Teeth: ' + c.body.teeth + '. Hands: ' + c.body.hands + '. Voice: ' + c.body.voice + '. Smells ' + c.body.smell + '.');
+    for (const f of c.body.features) push('- ' + f);
+    for (const s of c.body.scars) push('- Scar: ' + s.v);
+    for (const a of c.body.ailments) push('- Ailment: ' + a);
+    push('');
+    push('## Mind');
+    push('- Temperament: ' + c.mind.temperament);
+    push('- Virtue: ' + c.mind.virtue);
+    push('- Vice: ' + c.mind.vice);
+    push('- Fear: ' + c.mind.fear);
+    push('- Ambition: ' + c.mind.ambition);
+    push('- Faith: ' + c.mind.faith);
+    push('- Education: ' + c.education.label + ' — ' + c.education.desc);
+    for (const s of c.mind.superstitions) push('- Superstition: ' + s);
+    push('- Habit: ' + c.mind.tic);
+    if (c.touch) {
+      push('');
+      push('## The Touch');
+      push('- ' + c.touch.manifestation);
+      push('- *Or, as the sensible say:* ' + c.touch.mundaneExplanation);
+    }
+    push('');
+    push('## Skills');
+    for (const s of c.skills) push('- ' + s.name + ' (' + s.tier + ')' + (s.unlikely ? ' — an unlikely thing for one of their station' : ''));
+    push('');
+    push('## Possessions');
+    for (const p of c.possessions) push('- ' + p.item + ' — ' + p.price);
+    push('');
+    push('## People');
+    for (const r of c.relationships) push('- **' + r.name + '**, ' + r.tie + ' — ' + r.tension);
+    push('');
+    push('## The secret');
+    push(c.secret + '.');
+    push('');
+    push('## The wound in the world');
+    push(esc(c.problem) + '.');
+    push('');
+    if (c.heraldry.type === 'arms') {
+      push('## Arms');
+      push('*' + HERALDRY.blazon(c.heraldry) + '*');
+    } else {
+      push('## House mark');
+      push('A mark of ' + c.heraldry.strokes.length + ' strokes, ' + c.heraldry.place + '.');
+    }
+    if (c.flags.length) { push(''); push('## Of note'); for (const f of c.flags) push('- ' + f); }
+    return lines.join('\n');
+  }
+
+  function ordinal(n) { return n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'); }
+
+  function download(filename, text, mime) {
+    const blob = new Blob([text], { type: mime || 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }
+
+  function toJSON(c, locks) {
+    return JSON.stringify({ format: 'medieval-character', version: c.version, seed: c.seed, locks, character: c }, null, 2);
+  }
+
+  function svgToImage(svgText, w, h) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+    });
+  }
+
+  async function toPNG(c) {
+    const scale = 3;
+    const canvas = document.createElement('canvas');
+    canvas.width = 460 * scale; canvas.height = 300 * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#ece1c8'; ctx.fillRect(0, 0, 460, 300);
+    ctx.strokeStyle = '#2b2118'; ctx.lineWidth = 3; ctx.strokeRect(6, 6, 448, 288);
+    const port = await svgToImage(PORTRAIT.render(c.portrait, 'png'), 200, 240);
+    ctx.drawImage(port, 24, 30, 175, 210);
+    const her = HERALDRY.render(c.heraldry, 'pngh');
+    const herImg = await svgToImage(her.svg, 100, 124);
+    ctx.drawImage(herImg, 250, 40, her.svg.includes('viewBox="0 0 60') ? 120 : 110, her.svg.includes('viewBox="0 0 60') ? 120 : 136);
+    ctx.fillStyle = '#2b2118';
+    ctx.font = 'bold 20px Georgia, serif';
+    ctx.fillText(c.name.full, 24, 272);
+    ctx.font = 'italic 12px Georgia, serif';
+    ctx.fillText(c.socialClass.label + ' · ' + c.occupation.name + ' · ' + c.region.name, 24, 290);
+    if (her.blazon) {
+      ctx.font = 'italic 9px Georgia, serif';
+      wrapText(ctx, her.blazon, 250, 196, 190, 12);
+    }
+    canvas.toBlob(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = c.seed + '.png';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    });
+  }
+
+  function wrapText(ctx, text, x, y, maxW, lh) {
+    const words = text.split(' ');
+    let line = '';
+    for (const w of words) {
+      if (ctx.measureText(line + w).width > maxW && line) { ctx.fillText(line, x, y); line = w + ' '; y += lh; }
+      else line += w + ' ';
+    }
+    ctx.fillText(line, x, y);
+  }
+
+  return { toMarkdown, toJSON, toPNG, download };
+})();
+
+/* ---------- AI (optional, user-triggered; key lives in localStorage only) ---------- */
+const AI = (function () {
+  const KEY_STORE = 'medgen-anthropic-key';
+  const CACHE_PREFIX = 'medgen-tale-';
+
+  const SYSTEM = [
+    'You write short backstories for characters in a low-fantasy, grim, rare-magic medieval world.',
+    'Setting rules you must obey: technology and society sit at roughly 1150-1350 Western/Central Europe;',
+    'magic is rare, dangerous, and always deniable — never overt; the Faith (the Kirk) is a monotheist church',
+    'with saints, relics, tithes and heresies, the largest landowner and only literacy pipeline;',
+    'humans only — no elves, dwarves, or monsters; names are invented but plausible.',
+    'Constraints for the piece you write:',
+    '- 250 to 400 words, third person, past tense.',
+    '- Reference the character\'s secret OBLIQUELY — never state it outright.',
+    '- End on the character\'s current problem, unresolved.',
+    '- No modern idiom, no anachronism, no purple prose.',
+    '- If the character has the Touch, keep it ambiguous — it must be explainable as coincidence.',
+  ].join('\n');
+
+  function getKey() { try { return localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
+  function setKey(k) { try { k ? localStorage.setItem(KEY_STORE, k) : localStorage.removeItem(KEY_STORE); } catch (e) { } }
+  function getCached(seed) { try { return localStorage.getItem(CACHE_PREFIX + seed); } catch (e) { return null; } }
+  function setCached(seed, text) { try { localStorage.setItem(CACHE_PREFIX + seed, text); } catch (e) { } }
+
+  async function writeTale(c, onDelta, onDone, onError) {
+    const key = getKey();
+    if (!key) { onError('No API key set. Open Settings and paste an Anthropic API key.'); return; }
+    const sheet = EXPORT.toMarkdown(c);
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          stream: true,
+          system: SYSTEM,
+          messages: [{ role: 'user', content: 'Write the tale of this character.\n\n' + sheet }],
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        onError('API error ' + res.status + ': ' + body.slice(0, 300));
+        return;
+      }
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '', full = '';
+      for (; ;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const payload = line.slice(5).trim();
+          if (payload === '[DONE]') continue;
+          try {
+            const ev = JSON.parse(payload);
+            if (ev.type === 'content_block_delta' && ev.delta && ev.delta.text) { full += ev.delta.text; onDelta(full); }
+            if (ev.type === 'error') { onError('API stream error: ' + JSON.stringify(ev.error).slice(0, 200)); return; }
+          } catch (e) { /* partial frame */ }
+        }
+      }
+      setCached(c.seed, full);
+      onDone(full);
+    } catch (e) {
+      onError('Request failed: ' + e.message + ' (network blocked, bad key, or offline)');
+    }
+  }
+
+  return { getKey, setKey, getCached, writeTale };
+})();
+
+/* ---------- UI ---------- */
+if (typeof document !== 'undefined') (function () {
+  const $ = (sel) => document.querySelector(sel);
+  const state = { seed: '', locks: {}, char: null, hoveredPath: null };
+
+  function currentDebug() { return /[?&#]debug=1|#debug\b/.test(location.search + location.hash); }
+  TRACE.on = currentDebug();
+
+  function seedFromHash() {
+    const m = location.hash.match(/seed=([^&]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  function generate(newSeed) {
+    TRACE.rows = [];
+    state.seed = newSeed;
+    const overrides = {
+      region: $('#ov-region').value || undefined,
+      socialClass: $('#ov-class').value || undefined,
+      sex: $('#ov-sex').value || undefined,
+    };
+    state.char = GEN.generate(state.seed, { locks: state.locks, overrides });
+    $('#seed-input').value = state.seed;
+    history.replaceState(null, '', '#seed=' + encodeURIComponent(state.seed) + (currentDebug() ? '&debug=1' : ''));
+    render();
+  }
+
+  function lockBtn(path) {
+    const locked = path in state.locks;
+    return '<button class="lock' + (locked ? ' locked' : '') + '" data-path="' + path + '" title="' + (locked ? 'Unlock' : 'Lock') + ' — locked fields survive a reroll (key: L)">' + (locked ? '&#128274;' : '&#128275;') + '</button>';
+  }
+  function row(path, label, valueHtml) {
+    return '<div class="row" data-path="' + path + '"><span class="row-label">' + label + '</span><span class="row-value">' + valueHtml + '</span>' + lockBtn(path) + '</div>';
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function list(items) { return '<ul>' + items.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>'; }
+
+  function render() {
+    const c = state.char;
+    // Centre: portrait, arms, name.
+    $('#portrait-box').innerHTML = PORTRAIT.render(c.portrait, 'ui');
+    const her = HERALDRY.render(c.heraldry, 'uih');
+    $('#arms-box').innerHTML = her.svg + (c.heraldry.type === 'mark' ? '<div class="mark-note">' + esc(c.heraldry.place) + '</div>' : '');
+    $('#char-name').textContent = c.name.full;
+    $('#char-sub').textContent = c.socialClass.label + ' · ' + c.occupation.name + ' · ' + c.region.name;
+    $('#blazon').textContent = her.blazon || '';
+    $('#violation-note').textContent = (c.heraldry.violation ? 'Arms in violation of the rule of tincture — the herald noted it.' : '');
+
+    const alive = c.family.siblings.filter(s => s.alive).length;
+    const secs = [];
+    secs.push(section('Origin', [
+      row('region', 'Region', esc(c.region.name) + ' — ' + esc(c.region.terrain) + '. Lives by ' + esc(c.region.economy) + '. In living memory: ' + esc(c.region.disaster) + '.'),
+      row('culture', 'Culture', esc(c.culture)),
+      row('socialClass', 'Class', esc(c.socialClass.label) + ' — ' + esc(c.socialClass.desc)),
+    ]));
+    secs.push(section('Birth & family', [
+      row('birth', 'Birth', esc(c.birth.season) + ', ' + esc(c.birth.legitimacy) + ', born ' + c.birth.order + ordSuffix(c.birth.order) + '. ' + esc(c.birth.circumstance) + '.'),
+      row('family', 'Family', esc(c.family.structure) + '. Siblings: ' + c.family.siblings.length + ' born, ' + alive + ' living. Father ' + esc(c.family.father.name) + (c.family.father.alive ? '' : ' (dead)') + ', mother ' + (c.family.mother.alive ? 'living' : 'dead') + '.' + (c.family.guardian ? ' Guardian: ' + esc(c.family.guardian) + '.' : '')),
+      row('name', 'Name', esc(c.name.full) + ' <em>(' + esc(c.name.rule) + ': ' + esc(c.name.source) + ')</em>'),
+      row('sex', 'Sex', esc(c.sex)),
+      row('age', 'Age', c.age + ' (' + esc(c.ageBracket.label) + '), ' + esc(c.marital)),
+    ]));
+    secs.push(section('Station', [
+      row('occupation', 'Occupation', esc(c.occupation.name)),
+      row('education', 'Education', esc(c.education.label) + ' — ' + esc(c.education.desc)),
+    ]));
+    secs.push(section('Body', [
+      row('body', 'Body', esc([c.body.build, c.body.height, c.body.hair, c.body.eyes].join('; ')) + '.<br>Teeth: ' + esc(c.body.teeth) + '. Hands: ' + esc(c.body.hands) + '. Voice: ' + esc(c.body.voice) + '. Smells ' + esc(c.body.smell) + '.' +
+        list(c.body.features.concat(c.body.scars.map(s => 'Scar: ' + s.v), c.body.ailments.map(a => 'Ailment: ' + a)))),
+    ]));
+    secs.push(section('Mind', [
+      row('mind', 'Mind', list([
+        'Temperament: ' + c.mind.temperament, 'Virtue: ' + c.mind.virtue, 'Vice: ' + c.mind.vice,
+        'Fear: ' + c.mind.fear, 'Ambition: ' + c.mind.ambition, 'Faith: ' + c.mind.faith, 'Habit: ' + c.mind.tic,
+      ].concat(c.mind.superstitions.map(s => 'Superstition: ' + s)))),
+    ]));
+    if (c.touch) secs.push(section('The Touch', [
+      row('touch', 'The Touch', esc(c.touch.manifestation) + '<br><em>Or, as the sensible say: ' + esc(c.touch.mundaneExplanation) + '</em>'),
+    ]));
+    secs.push(section('Skills', [row('skills', 'Skills', list(c.skills.map(s => s.name + ' (' + s.tier + ')' + (s.unlikely ? ' — unlikely for their station' : ''))))]));
+    secs.push(section('Possessions', [row('possessions', 'Possessions', list(c.possessions.map(p => p.item + ' — ' + p.price)))]));
+    secs.push(section('People', [row('relationships', 'People', list(c.relationships.map(r => r.name + ', ' + r.tie + ' — ' + r.tension)))]));
+    secs.push(section('The secret', [row('secret', 'Secret', esc(c.secret) + '.')]));
+    secs.push(section('The wound in the world', [row('problem', 'Problem', esc(c.problem) + '.')]));
+    if (c.heraldry.type === 'arms') secs.push(section('Arms', [row('heraldry', 'Blazon', '<em>' + esc(her.blazon) + '</em>')]));
+    else secs.push(section('House mark', [row('heraldry', 'Mark', esc(c.heraldry.place))]));
+    if (c.flags.length) secs.push(section('Of note', [row('flags', 'Flags', list(c.flags))]));
+    $('#sheet').innerHTML = secs.join('');
+
+    // Tale cache.
+    const cached = AI.getCached(c.seed);
+    $('#tale-out').textContent = cached || '';
+    $('#tale-box').style.display = cached ? '' : 'none';
+    updateTaleButton();
+    renderDebug();
+    bindRows();
+  }
+
+  function ordSuffix(n) { return n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'; }
+  function section(title, rows) {
+    return '<details open><summary>' + title + '</summary>' + rows.join('') + '</details>';
+  }
+
+  function renderDebug() {
+    const box = $('#debug-box');
+    if (!currentDebug()) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    const c = state.char;
+    let html = '<h3>Generation trace — ' + TRACE.rows.length + ' rolls, ' + c.clamps.length + ' clamps</h3>';
+    html += '<div class="trace">' + TRACE.rows.map(r =>
+      r.t === 'clamp'
+        ? '<div class="clamp">CLAMP [' + esc(r.rule) + '] ' + esc(r.detail) + '</div>'
+        : '<div>' + esc(r.label) + ' → ' + esc(JSON.stringify(r.detail)) + '</div>'
+    ).join('') + '</div>';
+    html += '<h3>Clamps</h3>' + (c.clamps.length ? list(c.clamps.map(x => '[' + x.rule + '] ' + x.detail)) : '<p>none</p>');
+    box.innerHTML = html;
+  }
+
+  function bindRows() {
+    document.querySelectorAll('.lock').forEach(btn => {
+      btn.onclick = () => toggleLock(btn.dataset.path);
+    });
+    document.querySelectorAll('.row').forEach(r => {
+      r.onmouseenter = () => { state.hoveredPath = r.dataset.path; };
+      r.onmouseleave = () => { if (state.hoveredPath === r.dataset.path) state.hoveredPath = null; };
+    });
+  }
+
+  function toggleLock(path) {
+    if (path in state.locks) delete state.locks[path];
+    else state.locks[path] = JSON.parse(JSON.stringify(GEN.getPath(state.char, path)));
+    render();
+  }
+
+  function reroll() { generate(randomSeed()); }
+
+  function updateTaleButton() {
+    const btn = $('#tale-btn');
+    const hasKey = !!AI.getKey();
+    btn.disabled = !hasKey;
+    btn.title = hasKey ? 'Call the Anthropic API to write this character\'s backstory'
+      : 'Disabled: no API key. Open Settings and paste an Anthropic API key — it is stored only in this browser\'s localStorage.';
+  }
+
+  /* ---- wiring ---- */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Populate override dropdowns.
+    $('#ov-region').innerHTML = '<option value="">any region</option>' + DATA.regions.map(r => '<option value="' + r.v.key + '">' + r.v.name + '</option>').join('');
+    $('#ov-class').innerHTML = '<option value="">any class</option>' + DATA.classes.map(x => '<option value="' + x.v.key + '">' + x.v.label + '</option>').join('');
+    $('#ov-sex').innerHTML = '<option value="">any sex</option><option value="male">male</option><option value="female">female</option>';
+
+    $('#generate-btn').onclick = () => generate($('#seed-input').value.trim() || randomSeed());
+    $('#reroll-btn').onclick = reroll;
+    $('#seed-input').addEventListener('keydown', e => { if (e.key === 'Enter') generate($('#seed-input').value.trim() || randomSeed()); });
+    ['#ov-region', '#ov-class', '#ov-sex'].forEach(sel => { $(sel).onchange = () => generate(state.seed); });
+
+    $('#copy-link-btn').onclick = copyLink;
+    $('#export-json-btn').onclick = () => EXPORT.download(state.seed + '.json', EXPORT.toJSON(state.char, state.locks), 'application/json');
+    $('#export-md-btn').onclick = () => EXPORT.download(state.seed + '.md', EXPORT.toMarkdown(state.char), 'text/markdown');
+    $('#export-png-btn').onclick = () => EXPORT.toPNG(state.char);
+    $('#print-btn').onclick = () => window.print();
+    $('#import-input').onchange = (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        try {
+          const data = JSON.parse(rd.result);
+          if (data.format !== 'medieval-character') throw new Error('not a character file');
+          state.seed = data.seed;
+          state.locks = data.locks || {};
+          state.char = data.character;
+          $('#seed-input').value = state.seed;
+          history.replaceState(null, '', '#seed=' + encodeURIComponent(state.seed));
+          render();
+        } catch (err) { alert('Import failed: ' + err.message); }
+      };
+      rd.readAsText(f);
+      e.target.value = '';
+    };
+
+    // Settings.
+    $('#settings-btn').onclick = () => { $('#settings-panel').classList.toggle('open'); $('#api-key-input').value = AI.getKey(); };
+    $('#api-key-save').onclick = () => { AI.setKey($('#api-key-input').value.trim()); $('#settings-panel').classList.remove('open'); updateTaleButton(); };
+    $('#api-key-clear').onclick = () => { AI.setKey(''); $('#api-key-input').value = ''; updateTaleButton(); };
+
+    // Tale.
+    $('#tale-btn').onclick = () => {
+      const c = state.char;
+      const cached = AI.getCached(c.seed);
+      if (cached && !confirm('A tale is already written for this seed. Write it again?')) return;
+      $('#tale-box').style.display = '';
+      $('#tale-out').textContent = '…';
+      $('#tale-err').textContent = '';
+      AI.writeTale(c,
+        partial => { $('#tale-out').textContent = partial; },
+        () => { },
+        err => { $('#tale-err').textContent = err; });
+    };
+
+    // Keyboard: Space reroll, L lock hovered, C copy link.
+    document.addEventListener('keydown', e => {
+      if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+      if (e.code === 'Space') { e.preventDefault(); reroll(); }
+      else if (e.key === 'l' || e.key === 'L') { if (state.hoveredPath) toggleLock(state.hoveredPath); }
+      else if (e.key === 'c' || e.key === 'C') copyLink();
+    });
+
+    generate(seedFromHash() || randomSeed());
+  });
+
+  function copyLink() {
+    const url = location.origin === 'null' || location.protocol === 'file:'
+      ? location.href : location.origin + location.pathname + '#seed=' + encodeURIComponent(state.seed);
+    const done = () => {
+      const b = $('#copy-link-btn'); const t = b.textContent;
+      b.textContent = 'Copied!'; setTimeout(() => { b.textContent = t; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => fallbackCopy(url, done));
+    else fallbackCopy(url, done);
+  }
+  function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { alert('Copy this link:\n' + text); }
+    ta.remove();
+  }
+})();
+</script>
+</body>
+</html>
