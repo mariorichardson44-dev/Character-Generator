@@ -278,7 +278,7 @@ function makeRng(seedStr) {
   return mulberry32(h[0] ^ h[1]);
 }
 
-/* Generation trace for ?debug=1 — every roll, weight, clamp. */
+/* Generation trace for ?debug=1, every roll, weight, clamp. */
 const TRACE = { on: false, rows: [] };
 function traceRoll(label, detail) { if (TRACE.on) TRACE.rows.push({ t: 'roll', label, detail }); }
 function traceClamp(rule, detail) {
@@ -347,7 +347,7 @@ function randomSeed() {
 }
 /* ============================== DATA (part 1 of 2) ==============================
    All static tables. Assembled onto one DATA object, frozen at the end of part 2.
-   Keep logic out of here — GEN reads these, never the reverse.                  */
+   Keep logic out of here, GEN reads these, never the reverse.                  */
 'use strict';
 const DATA = {};
 
@@ -373,10 +373,10 @@ DATA.regions = [
 DATA.classes = [
   { w: 640, v: { key: 'serf', label: 'Serf', tier: 0, wealth: 0, desc: 'bound to the land and the lord’s week-work' } },
   { w: 470, v: { key: 'freePeasant', label: 'Free peasant', tier: 1, wealth: 1, desc: 'holds a few strips and owes rent, not blood' } },
-  { w: 45, v: { key: 'outcast', label: 'Outcast', tier: 0, wealth: 0, desc: 'outside parish and law — vagrant, leper, branded, or worse' } },
+  { w: 45, v: { key: 'outcast', label: 'Outcast', tier: 0, wealth: 0, desc: 'outside parish and law, vagrant, leper, branded, or worse' } },
   { w: 78, v: { key: 'craftsman', label: 'Craftsman', tier: 2, wealth: 2, desc: 'a trade in the hands and a place in a village or town' } },
   { w: 26, v: { key: 'burgher', label: 'Burgher', tier: 3, wealth: 3, desc: 'town citizen with guild rights and money troubles' } },
-  { w: 26, v: { key: 'clergy', label: 'Clergy', tier: 3, wealth: 2, desc: 'sworn to the Kirk — priest, monk, nun, or clerk in minor orders' } },
+  { w: 26, v: { key: 'clergy', label: 'Clergy', tier: 3, wealth: 2, desc: 'sworn to the Kirk, priest, monk, nun, or clerk in minor orders' } },
   { w: 10, v: { key: 'minorGentry', label: 'Minor gentry', tier: 4, wealth: 4, desc: 'a hall, a horse, and debts to match the pretensions' } },
   { w: 6, v: { key: 'knightly', label: 'Knightly', tier: 5, wealth: 4, desc: 'belted or squired; arms-bearing by right and obligation' } },
   { w: 2, v: { key: 'noble', label: 'Noble', tier: 6, wealth: 5, desc: 'blood that shows up in chronicles, for good or ill' } },
@@ -405,12 +405,12 @@ DATA.birthCircumstances = [
   { w: 4, v: 'born with the caul, which the midwife dried and sold to a sailor against drowning' },
   { w: 4, v: 'born feet-first, so the grandmothers said: a healer’s sign, or a hanged one’s' },
   { w: 4, v: 'born during the procession of Saint Varro, bells going the whole labour' },
-  { w: 4, v: 'a twin — the other died before baptism and has no name anyone says aloud' },
+  { w: 4, v: 'a twin, the other died before baptism and has no name anyone says aloud' },
   { w: 3, v: 'born in a hay-cart between villages, the parish still disputed at law' },
   { w: 3, v: 'born on a fast-day, which the priest called unfortunate and the father called typical' },
   { w: 3, v: 'the mother laboured three days; the midwife swore never again for that house' },
   { w: 3, v: 'born under a red moon, which the neighbours remembered only years later, when it suited them' },
-  { w: 3, v: 'baptised twice by mistake — two priests, a feud, and a snowstorm were involved' },
+  { w: 3, v: 'baptised twice by mistake, two priests, a feud, and a snowstorm were involved' },
   { w: 3, v: 'born the same hour the old lord died, and named in half-mockery for him' },
   { w: 3, v: 'born to the sound of the mill burning across the water' },
   { w: 2, v: 'born with a birthmark the midwife pressed with a cold key and pronounced harmless' },
@@ -437,7 +437,7 @@ DATA.legitimacy = [
   { w: 84, v: 'trueborn' },
   { w: 9, v: 'baseborn, acknowledged' },
   { w: 5, v: 'baseborn, unacknowledged' },
-  { w: 2, v: 'legitimacy disputed — the dates do not quite work, and people count' },
+  { w: 2, v: 'legitimacy disputed, the dates do not quite work, and people count' },
 ];
 
 /* ---- 3.4 Family structures (25) -------------------------------------------- */
@@ -446,7 +446,7 @@ DATA.familyStructures = [
   { w: 8, v: 'father dead of a winter fever; mother remarried within the year, as one must' },
   { w: 7, v: 'mother died in a later childbed; the eldest daughter became mother at eleven' },
   { w: 6, v: 'raised half by a grandmother who remembered the old rites and used them' },
-  { w: 6, v: 'father alive but broken — a kicked hip — and the household bends around his temper' },
+  { w: 6, v: 'father alive but broken, a kicked hip, and the household bends around his temper' },
   { w: 5, v: 'parents living apart since the bad year; the parish pretends not to notice' },
   { w: 5, v: 'father gone for a soldier and returned strange; he sleeps in the byre by choice' },
   { w: 5, v: 'an uncle holds the tenancy and never lets anyone forget whose bread it is' },
@@ -454,7 +454,7 @@ DATA.familyStructures = [
   { w: 4, v: 'father drowned at the ford with the rent money; both losses are still spoken of' },
   { w: 4, v: 'raised in a stepfather’s house on sufferance, fed last, blamed first' },
   { w: 4, v: 'the family holds two strips less each decade; everyone knows, no one says it' },
-  { w: 4, v: 'a house of women — the men taken by war, water, or the road — run better than most' },
+  { w: 4, v: 'a house of women, the men taken by war, water, or the road, run better than most' },
   { w: 3, v: 'father is the village’s quiet moneylender; the family is needed and hated in equal parts' },
   { w: 3, v: 'fostered out at seven to a childless cousin, and never quite called home again' },
   { w: 3, v: 'the eldest brother inherited everything and the rest were told to be grateful' },
@@ -548,7 +548,7 @@ DATA.names = {
 };
 
 /* ---- Company generation (households & warbands) ------------------------------ */
-// Tensions for ties INSIDE a generated company — same shape as §3.13 tensions.
+// Tensions for ties INSIDE a generated company, same shape as §3.13 tensions.
 DATA.householdTensions = [
   'who counts the coin a second time whenever you have handled it',
   'who took the blame for you once, years ago, and has never once mentioned it',
@@ -628,7 +628,7 @@ DATA.settlementCustoms = [
   'the first sheaf of each harvest is plaited and nailed above the church door',
   'rents are paid at the moot-oak, in public, so shame does the bailiff’s work',
   'a straw man is drowned in the beck each spring; the Kirk disapproves and attends',
-  'no marriages in the month the flood came — not law, just not done',
+  'no marriages in the month the flood came, not law, just not done',
   'the bounds are beaten each year and the boys thumped at each stone, so the stones are remembered',
   'the church ale is brewed by a different household each year, and judged without mercy',
   'on the eve of the levy-muster, every door leaves out bread for whoever might not come back',
@@ -642,14 +642,14 @@ DATA.settlementTroubles = [
   'the mill-race is silting, and the miller blames everyone upstream by name',
   'two families have not spoken since the boundary trial, and everyone must choose whose bread to eat',
   'the church roof lead was sold to recast the bell; now the rain is in and the bell cracked anyway',
-  'wolves — or something doing a wolf’s work — have been at the folds three nights running',
+  'wolves, or something doing a wolf’s work, have been at the folds three nights running',
   'the new bridge has moved the road, and the village is quietly starving of passers-by',
   'sanctuary was claimed at the altar a week ago, and the men outside are still waiting',
   'the reeve’s tally and the steward’s roll no longer agree, and someone will answer for the difference',
 ];
 // Feuds spanning households: cause + current state, injected into both heads' ties.
 DATA.feudCauses = [
-  'the boundary stone that moved — or did not move — in the plague year',
+  'the boundary stone that moved, or did not move, in the plague year',
   'a cow that drowned in the other side’s ditch',
   'a betrothal broken off two days before the banns',
   'whose grain goes first at the mill in a wet week',
@@ -663,7 +663,7 @@ DATA.feudCauses = [
   'a blood debt from the grandfathers’ time, which neither side can state precisely and neither will drop',
 ];
 DATA.feudStates = [
-  { w: 3, v: 'cold and formal — greetings exchanged like hostages' },
+  { w: 3, v: 'cold and formal, greetings exchanged like hostages' },
   { w: 3, v: 'open name-calling at market' },
   { w: 2, v: 'at law before the manor court, ruinously for both' },
   { w: 1, v: 'one barn already burned, cause officially unknown' },
@@ -681,7 +681,7 @@ DATA.villageTensions = [
   'who saw you at the old stones at dusk and has said nothing yet',
   'who waters the ale after the second cup, as the whole village knows',
   'who sets the bread price, and your table by it',
-  'who carried a tale about your household up to the manor — or so it came back to you',
+  'who carried a tale about your household up to the manor, or so it came back to you',
   'who alone came when the fever was in your house, and can now be refused nothing',
 ];
 
@@ -741,7 +741,7 @@ DATA.guardians = ['a widowed aunt with opinions', 'the parish, grudgingly', 'a m
 
 /* ---- 3.7 Occupations (60) ---------------------------------------------------
    classes: which class keys may hold it. sex: 'any'|'male'|'female' (legal norm,
-   not capability — GEN may transgress ~5% with a matching secret). lit: literacy
+   not capability, GEN may transgress ~5% with a matching secret). lit: literacy
    required. wealth: 0..5 tier. injuries: keywords biasing the scar/ailment pick.
    skills: trade skills granted. minAge: youngest plausible practitioner.        */
 DATA.occupations = [
@@ -846,7 +846,7 @@ DATA.builds = [
   { w: 8, v: 'gaunt, the ribs of a lean year still showing' }, { w: 8, v: 'soft-bodied, unusual in the country and remarked on' },
   { w: 8, v: 'thick-waisted and strong as an ox in short bursts' }, { w: 7, v: 'small-boned and quick' },
   { w: 7, v: 'round-shouldered from the loom, the desk, or the hoe' }, { w: 6, v: 'big-framed but half-starved into angles' },
-  { w: 5, v: 'burly, running to fat where the trade allows it' }, { w: 3, v: 'towering, a head above the crowd — a nuisance in low doorways' },
+  { w: 5, v: 'burly, running to fat where the trade allows it' }, { w: 3, v: 'towering, a head above the crowd, a nuisance in low doorways' },
 ];
 DATA.heights = [
   { w: 6, v: 'well under common height' }, { w: 12, v: 'a little short of common height' },
@@ -904,7 +904,7 @@ DATA.scars = [
   { w: 2, v: 'the pale glove of an old lime-burn on the right hand', loc: 'hand', src: ['lime', 'lye', 'tanning'] },
   { w: 2, v: 'a stitched lip that healed into a permanent half-sneer', loc: 'lip', src: ['brawl', 'blade'] },
   { w: 2, v: 'a horse-kick dent in the left shin that aches at frost', loc: 'leg', src: ['horse', 'kick'] },
-  { w: 2, v: 'a brand — a felon’s mark — on the base of the right thumb, explained as a burn', loc: 'hand', src: ['brand', 'law'] },
+  { w: 2, v: 'a brand, a felon’s mark, on the base of the right thumb, explained as a burn', loc: 'hand', src: ['brand', 'law'] },
   { w: 2, v: 'three parallel claw-lines on the forearm; the story changes with the audience', loc: 'arm', src: ['boar', 'dog', 'talon'] },
   { w: 2, v: 'a crushed and blackened big toenail that never grew back right', loc: 'body', src: ['crush', 'stone'] },
   { w: 2, v: 'a hayfork puncture in the right foot, one wet June', loc: 'body', src: ['harvest'] },
@@ -942,7 +942,7 @@ DATA.ailments = [
   { w: 2, v: 'skin that blisters in strong sun within the hour' },
   { w: 2, v: 'a jaw that clicks and locks over hard bread' },
   { w: 1, v: 'stone in the bladder, and the terror of the cutting that would fix it' },
-  { w: 1, v: 'the itch — recurring, humiliating, and blamed on other households' },
+  { w: 1, v: 'the itch, recurring, humiliating, and blamed on other households' },
   { w: 1, v: 'a numb white finger in each hand come winter', src: ['axe', 'hammer'] },
   { w: 1, v: 'dreams so violent the household moved the sleeping bench away from the wall' },
   { w: 1, v: 'a heart that flutters like a caged bird after fright, then rights itself' },
@@ -956,12 +956,12 @@ DATA.teeth = [
 DATA.hands = [
   { w: 16, v: 'calloused hard as hoof, cracked at every knuckle' }, { w: 12, v: 'big-knuckled, nails broken to the quick' },
   { w: 10, v: 'rope-burned and salt-cracked' }, { w: 10, v: 'small and quick, made for fiddly work' },
-  { w: 9, v: 'stained — dye, ink, or walnut, depending who’s asking' }, { w: 9, v: 'scarred with the trade’s whole history' },
+  { w: 9, v: 'stained, dye, ink, or walnut, depending who’s asking' }, { w: 9, v: 'scarred with the trade’s whole history' },
   { w: 8, v: 'strong but gone stiff in the mornings' }, { w: 8, v: 'surprisingly gentle for their size' },
-  { w: 5, v: 'soft palms that would betray any claim to field work' }, { w: 4, v: 'missing something — a fingertip, a nail, a straight bone' },
+  { w: 5, v: 'soft palms that would betray any claim to field work' }, { w: 4, v: 'missing something, a fingertip, a nail, a straight bone' },
 ];
 DATA.voices = [
-  { w: 14, v: 'low and unhurried, hard to imagine shouting' }, { w: 12, v: 'carrying — a field voice, indoors' },
+  { w: 14, v: 'low and unhurried, hard to imagine shouting' }, { w: 12, v: 'carrying, a field voice, indoors' },
   { w: 11, v: 'quiet, so people lean in and remember it' }, { w: 10, v: 'rasped by smoke or screaming, take your pick' },
   { w: 10, v: 'quick and clipped, always halfway out the door' }, { w: 9, v: 'a singer’s voice wasted on market prices' },
   { w: 9, v: 'flat and even, giving nothing away' }, { w: 9, v: 'warm, the kind debts get forgiven for' },
@@ -969,7 +969,7 @@ DATA.voices = [
 ];
 DATA.smells = [
   { w: 18, v: 'of woodsmoke and wet wool' }, { w: 15, v: 'of the byre, faint and permanent' },
-  { w: 13, v: 'of tallow and onions' }, { w: 12, v: 'of the trade — you could name it blindfolded' },
+  { w: 13, v: 'of tallow and onions' }, { w: 12, v: 'of the trade, you could name it blindfolded' },
   { w: 11, v: 'of river water and pitch' }, { w: 11, v: 'of clean straw, an achievement out here' },
   { w: 10, v: 'of old incense that never quite washes out' }, { w: 10, v: 'of horse, leather, and liniment' },
 ];
@@ -979,7 +979,7 @@ DATA.virtues = [
   'keeps every promise, at whatever stupid cost', 'shares food first and counts later', 'utterly steady in a crisis, falls apart afterwards in private',
   'cannot watch cruelty to animals without intervening', 'pays debts to the halfpenny and forgives them whole', 'tells the truth even when a lie would be kinder and easier',
   'works to the standard even when no one will ever inspect it', 'defends the absent against gossip', 'gentle with children, including the unlovable ones',
-  'never repeats what is told at night', 'gives honest measure — famous for it at three markets', 'sits with the dying when everyone else finds work elsewhere',
+  'never repeats what is told at night', 'gives honest measure, famous for it at three markets', 'sits with the dying when everyone else finds work elsewhere',
   'admits fault fast and fully, disarming everyone', 'loyal past the point of sense to old companions', 'brave in the small daily ways nobody ballads about',
   'patient with the slow, the old, and the mad', 'stands up in the moot and says the unpopular true thing', 'keeps the fast days honestly when no one is checking',
   'forgives injuries that others would nurse into feuds', 'notices who has not eaten and arranges accidents of surplus', 'can be trusted with money, keys, and other people’s spouses',
@@ -996,59 +996,59 @@ DATA.vices = [
   'vain about one feature and blind about the rest', 'sulks for days over slights nobody else noticed', 'borrows tools and returns them broken or never',
   'takes credit smoothly for other people’s work', 'superstitious to the point of paying for it', 'lecherous in a way the village maps carefully',
   'holds the purse strings of the household like a garrote', 'picks at other people’s grief for entertainment', 'always certain, most certain when wrong',
-  'steals small things — pins, eggs, buttons — needing none of them', 'bitter about a promotion, inheritance, or marriage lost decades back', 'bullies the one person in the house who cannot leave',
-  'prays loudly and tithes short', 'abandons projects at the four-fifths mark', 'blames the dead — they are never around to argue',
+  'steals small things, pins, eggs, buttons, needing none of them', 'bitter about a promotion, inheritance, or marriage lost decades back', 'bullies the one person in the house who cannot leave',
+  'prays loudly and tithes short', 'abandons projects at the four-fifths mark', 'blames the dead, they are never around to argue',
 ];
 DATA.fears = [
   'deep water and honest about it', 'the dark between the last house and the first tree', 'dogs, since the bite',
-  'fire in the thatch — wakes at the smell of smoke two farms off', 'the lord’s bailiff’s knock', 'being buried wrong and walking after',
+  'fire in the thatch, wakes at the smell of smoke two farms off', 'the lord’s bailiff’s knock', 'being buried wrong and walking after',
   'the pest returning, as it does', 'dying unshriven on a road somewhere', 'wells and what looks back from them',
   'the workhouse ward of the abbey, having seen inside once', 'horses’ hooves at speed behind them', 'the moment the trade fails the hands',
-  'crowds pressing tight — market days are endured', 'the sea, even from the shore', 'being laughed at in the moot',
+  'crowds pressing tight, market days are endured', 'the sea, even from the shore', 'being laughed at in the moot',
   'the tax roll and the letters they cannot read', 'thunder, hidden badly behind jokes', 'childbed, having heard it through a wall',
   'the forest at midday, oddly, not at night', 'mirrors and still water at night', 'the old stone rows on the hill and being near them at dusk',
-  'that the one great sin is written on their face', 'hunger — not death, hunger — remembered from the bad year', 'lepers’ bells, out of proportion to the danger',
-  'their own temper and what it nearly did once', 'oaths — will not swear on anything, which looks worse', 'the Kirk’s questions getting specific',
-  'growing like the parent they swore not to', 'being forgotten entire — no stone, no name, no mass said', 'nothing — claims to fear nothing, which is itself the fear showing',
+  'that the one great sin is written on their face', 'hunger, not death, hunger, remembered from the bad year', 'lepers’ bells, out of proportion to the danger',
+  'their own temper and what it nearly did once', 'oaths, will not swear on anything, which looks worse', 'the Kirk’s questions getting specific',
+  'growing like the parent they swore not to', 'being forgotten entire, no stone, no name, no mass said', 'nothing, claims to fear nothing, which is itself the fear showing',
 ];
 DATA.ambitions = [
   'to buy the family’s freedom from the week-work, in coin, on the manor rolls', 'to own the strip of land they were whipped on as a child',
   'to see the sea once before the end', 'to put a slate roof where the thatch leaks', 'to bury their parents in the churchyard proper, paid in full',
-  'to be made guildmaster and wear the chain at the procession', 'to learn letters, in secret if need be', 'to marry into the house on the hill, or failing that, burn it — no, marry into it',
+  'to be made guildmaster and wear the chain at the procession', 'to learn letters, in secret if need be', 'to marry into the house on the hill, or failing that, burn it, no, marry into it',
   'to walk the great pilgrimage and come back changed or not at all', 'to see their child apprenticed to a clean trade indoors',
-  'to own a horse — a real one, not a shared plough-beast', 'to be believed, once, in the moot, over a better-born liar',
+  'to own a horse, a real one, not a shared plough-beast', 'to be believed, once, in the moot, over a better-born liar',
   'to find the father who left and stand in front of him, just stand there', 'to pay off the debt before it eats the second field',
-  'to sing the great mass in the abbey choir just once', 'to be feared a little — just a little — by the right people',
+  'to sing the great mass in the abbey choir just once', 'to be feared a little, just a little, by the right people',
   'to die in a bed, of age, an ambition the family calls modest and history calls vast', 'to open an inn at the crossroads and hear every story that passes',
   'to reclaim the marsh-field their grandfather drowned trying to drain', 'to be the one the village sends for when it matters',
-  'to see the city once — the real one, with the towers', 'to breed the perfect sheepdog line; everything else is means to this',
+  'to see the city once, the real one, with the towers', 'to breed the perfect sheepdog line; everything else is means to this',
   'to be shriven of the one thing and sleep whole after', 'to out-live the rival, pettily, gloriously, completely',
   'to keep every one of the children alive to adulthood, breaking the family’s run of luck', 'to hang the man who burned the mill, lawfully if possible',
-  'to write — or dictate, letters willing — the true history of what happened at the ford', 'to hold the tenancy against the cousin’s claim, whatever it costs',
-  'to make one thing — one — that outlasts them: a bridge, a bell, a name', 'to be left alone entirely, which is the most expensive ambition of all',
+  'to write, or dictate, letters willing, the true history of what happened at the ford', 'to hold the tenancy against the cousin’s claim, whatever it costs',
+  'to make one thing, one, that outlasts them: a bridge, a bell, a name', 'to be left alone entirely, which is the most expensive ambition of all',
 ];
 DATA.temperaments = [
   { w: 12, v: 'phlegmatic: slow to move, immovable once moving' }, { w: 11, v: 'dour and dry, mistaken for humourless by the humourless' },
-  { w: 10, v: 'cheerful on a dark foundation' }, { w: 10, v: 'watchful — counts exits, counts knives, counts friends' },
+  { w: 10, v: 'cheerful on a dark foundation' }, { w: 10, v: 'watchful, counts exits, counts knives, counts friends' },
   { w: 9, v: 'quick-tempered, quick to laugh, exhausting either way' }, { w: 9, v: 'melancholic, told often to smile, doesn’t' },
   { w: 8, v: 'placid until the exact wrong day' }, { w: 8, v: 'restless; feet point at the horizon in every season' },
-  { w: 7, v: 'anxious and thorough — the two are related' }, { w: 7, v: 'sanguine past the evidence' },
+  { w: 7, v: 'anxious and thorough, the two are related' }, { w: 7, v: 'sanguine past the evidence' },
   { w: 6, v: 'cold in manner, scalding in loyalty' }, { w: 5, v: 'pious calm with a locked cellar underneath' },
   { w: 5, v: 'sly and delighted by it' }, { w: 4, v: 'grave beyond their years, whatever their years' },
   { w: 4, v: 'giddy, unserious, and smarter than they let show' },
 ];
 DATA.faithStances = [
   { w: 16, v: 'devout in the ordinary way: mass, tithes, and no questions asked aloud' },
-  { w: 13, v: 'devout and fearful — sin is a ledger and someone is keeping it' },
+  { w: 13, v: 'devout and fearful, sin is a ledger and someone is keeping it' },
   { w: 12, v: 'observant in public, indifferent in private' },
   { w: 11, v: 'trusts the saints but not their sellers' },
-  { w: 10, v: 'hedges every prayer with something older — iron, salt, spit' },
+  { w: 10, v: 'hedges every prayer with something older, iron, salt, spit' },
   { w: 9, v: 'genuinely comforted by the rites; the Kirk works as advertised, for them' },
   { w: 8, v: 'quietly angry at heaven since the loss, still attends, sits at the back' },
   { w: 7, v: 'believes fiercely in the Kirk and not at all in its clergy' },
   { w: 6, v: 'drawn to the preaching friars and their talk of poverty, which worries the family' },
   { w: 4, v: 'doubts everything, tells no one, and takes communion with a straight face' },
-  { w: 3, v: 'holds a private heresy — small, homemade, and hanging-grade if spoken' },
+  { w: 3, v: 'holds a private heresy, small, homemade, and hanging-grade if spoken' },
   { w: 2, v: 'touched by a genuine religious experience once, and unable to make it happen again' },
 ];
 DATA.educationLevels = [
@@ -1064,29 +1064,29 @@ DATA.superstitions = [
   'never puts new shoes on the table', 'spits left when a magpie crosses alone', 'won’t count lambs aloud until weaning',
   'keeps a hag-stone on a thong against the night-mare', 'bows to the new moon and turns a coin over', 'never says "drowned" on a boat, says "went under"',
   'leaves the last swallow of ale for the house-ghost', 'won’t start a journey on the Kirk’s fast-days', 'touches iron after speaking of the dead',
-  'keeps bread and salt in a new house’s wall', 'won’t whistle indoors — it calls wind down the chimney', 'crosses the door-sill right foot first, always',
+  'keeps bread and salt in a new house’s wall', 'won’t whistle indoors, it calls wind down the chimney', 'crosses the door-sill right foot first, always',
   'buries the first tooth of each child under the hearth', 'won’t lend fire from the house after sundown', 'ties red thread on anything newly born or newly bought',
-  'reads omens in the way smoke leans', 'never thanks anyone for a knife — pays a pin for it', 'won’t cut nails on a holy day',
+  'reads omens in the way smoke leans', 'never thanks anyone for a knife, pays a pin for it', 'won’t cut nails on a holy day',
   'pours a drop on the ground at the first cup', 'keeps rowan over the byre door', 'holds the breath passing the gallows-hill',
-  'never sweeps dust out the front door — carries it out the back', 'won’t wear green to a wedding', 'salts the doorstep the night of a death in the street',
-  'a coin in the mouth of every corpse they help lay out, Kirk’s frown notwithstanding', 'won’t name a child after a living relative — it splits the luck',
+  'never sweeps dust out the front door, carries it out the back', 'won’t wear green to a wedding', 'salts the doorstep the night of a death in the street',
+  'a coin in the mouth of every corpse they help lay out, Kirk’s frown notwithstanding', 'won’t name a child after a living relative, it splits the luck',
   'covers mirrors and still water in a storm', 'won’t eat where a priest has quarrelled', 'plants nothing on the day of a hanging',
-  'the first pancake goes to the fire, no argument', 'won’t hand anything across a threshold — steps through first', 'wears the shirt inside-out home after dark to confuse followers',
-  'never tells a dream before breakfast', 'knocks on the beam before boasting', 'won’t kill a spider in the house — carriers of house-luck',
+  'the first pancake goes to the fire, no argument', 'won’t hand anything across a threshold, steps through first', 'wears the shirt inside-out home after dark to confuse followers',
+  'never tells a dream before breakfast', 'knocks on the beam before boasting', 'won’t kill a spider in the house, carriers of house-luck',
   'braids a wheat-plait at harvest and keeps last year’s till the new one’s made', 'won’t look a corpse-cart driver in the eye', 'gives every well a greeting, by name if it has one',
   'stirs everything sunwise, and has stopped others’ pots to correct it', 'keeps a written charm they cannot read sewn into the hem',
 ];
 DATA.tics = [
-  'cracks each knuckle in order before hard work', 'quotes their dead mother mid-sentence without noticing', 'hums one tune — always the same one — when lying',
-  'touches the doorframe twice, coming and going', 'talks to animals with more courtesy than to people', 'counts under the breath when anxious — hayricks, coins, sins',
+  'cracks each knuckle in order before hard work', 'quotes their dead mother mid-sentence without noticing', 'hums one tune, always the same one, when lying',
+  'touches the doorframe twice, coming and going', 'talks to animals with more courtesy than to people', 'counts under the breath when anxious, hayricks, coins, sins',
   'rubs the old scar when a decision is coming', 'laughs one beat too late', 'stands too close; a lifetime of small rooms',
-  'never sits with a back to the door', 'apologises to furniture when bumping it', 'repeats the last three words of what people say — say — say',
+  'never sits with a back to the door', 'apologises to furniture when bumping it', 'repeats the last three words of what people say, say, say',
   'whittles when thinking; the house is full of small wooden birds', 'pulls the ear-lobe when about to bargain', 'eats fast, arm curled round the bowl, and knows it looks bad',
   'goes silent and pleasant when truly furious, which those who know them dread', 'chews a straw or a thumbnail to the quick', 'blinks hard twice before answering any question from an official',
   'always tests a bench before sitting, since the wedding incident', 'names tools; the good axe is "Widow"',
 ];
 
-/* ---- 3.10 The Touch (20) — every entry deniable ------------------------------- */
+/* ---- 3.10 The Touch (20), every entry deniable ------------------------------- */
 DATA.touch = [
   { w: 4, manifestation: 'Bread will not mould in the same room as her.', mundane: 'The room is dry and she eats it fast.' },
   { w: 4, manifestation: 'Dogs that bite everyone go quiet and lie down at his feet.', mundane: 'He moves slowly and smells of the kennel he grew up beside.' },
@@ -1099,15 +1099,15 @@ DATA.touch = [
   { w: 2, manifestation: 'Knew the church bell would crack before it did; refused to stand under it a week before.', mundane: 'The bell had sounded wrong for months to anyone who listened.' },
   { w: 2, manifestation: 'Her mother’s ghost speaks to her in the smoke of the fire, or so she has said twice, both times right.', mundane: 'Grief, smoke-staring, and knowing her mother’s mind better than anyone living.' },
   { w: 2, manifestation: 'Ice will bear him when it will bear no one else of his weight.', mundane: 'He grew up on the fen ice and reads it; the one time it was witnessed, it may have been thicker at his crossing.' },
-  { w: 2, manifestation: 'A dying man asked for her by name — a stranger who had never met her.', mundane: 'Delirium, a common name, and a story polished in the telling.' },
+  { w: 2, manifestation: 'A dying man asked for her by name, a stranger who had never met her.', mundane: 'Delirium, a common name, and a story polished in the telling.' },
   { w: 2, manifestation: 'The rain came the day after he ploughed the fallow widdershins, both years he tried it.', mundane: 'It was ploughing season. It rains in ploughing season.' },
   { w: 2, manifestation: 'No lice, ever. In a house full of them, none will board him.', mundane: 'Some people are simply not to a louse’s taste; his family finds it insulting.' },
   { w: 2, manifestation: 'Told a woman her lost ring was in the goose-yard, and it was.', mundane: 'Geese steal shining things; anyone who kept geese would have guessed it.' },
-  { w: 1, manifestation: 'Woke the whole house the night the dyke broke — screaming of black water — an hour before it broke.', mundane: 'The dyke groaned all that week and sleeping minds hear what waking ones dismiss.' },
+  { w: 1, manifestation: 'Woke the whole house the night the dyke broke, screaming of black water, an hour before it broke.', mundane: 'The dyke groaned all that week and sleeping minds hear what waking ones dismiss.' },
   { w: 1, manifestation: 'A hanged man’s cart-horse, unmanageable since the hanging, will work for her alone.', mundane: 'She feeds it apples and does not shout, unlike its owner.' },
   { w: 1, manifestation: 'His touch soured three batches of cream the week his brother died, say the dairy-women.', mundane: 'Thunder-weather sours cream, and the week was full of thunder and grief alike.' },
   { w: 1, manifestation: 'Was pronounced dead of the sweat at seven, laid out and washed, and sat up at the vigil.', mundane: 'The sweat drops people into a death-sleep; the marvel is only that they checked twice.' },
-  { w: 1, manifestation: 'The priest’s holy water hisses — very faintly — when it touches her skin, says the sexton.', mundane: 'Cold water on warm skin after the walk to the Kirk; the sexton drinks.' },
+  { w: 1, manifestation: 'The priest’s holy water hisses, very faintly, when it touches her skin, says the sexton.', mundane: 'Cold water on warm skin after the walk to the Kirk; the sexton drinks.' },
 ];
 
 /* ---- 3.11 Skills (50), tiered ------------------------------------------------- */
@@ -1129,7 +1129,7 @@ DATA.skills = [
   { name: 'Spear & shield', cap: 3 }, { name: 'Stealth', cap: 3 }, { name: 'Dice', cap: 2 }, { name: 'Singing', cap: 3 },
   { name: 'Storytelling', cap: 3 }, { name: 'Swimming', cap: 2 }, { name: 'Mining', cap: 3 }, { name: 'Reading faces', cap: 3 },
 ];
-// "Unlikely" skills — one per character, mildly out of place for their station.
+// "Unlikely" skills, one per character, mildly out of place for their station.
 DATA.unlikelySkills = [
   'Singing', 'Storytelling', 'Swimming', 'Dice', 'Stealth', 'Reading faces', 'Letters', 'Physic & herbs',
   'Horsemanship', 'Falconry', 'Latin of the Kirk', 'Sword & lance', 'Accounting', 'Dog-handling',
@@ -1147,7 +1147,7 @@ DATA.possessions = [
   { t: 0, p: '0d', v: 'a pressed flower in a scrap of waxed cloth, never explained' }, { t: 0, p: '1d', v: 'a sling and six chosen stones' },
   { t: 1, p: '6d', v: 'a hooded cloak of undyed wool, oiled against rain' }, { t: 1, p: '4d', v: 'a belt-pouch with a bone toggle' },
   { t: 1, p: '8d', v: 'a hand-axe, head loose but trustworthy' }, { t: 1, p: '5d', v: 'a fishing net in constant repair' },
-  { t: 1, p: '9d', v: 'a straw mattress and a feather pillow — the pillow is the boast' }, { t: 1, p: '6d', v: 'an iron cooking pot, the household’s spine' },
+  { t: 1, p: '9d', v: 'a straw mattress and a feather pillow, the pillow is the boast' }, { t: 1, p: '6d', v: 'an iron cooking pot, the household’s spine' },
   { t: 1, p: '4d', v: 'a wooden pilgrim’s badge from a shrine two days off' }, { t: 1, p: '7d', v: 'a hen and her tempers' },
   { t: 1, p: '5d', v: 'a horn cup with a brass rim' }, { t: 1, p: '8d', v: 'a spade with an iron-shod edge' },
   { t: 1, p: '6d', v: 'a distaff and spindle, never far from the hand' }, { t: 1, p: '10d', v: 'a pig, half-owned with a brother-in-law, source of endless accounting' },
@@ -1179,7 +1179,7 @@ DATA.possessions = [
   { t: 1, p: '5d', v: 'a wooden whistle shaped like a wren, a fair-day extravagance' }, { t: 3, p: '10s', v: 'a map of the district, wrong in ways only locals would catch' },
 ];
 
-/* ---- 3.13 Relationship types (30) — tie + tension; NPC name generated in GEN ---- */
+/* ---- 3.13 Relationship types (30), tie + tension; NPC name generated in GEN ---- */
 DATA.relationships = [
   { tie: 'elder brother', tension: 'who forgave you too easily, which is its own accusation' },
   { tie: 'younger sister', tension: 'who knows what you did and prices her silence in favours' },
@@ -1194,11 +1194,11 @@ DATA.relationships = [
   { tie: 'a former master', tension: 'who taught you everything and now calls your work theft of his custom' },
   { tie: 'an old soldier comrade', tension: 'who tells the story of the bridge differently, and louder' },
   { tie: 'a widowed neighbour', tension: 'whose fences you mend and whose name you cannot say without colouring' },
-  { tie: 'the midwife', tension: 'who was there the night in question and has never once mentioned it — deliberately' },
+  { tie: 'the midwife', tension: 'who was there the night in question and has never once mentioned it, deliberately' },
   { tie: 'a cousin', tension: 'raised alongside you, with a claim to the tenancy exactly as good as yours' },
   { tie: 'the alewife', tension: 'who lets your debts ride and collects in gossip you must supply' },
   { tie: 'a guild brother', tension: 'who blackballed your advancement, smiling, over dinner at your table' },
-  { tie: 'the sexton', tension: 'who saw where you buried it — whatever it was — and nods to you oddly' },
+  { tie: 'the sexton', tension: 'who saw where you buried it, whatever it was, and nods to you oddly' },
   { tie: 'a shepherd on the far hill', tension: 'the only person you have ever told, safe by distance and silence' },
   { tie: 'your betrothed', tension: 'chosen by the families, and the two of you circling politely, strangers' },
   { tie: 'a leper at the crossroads', tension: 'who was once your friend, and you pass with alms and averted eyes' },
@@ -1210,36 +1210,36 @@ DATA.relationships = [
   { tie: 'the lord’s youngest child', tension: 'who talks to you as an equal, which flatters and endangers you in equal parts' },
   { tie: 'a rival for the same office', tension: 'better born, worse at the work, and everyone knows both things' },
   { tie: 'an outlaw in the greenwood', tension: 'your kin, fed in secret at the cost of everything if it’s found out' },
-  { tie: 'the ferryman', tension: 'who carried you across the night you left and has kept the fare — and the hour — to himself' },
+  { tie: 'the ferryman', tension: 'who carried you across the night you left and has kept the fare, and the hour, to himself' },
 ];
 
-/* ---- 3.14 Secrets (40) — actionable and dangerous ------------------------------ */
+/* ---- 3.14 Secrets (40), actionable and dangerous ------------------------------ */
 DATA.secrets = [
   'moved the boundary stone two paces the winter the reeve was ill; the extra strip has fed the family since',
   'is the true father/mother of the child raised as a sibling’s',
-  'took the lord’s deer in the famine winter — the antlers are buried under the byre floor',
+  'took the lord’s deer in the famine winter, the antlers are buried under the byre floor',
   'keeps the old rites at the stone row each quarter-day, and not alone',
   'saw who really started the mill fire and has let another carry the blame',
   'has a first spouse, abandoned but living, two lordships away',
   'skims the tithe-grain by a fortieth and gives it to the widow-row',
-  'once sold a false relic — the pilgrim who bought it was later called healed by it',
+  'once sold a false relic, the pilgrim who bought it was later called healed by it',
   'can read, learned in secret, and has read the letters carried for others',
   'was the informer whose word hanged the outlaw the ballads now mourn',
   'is owed money by the priest, for a matter neither can name aloud',
-  'broke sanctuary once — helped drag a man from the altar — and dreams of it',
+  'broke sanctuary once, helped drag a man from the altar, and dreams of it',
   'knows the ford was passable that night; the drowning story the family tells is arranged',
   'holds a charter that would unmake the lord’s claim to the east pasture, and cannot use it safely',
   'fathered/bore a child in service at the manor; the child waits at table there now',
-  'poisoned the rival’s prize bull — slowly, deniably — and would do it again',
+  'poisoned the rival’s prize bull, slowly, deniably, and would do it again',
   'has never once believed, not since childhood, and performs every rite perfectly',
   'took a dead comrade’s name, pay, and history after the rout; the real name is on no roll',
   'stole the guild’s die-stamp for one night; somewhere, coins from that night still pass',
   'was paid to lame the horse before the wager-race, and did it',
   'knows which grave in the churchyard is empty and why',
-  'promised the dying mother to keep the sister from marrying him — and arranged it so, invisibly',
+  'promised the dying mother to keep the sister from marrying him, and arranged it so, invisibly',
   'has the falling sickness, concealed even at the cost of refusing the pilgrimage',
   'hid a heretic preacher for a season; the man’s books are still under the floor',
-  'is the one leaving hares at the widow’s door — poached hares, on gallows terms',
+  'is the one leaving hares at the widow’s door, poached hares, on gallows terms',
   'swore false oath at the boundary trial, hand on the reliquary, and won the case',
   'knows the steward keeps two rolls, and copied a page of the true one',
   'lay with the enemy scout the summer of the raids, and traded words as well',
@@ -1247,17 +1247,17 @@ DATA.secrets = [
   'was in the tower the night the old lord fell; nothing was said, and everything was arranged',
   'sells physic-herbs that are half prayer and half poison, dosed by grudge',
   'has been paying the hangman’s widow, monthly, for years, and could not stop now if it were noticed',
-  'let the plague-cart take a living man — a bad man, but living',
+  'let the plague-cart take a living man, a bad man, but living',
   'is not the sex the parish roll records; the bishop’s visitation is next spring',
   'knows where the wreck went down with the salt-tax silver, and dives it alone at neap tides',
   'wrote the anonymous bill nailed to the Kirk door that started all of it',
   'took the bribe to misremember the will; the disinherited niece serves them ale every market day',
-  'kept the sword of the man they killed on the road — marked with arms someone will eventually recognise',
+  'kept the sword of the man they killed on the road, marked with arms someone will eventually recognise',
   'is feeding information about the garrison to a man who pays in foreign coin',
-  'once cursed a neighbour aloud, alone, with the old words — and the neighbour sickened, and the guilt is worse than the fear',
+  'once cursed a neighbour aloud, alone, with the old words, and the neighbour sickened, and the guilt is worse than the fear',
 ];
 
-/* ---- 3.15 Current problems (30) — the wound in the world ----------------------- */
+/* ---- 3.15 Current problems (30), the wound in the world ----------------------- */
 DATA.problems = [
   'the rent is due at Martinmas and the money is not there, and the bailiff has begun looking at the cow',
   'a summons to the manor court, cause unstated, which is the worst way',
@@ -1265,29 +1265,29 @@ DATA.problems = [
   'a pregnancy that cannot be explained inside the arithmetic of the marriage',
   'a body turned up in the flood-wrack wearing a jacket everyone recognises',
   'the promise made at a deathbed is coming due, and keeping it means breaking something else',
-  'no rain since the Feast of Saint Osyth — the barley is failing and the muttering has started',
-  'the lord is mustering men for the border, and the levy list has the wrong name on it — or the right one',
+  'no rain since the Feast of Saint Osyth, the barley is failing and the muttering has started',
+  'the lord is mustering men for the border, and the levy list has the wrong name on it, or the right one',
   'a letter arrived, sealed, addressed correctly, and no one in the house can read it',
   'the pest is in the next valley; the roads are closing one by one',
   'a brother has taken to the greenwood, and men come asking at the house',
   'the guild has called an inquiry into short-weight goods, and the trail ends at a friend',
   'the new priest is asking precise, patient questions about the old customs',
-  'a marriage is being arranged, and the intended has kind eyes and a bad reputation, or the reverse — accounts differ',
+  'a marriage is being arranged, and the intended has kind eyes and a bad reputation, or the reverse, accounts differ',
   'the tithe-barn burned, and the parish must remake what was lost or answer for it',
   'an inheritance has fallen open two lordships away, and claiming it means going back',
   'the moneylender has sold the debt to someone with different manners',
   'the winter stores will not stretch; someone must go on the road or everyone gets thinner',
-  'a stranger has been asking for them by name at the market — by their old name',
+  'a stranger has been asking for them by name at the market, by their old name',
   'the mill-dam is failing and the two villages it serves have started blaming each other',
   'the wardship of a dead sibling’s children has landed on the household like a dropped beam',
-  'the relic procession route was changed to skip the village, and trade — and faith — bleed from the cut',
+  'the relic procession route was changed to skip the village, and trade, and faith, bleed from the cut',
   'an accusation of hex-craft is circling the neighbourhood, looking for somewhere to land',
   'the old enemy has come home rich, generous, and smiling, and everyone else has forgotten',
   'a survey commission is remeasuring the hides, and the family’s quiet arrangements will not survive honest measurement',
   'the eldest child’s apprenticeship fee is due in full, or the place goes to the miller’s boy',
   'a soldier billeted on the household refuses to leave and outranks every argument',
   'the salt price has doubled, which for a fishing family is arithmetic with teeth',
-  'a vow made in fear at sea — pilgrimage, barefoot, this year — is now inconvenient and unpaid',
+  'a vow made in fear at sea, pilgrimage, barefoot, this year, is now inconvenient and unpaid',
   'someone has been moving the fish-traps, and the night watch drawn up to catch them includes the person doing it',
 ];
 
@@ -1337,13 +1337,13 @@ Object.freeze(DATA);
    Systems Reference Document 5.1 by Wizards of the Coast LLC, available
    under the Creative Commons Attribution 4.0 International License
    (https://creativecommons.org/licenses/by/4.0/legalcode). Setting lore
-   stays this generator's own invented world — no campaign-setting IP.  */
+   stays this generator's own invented world, no campaign-setting IP.  */
 'use strict';
 
 const DATA5E = {};
 DATA5E.ATTRIBUTION = 'Uses material from the System Reference Document 5.1 by Wizards of the Coast LLC, licensed under CC-BY-4.0.';
 
-/* ---- Races (SRD). Weighted so humans stay the norm — the grim world persists. */
+/* ---- Races (SRD). Weighted so humans stay the norm, the grim world persists. */
 DATA5E.races = [
   { w: 48, v: { key: 'human', label: 'Human', bonus: { str: 1, dex: 1, con: 1, int: 1, wis: 1, cha: 1 }, speed: 30, size: 'Medium', note: 'as common as mud, and as varied' } },
   { w: 12, v: { key: 'dwarf', label: 'Dwarf (hill)', bonus: { con: 2, wis: 1 }, speed: 25, size: 'Medium', note: 'darkvision; resilient against poison; never forgets a debt or a seam of ore' } },
@@ -1385,7 +1385,7 @@ DATA5E.alignments = [
   { w: 7, v: 'Neutral Evil' }, { w: 5, v: 'Lawful Evil' }, { w: 2, v: 'Chaotic Evil' },
 ];
 
-/* Background derived from the generated life, not rolled fresh — the grim
+/* Background derived from the generated life, not rolled fresh, the grim
    biography IS the background story. Checked top to bottom, first match wins. */
 DATA5E.backgroundRules = [
   { test: c => c.socialClass.key === 'clergy', v: 'Acolyte' },
@@ -1437,7 +1437,7 @@ DATA5E.itemEffects = [
   { cat: 'weapon', min: 1, v: 'counts as magical, and cannot rust, chip, or dull by any mundane means' },
   { cat: 'weapon', min: 2, v: 'scores a critical hit on a 19 or 20 against creatures that have lied to the wielder today' },
   { cat: 'weapon', min: 1, v: 'returns to the wielder’s hand when thrown, taking the shortest path even through a crowd' },
-  { cat: 'weapon', min: 2, v: 'sheds no sound when it strikes — the blow lands in perfect, unsettling silence' },
+  { cat: 'weapon', min: 2, v: 'sheds no sound when it strikes, the blow lands in perfect, unsettling silence' },
   { cat: 'weapon', min: 3, v: 'once per dawn, the wielder may reroll one missed attack made with it; the second try always looks like luck' },
   { cat: 'weapon', min: 2, v: 'the wielder has advantage on attack rolls against undead, who seem to remember it' },
   { cat: 'weapon', min: 3, v: 'wounds it deals cannot be healed by magic until the wielder consents aloud' },
@@ -1498,7 +1498,7 @@ DATA5E.itemEffects = [
   { cat: 'staff', min: 2, v: 'has 10 charges; expend 1 to cast cure wounds at 1st level. Regains 1d6+4 at dawn if left overnight in running water' },
   { cat: 'staff', min: 2, v: 'while held, the bearer may cast druidcraft at will, and local weather takes their moods slightly personally' },
   { cat: 'staff', min: 3, v: 'has 8 charges; expend 2 to cast call lightning. Thunder in the region arrives a beat early, as if introduced' },
-  { cat: 'staff', min: 1, v: 'never slips, never rots, and floats — carrying its bearer’s pack — at a walking pace behind them on the road' },
+  { cat: 'staff', min: 1, v: 'never slips, never rots, and floats, carrying its bearer’s pack, at a walking pace behind them on the road' },
 ];
 DATA5E.itemQuirks = [
   'hums old marching songs, badly, when danger is within a mile',
@@ -1509,32 +1509,32 @@ DATA5E.itemQuirks = [
   'casts a shadow a half-second behind its movements',
   'small birds regard it with open suspicion',
   'weighs noticeably more on holy days',
-  'whispers the bearer’s name, once, on first touch — then never speaks again',
+  'whispers the bearer’s name, once, on first touch, then never speaks again',
   'attracts moths, which do it no harm and pay it obvious court',
   'is always the last thing lit by a sunset in any room',
   'tastes of salt if licked, which the previous owner’s journal warns against twice',
-  'dreams — anyone sleeping within arm’s reach shares a recurring dream of a ford in winter',
+  'dreams, anyone sleeping within arm’s reach shares a recurring dream of a ford in winter',
   'will not cross a threshold sprinkled with salt unless carried backwards',
   'keeps its bearer’s hands clean: dirt simply prefers to be elsewhere',
-  'sulks — after a day of disuse its effects arrive a breath later than asked',
+  'sulks, after a day of disuse its effects arrive a breath later than asked',
   'is inexplicably known, by name, to every dog in any village the bearer enters',
   'collects frost on its surface when a lie is told nearby',
   'grows lighter as the bearer’s debts are paid, and heavier as they accrue',
-  'once a season, is briefly seen — by the bearer alone — in the hands of a stranger in a crowd',
+  'once a season, is briefly seen, by the bearer alone, in the hands of a stranger in a crowd',
 ];
 DATA5E.itemCurses = [
   'Curse: the bearer cannot speak the item’s true name aloud; attempts come out as the name of a childhood friend',
   'Curse: while attuned, the bearer’s reflection lags by a heartbeat and occasionally declines to appear',
-  'Curse: the item must be fed — a coin buried at a crossroads each new moon — or its effect inverts until paid',
+  'Curse: the item must be fed, a coin buried at a crossroads each new moon, or its effect inverts until paid',
   'Curse: the bearer always knows exactly how many days they have been alive, and the number feels like a countdown',
   'Curse: whoever the bearer loves best dreams of the item and wakes reaching for it',
-  'Curse: while attuned, the bearer cannot refuse hospitality — any offered roof, meal, or toast must be accepted',
+  'Curse: while attuned, the bearer cannot refuse hospitality, any offered roof, meal, or toast must be accepted',
   'Curse: wounds the bearer deals scar in the shape of the item’s silhouette, which witnesses remember',
   'Curse: the item is owed one service, unspecified; it will make its claim at the least convenient hour',
   'Curse: salt loses its taste for the bearer, and sanctified ground itches faintly underfoot',
   'Curse: the previous owner is looking for it, is not alive, and is not in a hurry',
   'Curse: each dawn there is a 1-in-20 chance the item has swapped places with the most valuable thing the bearer carries',
-  'Curse: the bearer’s name migrates to the item — strangers recall meeting the sword, not the swordsman',
+  'Curse: the bearer’s name migrates to the item, strangers recall meeting the sword, not the swordsman',
 ];
 DATA5E.itemNameNouns = ['Embers', 'the Drowned Court', 'Silence', 'the Ninth Winter', 'Thorns', 'the Pale Hunt', 'Last Light', 'the Salt Road', 'Crows', 'the Broken Bell', 'Mercy', 'the Long Fast', 'Sparrows', 'the Old Dyke', 'Patience', 'the Red Harvest', 'Cinders', 'the Quiet Ford', 'Oaths', 'the Gallows Oak'];
 DATA5E.itemNameAdjectives = ['Sallow', 'Threadbare', 'Unforgiving', 'Wakeless', 'Hungering', 'Sunward', 'Miser’s', 'Tithing', 'Winterborn', 'Griefbound', 'Coalbright', 'Fenwrought', 'Sexton’s', 'Vagrant', 'Steadfast'];
@@ -1548,7 +1548,7 @@ DATA5E.itemHistories = [
   'dug up by a plough within living memory, along with teeth that fit no known jaw',
   'carried through the sack of Croixhaut by a soldier who swears it carried him',
   'said to have been made as one of a pair; the other is accounted for, which is worse',
-  'bought honestly, at fair price, with a receipt — which everyone agrees is the strangest thing about it',
+  'bought honestly, at fair price, with a receipt, which everyone agrees is the strangest thing about it',
   'left at the church door in a fish basket, like a foundling, with a note no one admits to reading',
   'the only thing to survive the Great Burning unscorched, found at the fire’s exact centre',
   'a saint’s relic by local insistence, a stolen trade-good by the Kirk’s quiet ledger',
@@ -1635,7 +1635,7 @@ const GEN = (function () {
     L('culture', () => {
       if (chance(rng, 0.1)) {
         const others = Object.keys(DATA.names).filter(k => k !== c.region.namePool);
-        c.flags.push('minority culture — the family came from away, and the village remembers');
+        c.flags.push('minority culture, the family came from away, and the village remembers');
         return pick(rng, others, 'culture:minority');
       }
       return c.region.namePool;
@@ -1683,7 +1683,7 @@ const GEN = (function () {
     // Coherence: orphaned minor gets a guardian.
     if (!c.family.father.alive && !c.family.mother.alive && c.age < 16 && !c.family.guardian) {
       c.family.guardian = pick(rng, DATA.guardians, 'guardian');
-      clamp('orphan-guardian', 'both parents dead at age ' + c.age + ' — guardian assigned: ' + c.family.guardian);
+      clamp('orphan-guardian', 'both parents dead at age ' + c.age + ', guardian assigned: ' + c.family.guardian);
     }
     L('marital', () => {
       if (c.age < 16) return 'unwed';
@@ -1703,7 +1703,7 @@ const GEN = (function () {
     // Coherence: a literate serf is allowed only via a Church path, and flagged.
     if (c.socialClass.key === 'serf' && c.education.lit && !('education' in locks)) {
       if (chance(rng, 0.25)) {
-        c.flags.push('remarkable: a serf with letters — taught by the parish priest, who had reasons');
+        c.flags.push('remarkable: a serf with letters, taught by the parish priest, who had reasons');
       } else {
         clamp('serf-literacy', 'literate serf clamped to "knows the alphabet"');
         c.education = deepClone(DATA.educationLevels[2].v);
@@ -1716,7 +1716,7 @@ const GEN = (function () {
         traceRoll('occupation:constrained', { chosen: occDef.name });
         return deepClone(occDef);
       }
-      if (occDef) clamp('occupation-override-failed', overrides.occupation + ' does not fit age/literacy/class — falling back to open roll');
+      if (occDef) clamp('occupation-override-failed', overrides.occupation + ' does not fit age/literacy/class, falling back to open roll');
       const pool = DATA.occupations.filter(o =>
         o.classes.includes(c.socialClass.key) && c.age >= o.minAge && (!o.lit || c.education.lit));
       const sexPool = pool.filter(o => o.sex === 'any' || o.sex === c.sex);
@@ -1724,12 +1724,12 @@ const GEN = (function () {
       // ~5% of the time a legally-barred trade is allowed as a flagged transgression (§2.1).
       if (barred.length && chance(rng, 0.05)) {
         const chosen = deepClone(pick(rng, barred.map(o => ({ w: o.w, v: o })), 'occupation:transgression'));
-        c.flags.push('transgression: practises a trade the law reserves for ' + chosen.sex + 's — interesting, and dangerous');
+        c.flags.push('transgression: practises a trade the law reserves for ' + chosen.sex + 's, interesting, and dangerous');
         c.forcedSecret = 'is not the sex the parish roll records; the bishop’s visitation is next spring';
         return chosen;
       }
-      if (!sexPool.length) { // outcast corner cases etc. — fall back to labourer
-        clamp('occupation-pool-empty', 'no occupation fits ' + c.socialClass.key + '/' + c.sex + '/' + c.age + ' — defaulted to field labourer');
+      if (!sexPool.length) { // outcast corner cases etc., fall back to labourer
+        clamp('occupation-pool-empty', 'no occupation fits ' + c.socialClass.key + '/' + c.sex + '/' + c.age + ', defaulted to field labourer');
         return deepClone(DATA.occupations[0]);
       }
       return deepClone(pick(rng, sexPool.map(o => ({ w: o.w, v: o })), 'occupation'));
@@ -1764,7 +1764,7 @@ const GEN = (function () {
       for (const s of picked) {
         // Coherence: a fresh-faced youth in a mild trade doesn't carry a fighter's wounds.
         if (s.src && s.src.some(x => WAR_SRC.includes(x)) && !martial && !s.src.some(x => inj.includes(x)) && c.age < 25) {
-          clamp('scar-occupation', 'dropped "' + s.v + '" — martial scar on a ' + c.age + '-year-old ' + c.occupation.name);
+          clamp('scar-occupation', 'dropped "' + s.v + '", martial scar on a ' + c.age + '-year-old ' + c.occupation.name);
           continue;
         }
         body.scars.push({ v: s.v, loc: s.loc });
@@ -1781,7 +1781,7 @@ const GEN = (function () {
     });
     // Coherence: peasant field-trades don't have soft palms.
     if (!('body' in locks) && /soft palms/.test(c.body.hands) && c.socialClass.tier <= 1 && !c.occupation.lit) {
-      clamp('hands-occupation', 'soft palms on a ' + c.occupation.name + ' — rerolled to calloused');
+      clamp('hands-occupation', 'soft palms on a ' + c.occupation.name + ', rerolled to calloused');
       c.body.hands = 'calloused hard as hoof, cracked at every knuckle';
     }
 
@@ -1819,7 +1819,7 @@ const GEN = (function () {
         const def = DATA.skills.find(s => s.name === name) || { cap: 3 };
         out.push({ name, tier: DATA.skillTiers[Math.min(tierFor(), def.cap)] });
       }
-      // One "unlikely" skill (§3.11) — mildly out of place for the station.
+      // One "unlikely" skill (§3.11), mildly out of place for the station.
       const odd = pick(rng, DATA.unlikelySkills.filter(s => !seen.has(s)), 'skill:unlikely');
       out.push({ name: odd, tier: DATA.skillTiers[chance(rng, 0.3) ? 1 : 0], unlikely: true });
       // Everyone can do something general.
@@ -1882,7 +1882,7 @@ const GEN = (function () {
 
     /* -- 20 (optional). D&D 5e layer (SRD, CC-BY-4.0) -------------------------------
        Drawn from a SEPARATE seeded stream so the base character is byte-identical
-       whichever rules mode is active — the toggle adds a layer, never a reroll.   */
+       whichever rules mode is active, the toggle adds a layer, never a reroll.   */
     if (opts.mode === '5e') {
       L('fiveE', () => gen5e(c, makeRng(seedStr + ':5e')));
       c.portrait.race = c.fiveE.race.key;
@@ -1932,7 +1932,7 @@ const GEN = (function () {
     const form = pick(rng, DATA5E.itemForms[category], 'item:form');
     const rarity = deepClone(pick(rng, DATA5E.rarities, 'item:rarity'));
     const tier = RARITY_ORDER.indexOf(rarity.key);
-    // Common non-potions carry no mechanical effect — the quirk IS the magic.
+    // Common non-potions carry no mechanical effect, the quirk IS the magic.
     const pool = DATA5E.itemEffects.filter(e => e.cat === category && e.min <= tier);
     const effects = [];
     if (pool.length) {
@@ -1964,7 +1964,7 @@ const GEN = (function () {
     };
   }
 
-  /* Byname formation — all five rules (§3.6), weighted, derived from own fields. */
+  /* Byname formation, all five rules (§3.6), weighted, derived from own fields. */
   function buildName(rng, c) {
     const given = givenName(rng, c.culture, c.sex);
     const bodyTexts = [c.body.build, c.body.height, c.body.hair, c.body.eyes, c.body.teeth, c.body.hands, c.body.voice]
@@ -2024,12 +2024,12 @@ const GEN = (function () {
     }
     // Peasant's hands vs lord's heraldry: arms only for tier ≥ 4.
     if (c.heraldry && c.heraldry.type === 'arms' && c.socialClass.tier < 4 && !('heraldry' in locks)) {
-      clamp('heraldry-class', 'arms on class ' + c.socialClass.key + ' — demoted to house mark');
+      clamp('heraldry-class', 'arms on class ' + c.socialClass.key + ', demoted to house mark');
       c.heraldry = HERALDRY.generateParams(makeRng(c.seed + ':markfix'), c, true);
     }
     // Literacy-required occupation on an unlettered character (possible via locks).
     if (c.occupation.lit && !c.education.lit) {
-      clamp('occupation-literacy', c.occupation.name + ' requires letters; education says otherwise — flagged, kept (locked fields win)');
+      clamp('occupation-literacy', c.occupation.name + ' requires letters; education says otherwise, flagged, kept (locked fields win)');
       c.flags.push('incoherent under locks: an unlettered ' + c.occupation.name);
     }
     for (const [k, v] of Object.entries(c)) {
@@ -2049,7 +2049,7 @@ const GEN = (function () {
   }
 
   /* Two villagers with the identical secret reads as a bug on the roster page.
-     Deterministically reroll duplicates — except the transgression secret,
+     Deterministically reroll duplicates, except the transgression secret,
      which is forced by a flag and must stay. */
   function dedupeSecrets(members, seedStr) {
     const rng = makeRng(seedStr + ':secret-dedupe');
@@ -2250,7 +2250,7 @@ const GEN = (function () {
       const tieFor = (other, otherLabel) => ({
         name: other.char.name.given,
         tie: 'the far side of the feud (' + otherLabel + ')',
-        tension: 'your feud — over ' + cause + '; ' + state,
+        tension: 'your feud, over ' + cause + '; ' + state,
       });
       a.char.relationships.unshift(tieFor(b, b.label));
       b.char.relationships.unshift(tieFor(a, a.label));
@@ -2347,7 +2347,7 @@ const HERALDRY = (function () {
         let t = pick(rng, ALL_TINCTURES(), 'charge:t');
         if (clash(t, p.t1)) {
           if (chance(rng, 0.07)) {
-            p.violation = true; // "arms in violation — the herald noted it"
+            p.violation = true; // "arms in violation, the herald noted it"
           } else {
             t = contrasting(rng, p.t1);
           }
@@ -2386,7 +2386,7 @@ const HERALDRY = (function () {
     if (p.cadency) parts.push(DATA.cadency.find(x => x.key === p.cadency).blazon + ' for difference');
     let s = parts.join(', ') + '.';
     s = s.charAt(0).toUpperCase() + s.slice(1);
-    if (p.violation) s += ' [arms in violation of the rule of tincture — the herald noted it]';
+    if (p.violation) s += ' [arms in violation of the rule of tincture, the herald noted it]';
     return s;
   }
 
@@ -2781,6 +2781,18 @@ const PORTRAIT = (function () {
 const EXPORT = (function () {
   function esc(s) { return String(s == null ? '' : s); }
 
+  /* Prices are stored as medieval shorthand (d = pennies, s = shillings,
+     m = gold marks); spell them out wherever a reader sees them. */
+  function priceLabel(p) {
+    const m = String(p).match(/^(\d+)([dsm])$/);
+    if (!m) return p;
+    const n = +m[1];
+    if (n === 0) return 'worth nothing, and kept anyway';
+    const unit = m[2] === 'd' ? 'penn' : m[2] === 's' ? 'shilling' : 'gold mark';
+    if (m[2] === 'd') return n + (n === 1 ? ' penny' : ' pennies');
+    return n + ' ' + unit + (n === 1 ? '' : 's');
+  }
+
   function toMarkdown(c) {
     const lines = [];
     const push = (s) => lines.push(s);
@@ -2788,10 +2800,10 @@ const EXPORT = (function () {
     push('');
     push('*Seed: `' + c.seed + '` · generator v' + c.version + '*');
     push('');
-    push('**' + c.socialClass.label + '** — ' + c.occupation.name + ' · ' + c.sex + ', ' + c.age + ' (' + c.marital + ')');
+    push('**' + c.socialClass.label + '**, ' + c.occupation.name + ' · ' + c.sex + ', ' + c.age + ' (' + c.marital + ')');
     push('');
     push('## Region');
-    push('- **' + c.region.name + '** — ' + c.region.terrain + '; lives by ' + c.region.economy + '.');
+    push('- **' + c.region.name + '**, ' + c.region.terrain + '; lives by ' + c.region.economy + '.');
     push('- Folk here are ' + c.region.temperament + '. Faith: ' + c.region.faith + '.');
     push('- In living memory: ' + c.region.disaster + '.');
     push('');
@@ -2801,7 +2813,7 @@ const EXPORT = (function () {
     const alive = c.family.siblings.filter(s => s.alive).length;
     push('- Siblings: ' + c.family.siblings.length + ' born, ' + alive + ' living. Father: ' + c.family.father.name + (c.family.father.alive ? '' : ' (dead)') + '; mother ' + (c.family.mother.alive ? 'living' : 'dead') + '.');
     if (c.family.guardian) push('- Guardian: ' + c.family.guardian + '.');
-    push('- Byname: *' + c.name.byname + '* (' + c.name.rule + ' — ' + c.name.source + ')');
+    push('- Byname: *' + c.name.byname + '* (' + c.name.rule + ', ' + c.name.source + ')');
     push('');
     push('## Body');
     push('- ' + [c.body.build, c.body.height, c.body.hair, c.body.eyes].join('; ') + '.');
@@ -2817,7 +2829,7 @@ const EXPORT = (function () {
     push('- Fear: ' + c.mind.fear);
     push('- Ambition: ' + c.mind.ambition);
     push('- Faith: ' + c.mind.faith);
-    push('- Education: ' + c.education.label + ' — ' + c.education.desc);
+    push('- Education: ' + c.education.label + ', ' + c.education.desc);
     for (const s of c.mind.superstitions) push('- Superstition: ' + s);
     push('- Habit: ' + c.mind.tic);
     if (c.touch) {
@@ -2839,13 +2851,13 @@ const EXPORT = (function () {
       push('');
     }
     push('## Skills');
-    for (const s of c.skills) push('- ' + s.name + ' (' + s.tier + ')' + (s.unlikely ? ' — an unlikely thing for one of their station' : ''));
+    for (const s of c.skills) push('- ' + s.name + ' (' + s.tier + ')' + (s.unlikely ? ', an unlikely thing for one of their station' : ''));
     push('');
     push('## Possessions');
-    for (const p of c.possessions) push('- ' + p.item + ' — ' + p.price);
+    for (const p of c.possessions) push('- ' + p.item + ' (' + priceLabel(p.price) + ')');
     push('');
     push('## People');
-    for (const r of c.relationships) push('- **' + r.name + '**, ' + r.tie + ' — ' + r.tension);
+    for (const r of c.relationships) push('- **' + r.name + '**, ' + r.tie + ', ' + r.tension);
     push('');
     push('## The secret');
     push(c.secret + '.');
@@ -2961,7 +2973,7 @@ const EXPORT = (function () {
       h += '<div class="sum-facts">Custom: ' + escH(g.custom) + '.</div>';
       h += '<div class="sum-trouble">The village’s trouble: ' + escH(g.trouble) + '.</div>';
       for (const f of (g.feuds || [])) {
-        h += '<div class="sum-feud">Feud: ' + escH(f.sides[0]) + ' against ' + escH(f.sides[1]) + ' — over ' + escH(f.cause) + '; ' + escH(f.state) + '.</div>';
+        h += '<div class="sum-feud">Feud: ' + escH(f.sides[0]) + ' against ' + escH(f.sides[1]) + ', over ' + escH(f.cause) + '; ' + escH(f.state) + '.</div>';
       }
     } else {
       const lead = g.members[0].char;
@@ -2976,7 +2988,7 @@ const EXPORT = (function () {
         const c = m.char;
         h += '<div class="sum-row">' + PORTRAIT.render(c.portrait, 'sum' + (i++)) +
           '<div><span class="sum-name">' + escH(c.name.full) + '</span> <span class="sum-role">' + escH(m.role.replace(/ · hearth \d+$/, '')) + '</span>' +
-          '<div class="sum-line">' + escH(c.sex) + ', ' + c.age + ' · ' + escH(c.occupation.name) + ' · ' + escH(c.mind.temperament.split(/[:;—]/)[0].trim()) + '</div>' +
+          '<div class="sum-line">' + escH(c.sex) + ', ' + c.age + ' · ' + escH(c.occupation.name) + ' · ' + escH(c.mind.temperament.split(/[:;, ]/)[0].trim()) + '</div>' +
           '<div class="sum-secret">Secret: ' + escH(c.secret) + '.</div></div></div>';
       }
     }
@@ -2991,7 +3003,7 @@ const EXPORT = (function () {
       for (const f of g.features) lines.push('- ' + f);
       lines.push('- Custom: ' + g.custom + '.');
       lines.push('- **The village’s trouble:** ' + g.trouble + '.');
-      for (const f of (g.feuds || [])) lines.push('- **Feud:** ' + f.sides[0] + ' against ' + f.sides[1] + ' — over ' + f.cause + '; ' + f.state + '.');
+      for (const f of (g.feuds || [])) lines.push('- **Feud:** ' + f.sides[0] + ' against ' + f.sides[1] + ', over ' + f.cause + '; ' + f.state + '.');
     } else {
       lines.push('*Seed: `' + g.seed + '` · shared trouble: ' + g.members[0].char.problem + '.*');
     }
@@ -3000,7 +3012,7 @@ const EXPORT = (function () {
       lines.push('## ' + sec.title);
       for (const m of sec.members) {
         const c = m.char;
-        lines.push('- **' + c.name.full + '** (' + m.role.replace(/ · hearth \d+$/, '') + ') — ' + c.sex + ', ' + c.age + ', ' + c.occupation.name + '. Secret: ' + c.secret + '.');
+        lines.push('- **' + c.name.full + '** (' + m.role.replace(/ · hearth \d+$/, '') + '), ' + c.sex + ', ' + c.age + ', ' + c.occupation.name + '. Secret: ' + c.secret + '.');
       }
       lines.push('');
     }
@@ -3020,7 +3032,7 @@ const EXPORT = (function () {
     return lines.join('\n');
   }
 
-  return { toMarkdown, toJSON, toPNG, download, companySummaryHTML, companyMarkdown, companyTitle, itemMarkdown };
+  return { toMarkdown, toJSON, toPNG, download, companySummaryHTML, companyMarkdown, companyTitle, itemMarkdown, priceLabel };
 })();
 
 /* ---------- AI (optional, user-triggered; key lives in localStorage only) ---------- */
@@ -3031,15 +3043,16 @@ const AI = (function () {
   const SYSTEM = [
     'You write short backstories for characters in a low-fantasy, grim, rare-magic medieval world.',
     'Setting rules you must obey: technology and society sit at roughly 1150-1350 Western/Central Europe;',
-    'magic is rare, dangerous, and always deniable — never overt; the Faith (the Kirk) is a monotheist church',
+    'magic is rare, dangerous, and always deniable, never overt; the Faith (the Kirk) is a monotheist church',
     'with saints, relics, tithes and heresies, the largest landowner and only literacy pipeline;',
-    'humans only — no elves, dwarves, or monsters; names are invented but plausible.',
+    'humans only, no elves, dwarves, or monsters; names are invented but plausible.',
     'Constraints for the piece you write:',
     '- 250 to 400 words, third person, past tense.',
-    '- Reference the character\'s secret OBLIQUELY — never state it outright.',
+    '- Reference the character\'s secret OBLIQUELY, never state it outright.',
     '- End on the character\'s current problem, unresolved.',
     '- No modern idiom, no anachronism, no purple prose.',
-    '- If the character has the Touch, keep it ambiguous — it must be explainable as coincidence.',
+    '- Never use em dashes; use commas, colons, semicolons, or full stops instead.',
+    '- If the character has the Touch, keep it ambiguous, it must be explainable as coincidence.',
   ].join('\n');
 
   function getKey() { try { return localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
@@ -3088,7 +3101,8 @@ const AI = (function () {
           if (payload === '[DONE]') continue;
           try {
             const ev = JSON.parse(payload);
-            if (ev.type === 'content_block_delta' && ev.delta && ev.delta.text) { full += ev.delta.text; onDelta(full); }
+            // House style bans em dashes; scrub any that slip past the prompt.
+            if (ev.type === 'content_block_delta' && ev.delta && ev.delta.text) { full += ev.delta.text.replace(/\s*\u2014\s*/g, ', '); onDelta(full); }
             if (ev.type === 'error') { onError('API stream error: ' + JSON.stringify(ev.error).slice(0, 200)); return; }
           } catch (e) { /* partial frame */ }
         }
@@ -3149,7 +3163,7 @@ if (typeof document !== 'undefined') (function () {
   }
 
   /* Companies: households & warbands. Locks and the constraint dropdowns apply
-     to single characters only — a company manages its own internal coherence. */
+     to single characters only, a company manages its own internal coherence. */
   function generateGroup(kind, baseSeed) {
     TRACE.rows = [];
     state.seed = baseSeed;
@@ -3173,7 +3187,7 @@ if (typeof document !== 'undefined') (function () {
       '<div>Custom: ' + esc(s.custom) + '.</div>' +
       '<div class="s-trouble">The village’s trouble: ' + esc(s.trouble) + '.</div>' +
       (s.feuds || []).map(f => '<div class="s-feud">Feud: ' + esc(f.sides[0]) + ' against ' + esc(f.sides[1]) +
-        ' — over ' + esc(f.cause) + '; ' + esc(f.state) + '.</div>').join('');
+        ', over ' + esc(f.cause) + '; ' + esc(f.state) + '.</div>').join('');
   }
 
   function renderStrip() {
@@ -3203,7 +3217,7 @@ if (typeof document !== 'undefined') (function () {
 
   function lockBtn(path) {
     const locked = path in state.locks;
-    return '<button class="lock' + (locked ? ' locked' : '') + '" data-path="' + path + '" title="' + (locked ? 'Unlock' : 'Lock') + ' — locked fields survive a reroll (key: L)">' + (locked ? '&#128274;' : '&#128275;') + '</button>';
+    return '<button class="lock' + (locked ? ' locked' : '') + '" data-path="' + path + '" title="' + (locked ? 'Unlock' : 'Lock') + ', locked fields survive a reroll (key: L)">' + (locked ? '&#128274;' : '&#128275;') + '</button>';
   }
   function row(path, label, valueHtml) {
     return '<div class="row" data-path="' + path + '"><span class="row-label">' + label + '</span><span class="row-value">' + valueHtml + '</span>' + lockBtn(path) + '</div>';
@@ -3220,7 +3234,7 @@ if (typeof document !== 'undefined') (function () {
     $('#char-name').textContent = c.name.full;
     $('#char-sub').textContent = c.socialClass.label + ' · ' + c.occupation.name + ' · ' + c.region.name;
     $('#blazon').textContent = her.blazon || '';
-    $('#violation-note').textContent = (c.heraldry.violation ? 'Arms in violation of the rule of tincture — the herald noted it.' : '');
+    $('#violation-note').textContent = (c.heraldry.violation ? 'Arms in violation of the rule of tincture, the herald noted it.' : '');
 
     const alive = c.family.siblings.filter(s => s.alive).length;
     const secs = [];
@@ -3239,9 +3253,9 @@ if (typeof document !== 'undefined') (function () {
       ]));
     }
     secs.push(section('Origin', [
-      row('region', 'Region', esc(c.region.name) + ' — ' + esc(c.region.terrain) + '. Lives by ' + esc(c.region.economy) + '. In living memory: ' + esc(c.region.disaster) + '.'),
+      row('region', 'Region', esc(c.region.name) + ', ' + esc(c.region.terrain) + '. Lives by ' + esc(c.region.economy) + '. In living memory: ' + esc(c.region.disaster) + '.'),
       row('culture', 'Culture', esc(c.culture)),
-      row('socialClass', 'Class', esc(c.socialClass.label) + ' — ' + esc(c.socialClass.desc)),
+      row('socialClass', 'Class', esc(c.socialClass.label) + ', ' + esc(c.socialClass.desc)),
     ]));
     secs.push(section('Birth & family', [
       row('birth', 'Birth', esc(c.birth.season) + ', ' + esc(c.birth.legitimacy) + ', born ' + c.birth.order + ordSuffix(c.birth.order) + '. ' + esc(c.birth.circumstance) + '.'),
@@ -3252,7 +3266,7 @@ if (typeof document !== 'undefined') (function () {
     ]));
     secs.push(section('Station', [
       row('occupation', 'Occupation', esc(c.occupation.name)),
-      row('education', 'Education', esc(c.education.label) + ' — ' + esc(c.education.desc)),
+      row('education', 'Education', esc(c.education.label) + ', ' + esc(c.education.desc)),
     ]));
     secs.push(section('Body', [
       row('body', 'Body', esc([c.body.build, c.body.height, c.body.hair, c.body.eyes].join('; ')) + '.<br>Teeth: ' + esc(c.body.teeth) + '. Hands: ' + esc(c.body.hands) + '. Voice: ' + esc(c.body.voice) + '. Smells ' + esc(c.body.smell) + '.' +
@@ -3267,9 +3281,9 @@ if (typeof document !== 'undefined') (function () {
     if (c.touch) secs.push(section('The Touch', [
       row('touch', 'The Touch', esc(c.touch.manifestation) + '<br><em>Or, as the sensible say: ' + esc(c.touch.mundaneExplanation) + '</em>'),
     ]));
-    secs.push(section('Skills', [row('skills', 'Skills', list(c.skills.map(s => s.name + ' (' + s.tier + ')' + (s.unlikely ? ' — unlikely for their station' : ''))))]));
-    secs.push(section('Possessions', [row('possessions', 'Possessions', list(c.possessions.map(p => p.item + ' — ' + p.price)))]));
-    secs.push(section('People', [row('relationships', 'People', list(c.relationships.map(r => r.name + ', ' + r.tie + ' — ' + r.tension)))]));
+    secs.push(section('Skills', [row('skills', 'Skills', list(c.skills.map(s => s.name + ' (' + s.tier + ')' + (s.unlikely ? ', unlikely for their station' : ''))))]));
+    secs.push(section('Possessions', [row('possessions', 'Possessions', list(c.possessions.map(p => p.item + ' (' + EXPORT.priceLabel(p.price) + ')')))]));
+    secs.push(section('People', [row('relationships', 'People', list(c.relationships.map(r => r.name + ', ' + r.tie + ', ' + r.tension)))]));
     secs.push(section('The secret', [row('secret', 'Secret', esc(c.secret) + '.')]));
     secs.push(section('The wound in the world', [row('problem', 'Problem', esc(c.problem) + '.')]));
     if (c.heraldry.type === 'arms') secs.push(section('Arms', [row('heraldry', 'Blazon', '<em>' + esc(her.blazon) + '</em>')]));
@@ -3318,7 +3332,7 @@ if (typeof document !== 'undefined') (function () {
     if (!currentDebug()) { box.style.display = 'none'; return; }
     box.style.display = '';
     const c = state.char;
-    let html = '<h3>Generation trace — ' + TRACE.rows.length + ' rolls, ' + c.clamps.length + ' clamps</h3>';
+    let html = '<h3>Generation trace, ' + TRACE.rows.length + ' rolls, ' + c.clamps.length + ' clamps</h3>';
     html += '<div class="trace">' + TRACE.rows.map(r =>
       r.t === 'clamp'
         ? '<div class="clamp">CLAMP [' + esc(r.rule) + '] ' + esc(r.detail) + '</div>'
@@ -3359,7 +3373,7 @@ if (typeof document !== 'undefined') (function () {
     const hasKey = !!AI.getKey();
     btn.disabled = !hasKey;
     btn.title = hasKey ? 'Call the Anthropic API to write this character\'s backstory'
-      : 'Disabled: no API key. Open Settings and paste an Anthropic API key — it is stored only in this browser\'s localStorage.';
+      : 'Disabled: no API key. Open Settings and paste an Anthropic API key, it is stored only in this browser\'s localStorage.';
   }
 
   /* ---- wiring ---- */
