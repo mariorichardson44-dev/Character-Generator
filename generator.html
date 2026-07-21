@@ -94,6 +94,15 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 .lock:hover { opacity: 1; background: none; }
 .lock.locked { opacity: 1; }
 
+/* ---- company strip ---- */
+#group-strip { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-bottom: .9rem; }
+.member-card { width: 88px; cursor: pointer; border: 1.5px solid var(--rule); background: rgba(255,252,240,.5); padding: .25rem .25rem .35rem; }
+.member-card:hover { border-color: var(--ink-soft); }
+.member-card.sel { border-color: var(--ink); box-shadow: 0 0 0 1.5px var(--ink); }
+.member-card svg { width: 100%; height: auto; display: block; }
+.member-card .m-name { font-size: .68rem; text-align: center; font-family: var(--serif-display); }
+.member-card .m-role { font-size: .62rem; font-style: italic; text-align: center; color: var(--ink-soft); }
+
 /* ---- debug ---- */
 #debug-box { grid-column: 1 / -1; border: 2px dashed var(--accent); padding: .8rem; font-size: .78rem; }
 #debug-box .trace { max-height: 320px; overflow: auto; font-family: monospace; background: rgba(0,0,0,.04); padding: .5rem; }
@@ -103,7 +112,7 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
 @media print {
   @page { size: A4; margin: 12mm; }
   body { background: #fff; font-size: 10.5px; }
-  header, #controls, .lock, #tale-controls, #debug-box { display: none !important; }
+  header, #controls, .lock, #tale-controls, #debug-box, #group-strip { display: none !important; }
   #layout { display: block; padding: 0; }
   #centre { page-break-inside: avoid; }
   #face-arms svg { max-height: 150px; width: auto; margin: 0 auto; }
@@ -127,6 +136,12 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
       <button id="generate-btn">Generate</button>
       <button id="reroll-btn">Reroll (new seed)</button>
       <button id="copy-link-btn">Copy share link</button>
+    </div>
+    <div class="group">
+      <label>Company</label>
+      <button id="solo-btn">Single character</button>
+      <button id="household-btn">Household</button>
+      <button id="warband-btn">Warband</button>
     </div>
     <div class="group">
       <label for="ov-region">Constrain the roll</label>
@@ -157,6 +172,7 @@ header .kbd-hint { font-size: .75rem; color: var(--ink-soft); font-style: italic
     </div>
   </div>
   <div id="centre">
+    <div id="group-strip" style="display:none"></div>
     <div id="face-arms">
       <div id="portrait-box"></div>
       <div id="arms-box"></div>
@@ -292,6 +308,10 @@ DATA.regions = [
   { w: 10, v: { key: 'brennalow', name: 'The Brennalow', terrain: 'rich river vale of vineyards and walled abbeys', economy: 'wine, wheat, parchment, and pilgrim traffic', faith: 'the Kirk owns half the vale and lends money on the other half', temperament: 'polished, litigious, convinced of their own refinement', namePool: 'veyric', settlements: ['Aubremont', 'Chalsigny', 'Pontverre'], disaster: 'the Vintner’s Frost, three springs running, which broke half the growers into tenancy' } },
   { w: 6, v: { key: 'freihafen', name: 'Freihafen', terrain: 'a walled free city on a cold estuary, and its cabbage-garden hinterland', economy: 'herring, cloth, coin-changing, and every guild you can name', faith: 'the Kirk preaches; the guilds decide', temperament: 'sharp, showy, contemptuous of the countryside they eat from', namePool: 'brakkish', settlements: ['Freihafen itself', 'Neuwerk quay-town', 'Kesselgate suburb'], disaster: 'the Weavers’ Rising, put down with hangings that the city still argues about' } },
   { w: 4, v: { key: 'grauvane', name: 'The Grauvane Marches', terrain: 'contested hill country of burned towers and new gibbets', economy: 'cattle-raiding, garrison wages, and ransom', faith: 'chaplains bless both sides; saints’ days are for truces', temperament: 'wary, dark-humoured, loyal to kin over any banner', namePool: 'veyric', settlements: ['Fort Maligne', 'Croixhaut', 'Dernier Gué'], disaster: 'the sack of Croixhaut, two years gone, still half-roofless' } },
+  { w: 9, v: { key: 'blackmoss', name: 'The Blackmoss', terrain: 'high peat moor, standing water, and wind-bent thorn', economy: 'peat-cutting, black cattle, and geese driven south each autumn', faith: 'the Kirk holds the valleys; the moor-tops hold their tongue', temperament: 'patient, grudge-keeping, kind in emergencies and only then', namePool: 'aldmark', settlements: ['Mosscroft', 'Blackshiel', 'Withergill'], disaster: 'the bog-slide above Withergill that took the summer shielings and eleven herders' } },
+  { w: 8, v: { key: 'hvalstrand', name: 'The Hvalstrand', terrain: 'grey whale-road coast of skerries, boat-strands, and turf-roofed steads', economy: 'cod, whale-strandings by law of the shore, and hiring out as oarsmen', faith: 'the Kirk came late by boat; the old boat-burials are within living memory', temperament: 'boastful ashore, silent at sea, generous with everything but pity', namePool: 'norr', settlements: ['Hvalvik', 'Skarnes', 'Ulfsfjord'], disaster: 'three herring-summers in a row when the shoals never came, and the boats went south with sons in them' } },
+  { w: 7, v: { key: 'eylands', name: 'The Eylands', terrain: 'terp-mound islands and reclaimed polder behind old dykes', economy: 'fat cattle, cheese, sea-wool, and the endless levy of dyke-work', faith: 'the Kirk is respected; the dyke-reeve is obeyed', temperament: 'stubborn, law-minded, slow to panic because panic drowns people', namePool: 'frisk', settlements: ['Terpwerum', 'Osselwarden', 'Grindholm'], disaster: 'the Allhallows flood, when the east dyke went and the sea kept what it took' } },
+  { w: 6, v: { key: 'zhorova', name: 'The Zhorova Verge', terrain: 'half-emptied borderland of overgrown fields and villages gone to birch', economy: 'resettlement grants, wax and honey, salvage from the abandoned steads', faith: 'too few priests for the ground; the shrines are tended by whoever is nearest', temperament: 'makeshift, unsentimental, hungry for neighbours and wary of them', namePool: 'ostrav', settlements: ['Zhorov', 'Bela Voda', 'Trn'], disaster: 'the pest, a generation back, which emptied the Verge and is why the land is cheap' } },
 ];
 
 /* ---- 3.2 Social classes (9) ------------------------------------------------ */
@@ -315,6 +335,10 @@ DATA.classRegionMod = {
   ostervail: { serf: 0.6, freePeasant: 1.4, minorGentry: 1.3 },
   karstfells: { craftsman: 1.4, serf: 0.7, freePeasant: 1.3 },
   saltings: { serf: 0.8, freePeasant: 1.3, outcast: 1.3 },
+  blackmoss: { serf: 1.2, freePeasant: 1.1, clergy: 0.6, burgher: 0.3 },
+  hvalstrand: { serf: 0.3, freePeasant: 1.8, outcast: 1.2, knightly: 0.5 },
+  eylands: { serf: 0.4, freePeasant: 1.8, craftsman: 1.1, burgher: 0.6 },
+  zhorova: { outcast: 2, serf: 0.7, freePeasant: 1.3, clergy: 0.7 },
 };
 
 /* ---- 3.3 Birth circumstances (30) ------------------------------------------ */
@@ -447,7 +471,65 @@ DATA.names = {
       'Gniewa', 'Hana', 'Iskra', 'Kvetka', 'Lyudmila', 'Mira', 'Rostislava', 'Svetlana', 'Vesna', 'Zorka'],
     neutral: ['Blazh', 'Duszan', 'Kaz', 'Ogni', 'Slav', 'Zima'],
   },
+  norr: {
+    patronymicSuffix: { male: 'sson', female: 'sdottir' },
+    male: ['Arnvid', 'Bjarnulf', 'Dagfinn', 'Eyvar', 'Folkvid', 'Geirmund', 'Halvar', 'Ingolf', 'Jorund', 'Kettil',
+      'Leidolf', 'Modolf', 'Ottar', 'Ragnvald', 'Sigfast', 'Thorgil', 'Ulfar', 'Vebrand', 'Yngvar', 'Asmund',
+      'Bergthor', 'Eindride', 'Gunnolf', 'Hakvin', 'Kolbein', 'Ormar', 'Skeggi', 'Steinar', 'Torvald', 'Vidkun'],
+    female: ['Asgerd', 'Bergdis', 'Dagrun', 'Eydis', 'Fastvi', 'Gudveig', 'Halldis', 'Ingirun', 'Jorunn', 'Kolfinna',
+      'Liufa', 'Malmfrid', 'Oddny', 'Ragnfrid', 'Signy', 'Thordis', 'Ulfhild', 'Valdis', 'Yrsa', 'Alfdis',
+      'Bothild', 'Estrid', 'Gyrid', 'Herdis', 'Kelda', 'Ottkatla', 'Solveig', 'Steinvor', 'Thyra', 'Vigdis'],
+    neutral: ['Aud', 'Bergli', 'Kolla', 'Rane', 'Skardi', 'Vali'],
+  },
+  frisk: {
+    patronymicSuffix: { male: 'szoon', female: 'sdochter' },
+    male: ['Tjade', 'Okke', 'Harro', 'Eise', 'Foppe', 'Gerlof', 'Hidde', 'Jarich', 'Keimpe', 'Liuwe',
+      'Meinte', 'Nanne', 'Obbe', 'Pier', 'Rienk', 'Sikke', 'Tialf', 'Ubbo', 'Watse', 'Wybren',
+      'Aldert', 'Bouwe', 'Doede', 'Eelke', 'Gosse', 'Hoite', 'Jelmer', 'Ruurd', 'Sjoerd', 'Tamme'],
+    female: ['Antje', 'Baukje', 'Dieuwke', 'Eelkje', 'Fardou', 'Geeske', 'Hylkje', 'Idske', 'Jeltsje', 'Klaske',
+      'Lutske', 'Minke', 'Nynke', 'Oentsje', 'Rixt', 'Saakje', 'Tetsje', 'Uilkje', 'Wobbelina', 'Ymkje',
+      'Aaltje', 'Botje', 'Doetje', 'Femke', 'Gatske', 'Hiske', 'Jitske', 'Marijke', 'Sibbeltje', 'Tsjitske'],
+    neutral: ['Fol', 'Heere', 'Jelle', 'Meints', 'Sape', 'Wietse'],
+  },
 };
+
+/* ---- Company generation (households & warbands) ------------------------------ */
+// Tensions for ties INSIDE a generated company — same shape as §3.13 tensions.
+DATA.householdTensions = [
+  'who counts the coin a second time whenever you have handled it',
+  'who took the blame for you once, years ago, and has never once mentioned it',
+  'whose favourite you are, which the others have not forgiven',
+  'who talks of leaving every winter and is still here',
+  'who prays for you by name, loudly, for reasons unexplained',
+  'who watched you at the boundary stone that night and said nothing',
+  'whose portion of the inheritance you are quietly eating',
+  'who married into this house and still keeps a bundle packed',
+  'who loves you best when you fail',
+  'who has begun forgetting names, and remembers only the old grievances',
+  'who does two people’s work and keeps the ledger of it in their face',
+  'whose cough the whole house pretends not to hear',
+];
+DATA.warbandTensions = [
+  'who saved your life at the ford and spends the debt a penny at a time',
+  'who was on the other side two wars ago, as you both remember',
+  'who saw what you took from the church at the sack',
+  'who follows you because of a promise made to their dying father',
+  'whose dice are heavier on one side, as everyone knows and no one proves',
+  'who is someone important’s child under a plain name, and badly hidden',
+  'who talks in their sleep, in another language, about a burning town',
+  'who would be captain if anything happened to the captain',
+  'who sends every coin home and starves politely in between',
+  'who has begun flinching at things no one else hears',
+  'who swore an oath to quit after this season, and swears it every season',
+  'who knows the country ahead too well to have learned it honestly',
+];
+DATA.warbandRoles = ['serjeant-at-arms', 'archer', 'crossbowman', 'spearman', 'forager', 'baggage-master', 'chirurgeon of sorts', 'banner-carrier', 'scout', 'cook and quartermaster'];
+DATA.childStructures = [
+  'raised under the parents’ roof and into the family trade',
+  'the child kept closest to the hearth and worked hardest for it',
+  'sent to sleep in the loft with the others and expected to be useful by daylight',
+  'raised half by the eldest sibling while the parents worked',
+];
 
 /* ---- 3.6 Byname material: 40 keyed epithets --------------------------------
    These are NOT picked at random. GEN matches keys against the character's own
@@ -1104,7 +1186,7 @@ Object.freeze(DATA);
 'use strict';
 
 const GEN = (function () {
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.0';
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
@@ -1486,7 +1568,136 @@ const GEN = (function () {
     }
   }
 
-  return { generate, VERSION, getPath, setPath };
+  /* ================= Companies: households & warbands =================
+     A group is a pure function of (seed, kind). Every member runs through
+     the full pipeline; shared facts (region, class, ages, parentage, the
+     problem) are injected via overrides and locks so all coherence rules
+     still apply. Cross-relationships are appended afterwards from the
+     members' own generated names.                                        */
+
+  function bracketFor(age) {
+    return deepClone(DATA.ageBrackets.map(e => e.v).find(b => age >= b.min && age <= b.max) || DATA.ageBrackets[5].v);
+  }
+
+  function generateGroup(seedStr, kind) {
+    const g = makeRng(seedStr + ':' + kind);
+    return kind === 'warband' ? genWarband(seedStr, g) : genHousehold(seedStr, g);
+  }
+
+  function genHousehold(seedStr, g) {
+    const members = [];
+    // Head: an adult householder; clergy and outcasts don't head hearth-households.
+    const classKey = pick(g, DATA.classes.filter(e => e.v.key !== 'clergy' && e.v.key !== 'outcast')
+      .map(e => ({ w: e.w, v: e.v.key })), 'group:class');
+    const headBracket = pick(g, [
+      { w: 14, v: DATA.ageBrackets[1].v }, { w: 30, v: DATA.ageBrackets[2].v },
+      { w: 26, v: DATA.ageBrackets[3].v }, { w: 18, v: DATA.ageBrackets[4].v }, { w: 6, v: DATA.ageBrackets[5].v }], 'group:headAge');
+    const headAge = roll(g, Math.max(headBracket.min, 22), headBracket.max);
+    const widowed = chance(g, 0.12);
+    const head = generate(seedStr + ':head', {
+      overrides: { socialClass: classKey },
+      locks: { ageBracket: deepClone(headBracket), age: headAge, marital: widowed ? 'widowed' : 'wed' },
+    });
+    members.push({ role: 'head of the household', char: head });
+
+    let spouse = null;
+    if (!widowed) {
+      const spouseAge = Math.max(17, headAge - 6 + roll(g, 0, 9));
+      spouse = generate(seedStr + ':spouse', {
+        overrides: { region: head.region.key, socialClass: classKey, sex: head.sex === 'male' ? 'female' : 'male' },
+        locks: { culture: head.culture, ageBracket: bracketFor(spouseAge), age: spouseAge, marital: 'wed', problem: head.problem },
+      });
+      members.push({ role: head.sex === 'male' ? 'wife' : 'husband', char: spouse });
+    }
+
+    // Children old enough to be characters (14+). Younger ones exist only as sheet colour.
+    const maxChildAge = Math.min(26, headAge - 17);
+    const kids = [];
+    if (maxChildAge >= 14) {
+      const n = pick(g, [{ w: 2, v: 0 }, { w: 4, v: 1 }, { w: 4, v: 2 }, { w: 2, v: 3 }], 'group:children');
+      const ages = [];
+      for (let i = 0; i < n; i++) ages.push(roll(g, 14, maxChildAge));
+      ages.sort((a, b) => b - a);
+      const sexes = ages.map(() => pick(g, DATA.sexes, 'group:childSex'));
+      const fatherName = head.sex === 'male' ? head.name.given
+        : spouse ? spouse.name.given : givenName(g, head.culture, 'male'); // widow's late husband
+      ages.forEach((age, idx) => {
+        const family = {
+          structure: pick(g, DATA.childStructures, 'group:childStructure'),
+          siblings: ages.map((a2, j) => ({ sex: sexes[j], older: a2 > age || (a2 === age && j < idx), alive: true }))
+            .filter((_, j) => j !== idx),
+          father: { name: fatherName, alive: head.sex === 'male' ? true : !!spouse },
+          mother: { alive: head.sex === 'female' ? true : !!spouse },
+          guardian: null,
+        };
+        const birth = {
+          circumstance: pick(g, DATA.birthCircumstances, 'group:childBirth'),
+          season: pick(g, DATA.seasons, 'group:childSeason'),
+          legitimacy: chance(g, 0.95) ? 'trueborn' : 'baseborn, acknowledged',
+          order: idx + 1,
+        };
+        const child = generate(seedStr + ':child' + (idx + 1), {
+          overrides: { region: head.region.key, socialClass: classKey, sex: sexes[idx] },
+          locks: { culture: head.culture, ageBracket: bracketFor(age), age, marital: 'unwed', family, birth, problem: head.problem },
+        });
+        kids.push(child);
+        members.push({ role: sexes[idx] === 'male' ? 'son' : 'daughter', char: child });
+      });
+    }
+
+    // Cross-ties, from the members' own generated names.
+    const tension = () => pick(g, DATA.householdTensions, 'group:tension');
+    if (spouse) {
+      head.relationships.unshift({ name: spouse.name.given, tie: head.sex === 'male' ? 'your wife' : 'your husband', tension: tension() });
+      spouse.relationships.unshift({ name: head.name.given, tie: spouse.sex === 'male' ? 'your wife' : 'your husband', tension: tension() });
+    }
+    for (const k of kids) {
+      k.relationships.unshift({ name: head.name.given, tie: head.sex === 'male' ? 'your father' : 'your mother', tension: tension() });
+      head.relationships.unshift({ name: k.name.given, tie: k.sex === 'male' ? 'your son' : 'your daughter', tension: tension() });
+      if (spouse) spouse.relationships.unshift({ name: k.name.given, tie: k.sex === 'male' ? 'your son' : 'your daughter', tension: tension() });
+    }
+    for (const m of members) m.char.relationships = m.char.relationships.slice(0, 6);
+    return { kind: 'household', seed: seedStr, version: VERSION, members };
+  }
+
+  function genWarband(seedStr, g) {
+    const members = [];
+    const leaderClass = pick(g, [{ w: 4, v: 'knightly' }, { w: 3, v: 'minorGentry' }, { w: 2, v: 'outcast' }, { w: 2, v: 'freePeasant' }], 'group:leaderClass');
+    const leaderAge = roll(g, 26, 48);
+    const leader = generate(seedStr + ':leader', {
+      overrides: { socialClass: leaderClass, sex: 'male' },
+      locks: { ageBracket: bracketFor(leaderAge), age: leaderAge },
+    });
+    members.push({ role: 'captain', char: leader });
+
+    const n = roll(g, 3, 5);
+    const roles = pickN(g, DATA.warbandRoles, n);
+    for (let i = 0; i < n; i++) {
+      const cls = pick(g, [{ w: 4, v: 'freePeasant' }, { w: 3, v: 'outcast' }, { w: 2, v: 'craftsman' }], 'group:memberClass');
+      const age = roll(g, 16, 45);
+      const sexOverride = chance(g, 0.85) ? 'male' : undefined;
+      const m = generate(seedStr + ':m' + (i + 1), {
+        overrides: { region: leader.region.key, socialClass: cls, sex: sexOverride },
+        locks: { ageBracket: bracketFor(age), age, problem: leader.problem },
+      });
+      members.push({ role: roles[i], char: m });
+    }
+
+    const tension = () => pick(g, DATA.warbandTensions, 'group:tension');
+    for (let i = 1; i < members.length; i++) {
+      const m = members[i].char;
+      m.relationships.unshift({ name: leader.name.given, tie: 'your captain', tension: tension() });
+      leader.relationships.unshift({ name: m.name.given, tie: 'sworn follower (' + members[i].role + ')', tension: tension() });
+      if (i > 1) {
+        const prev = members[i - 1].char;
+        m.relationships.unshift({ name: prev.name.given, tie: 'your sword-companion', tension: tension() });
+      }
+    }
+    for (const m of members) m.char.relationships = m.char.relationships.slice(0, 6);
+    return { kind: 'warband', seed: seedStr, version: VERSION, members };
+  }
+
+  return { generate, generateGroup, VERSION, getPath, setPath };
 })();
 /* ============================== HERALDRY ==============================
    generateParams(rng, c) runs inside the pipeline (consumes seeded draws);
@@ -2204,7 +2415,7 @@ const AI = (function () {
 /* ---------- UI ---------- */
 if (typeof document !== 'undefined') (function () {
   const $ = (sel) => document.querySelector(sel);
-  const state = { seed: '', locks: {}, char: null, hoveredPath: null };
+  const state = { seed: '', locks: {}, char: null, hoveredPath: null, group: null, sel: 0 };
 
   function currentDebug() { return /[?&#]debug=1|#debug\b/.test(location.search + location.hash); }
   TRACE.on = currentDebug();
@@ -2213,10 +2424,20 @@ if (typeof document !== 'undefined') (function () {
     const m = location.hash.match(/seed=([^&]+)/);
     return m ? decodeURIComponent(m[1]) : null;
   }
+  function groupFromHash() {
+    const m = location.hash.match(/group=(household|warband)/);
+    return m ? m[1] : null;
+  }
+  function writeHash() {
+    history.replaceState(null, '', '#seed=' + encodeURIComponent(state.seed)
+      + (state.group ? '&group=' + state.group.kind : '')
+      + (currentDebug() ? '&debug=1' : ''));
+  }
 
   function generate(newSeed) {
     TRACE.rows = [];
     state.seed = newSeed;
+    state.group = null;
     const overrides = {
       region: $('#ov-region').value || undefined,
       socialClass: $('#ov-class').value || undefined,
@@ -2224,8 +2445,42 @@ if (typeof document !== 'undefined') (function () {
     };
     state.char = GEN.generate(state.seed, { locks: state.locks, overrides });
     $('#seed-input').value = state.seed;
-    history.replaceState(null, '', '#seed=' + encodeURIComponent(state.seed) + (currentDebug() ? '&debug=1' : ''));
+    writeHash();
+    renderStrip();
     render();
+  }
+
+  /* Companies: households & warbands. Locks and the constraint dropdowns apply
+     to single characters only — a company manages its own internal coherence. */
+  function generateGroup(kind, baseSeed) {
+    TRACE.rows = [];
+    state.seed = baseSeed;
+    state.group = GEN.generateGroup(baseSeed, kind);
+    state.sel = 0;
+    state.char = state.group.members[0].char;
+    $('#seed-input').value = baseSeed;
+    writeHash();
+    renderStrip();
+    render();
+  }
+
+  function renderStrip() {
+    const strip = $('#group-strip');
+    if (!state.group) { strip.style.display = 'none'; strip.innerHTML = ''; return; }
+    strip.style.display = '';
+    strip.innerHTML = state.group.members.map((m, i) =>
+      '<div class="member-card' + (i === state.sel ? ' sel' : '') + '" data-idx="' + i + '">' +
+      PORTRAIT.render(m.char.portrait, 'card' + i) +
+      '<div class="m-name">' + esc(m.char.name.given) + '</div>' +
+      '<div class="m-role">' + esc(m.role) + '</div></div>').join('');
+    strip.querySelectorAll('.member-card').forEach(card => {
+      card.onclick = () => {
+        state.sel = +card.dataset.idx;
+        state.char = state.group.members[state.sel].char;
+        renderStrip();
+        render();
+      };
+    });
   }
 
   function lockBtn(path) {
@@ -2335,7 +2590,15 @@ if (typeof document !== 'undefined') (function () {
     render();
   }
 
-  function reroll() { generate(randomSeed()); }
+  function reroll() {
+    if (state.group) generateGroup(state.group.kind, randomSeed());
+    else generate(randomSeed());
+  }
+  function generateFromInput() {
+    const s = $('#seed-input').value.trim() || randomSeed();
+    if (state.group) generateGroup(state.group.kind, s);
+    else generate(s);
+  }
 
   function updateTaleButton() {
     const btn = $('#tale-btn');
@@ -2352,10 +2615,14 @@ if (typeof document !== 'undefined') (function () {
     $('#ov-class').innerHTML = '<option value="">any class</option>' + DATA.classes.map(x => '<option value="' + x.v.key + '">' + x.v.label + '</option>').join('');
     $('#ov-sex').innerHTML = '<option value="">any sex</option><option value="male">male</option><option value="female">female</option>';
 
-    $('#generate-btn').onclick = () => generate($('#seed-input').value.trim() || randomSeed());
+    $('#generate-btn').onclick = generateFromInput;
     $('#reroll-btn').onclick = reroll;
-    $('#seed-input').addEventListener('keydown', e => { if (e.key === 'Enter') generate($('#seed-input').value.trim() || randomSeed()); });
-    ['#ov-region', '#ov-class', '#ov-sex'].forEach(sel => { $(sel).onchange = () => generate(state.seed); });
+    $('#seed-input').addEventListener('keydown', e => { if (e.key === 'Enter') generateFromInput(); });
+    ['#ov-region', '#ov-class', '#ov-sex'].forEach(sel => { $(sel).onchange = () => { if (!state.group) generate(state.seed); }; });
+
+    $('#solo-btn').onclick = () => generate(state.seed || randomSeed());
+    $('#household-btn').onclick = () => generateGroup('household', state.seed || randomSeed());
+    $('#warband-btn').onclick = () => generateGroup('warband', state.seed || randomSeed());
 
     $('#copy-link-btn').onclick = copyLink;
     $('#export-json-btn').onclick = () => EXPORT.download(state.seed + '.json', EXPORT.toJSON(state.char, state.locks), 'application/json');
@@ -2373,8 +2640,10 @@ if (typeof document !== 'undefined') (function () {
           state.seed = data.seed;
           state.locks = data.locks || {};
           state.char = data.character;
+          state.group = null;
           $('#seed-input').value = state.seed;
-          history.replaceState(null, '', '#seed=' + encodeURIComponent(state.seed));
+          writeHash();
+          renderStrip();
           render();
         } catch (err) { alert('Import failed: ' + err.message); }
       };
@@ -2409,12 +2678,14 @@ if (typeof document !== 'undefined') (function () {
       else if (e.key === 'c' || e.key === 'C') copyLink();
     });
 
-    generate(seedFromHash() || randomSeed());
+    const hashSeed = seedFromHash() || randomSeed();
+    const hashGroup = groupFromHash();
+    if (hashGroup) generateGroup(hashGroup, hashSeed);
+    else generate(hashSeed);
   });
 
   function copyLink() {
-    const url = location.origin === 'null' || location.protocol === 'file:'
-      ? location.href : location.origin + location.pathname + '#seed=' + encodeURIComponent(state.seed);
+    const url = location.href; // writeHash keeps seed (and group mode) current in the hash
     const done = () => {
       const b = $('#copy-link-btn'); const t = b.textContent;
       b.textContent = 'Copied!'; setTimeout(() => { b.textContent = t; }, 1200);

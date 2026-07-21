@@ -20,6 +20,33 @@ character byte-for-byte, portrait and arms included.
 - **Export**: JSON (full object, re-importable, includes locks), Markdown, a PNG name-card
   (portrait + arms via canvas), and a print stylesheet that fits the sheet on one A4/Letter
   page. `C` copies a share link.
+- **Companies**: the **Household** and **Warband** buttons generate a linked group from the
+  seed — a strip of portrait cards appears; click a card to view that member's full sheet.
+  The share link preserves the mode (`#seed=X&group=household`), so a company reproduces
+  exactly like a single character. **Single character** returns to solo mode.
+
+## Households & warbands
+
+A company is a pure function of `(seed, kind)`. Every member runs through the *full*
+generation pipeline; shared facts are injected via the same locks-and-overrides mechanism
+the UI uses, so all coherence rules still apply to every member:
+
+- **Household**: an adult head (never clergy or outcast), usually a spouse, and any
+  children old enough to be characters (14+). All share region, culture, class, and the
+  household's current problem. Children's birth order, sibling lists, and father's name are
+  constructed from the actual generated household — a son's patronymic byname traces to his
+  real father's given name. Widowed heads (≈12%) get no spouse and the children's dead
+  parent is marked accordingly.
+- **Warband**: a captain (knightly, gentry, or rougher stock) and 3–5 followers with
+  distinct roles, all from the same district and all carrying the captain's problem as
+  their shared trouble.
+- Members get cross-relationships referencing each other's generated names, with tensions
+  from dedicated household/warband tension tables.
+- The padlocks and the constraint dropdowns apply to **single characters only** — a company
+  manages its own internal coherence.
+
+Duplicate given names inside a company can happen and are left alone on purpose: that is
+what bynames are for.
 
 ## How the pipeline cascades
 
@@ -96,4 +123,12 @@ A headless test suite exercises the exact same modules that ship in the file: ta
 floors, 10/10 seed determinism including SVG output, a 500-character sweep (no exceptions,
 no `undefined`, ≥80% peasant-or-below, Touch ≤6%, no unflagged rule-of-tincture
 violations, every byname traceable to a field on its own character), blazon/render
-agreement for 20 armigerous characters, and lock-stability over 20 rerolls.
+agreement for 20 armigerous characters, lock-stability over 20 rerolls, and company checks
+(household/warband determinism, shared region/culture/class/problem, child age and
+parentage coherence, cross-ties referencing real member names).
+
+## Content summary
+
+12 regions across 6 name cultures (Anglo-, Germanic-, Frankish-, Slavic-, Norse-, and
+Frisian-flavoured, 60+ given names each), 64 occupations, and every §3 table at or above
+its specified floor.
